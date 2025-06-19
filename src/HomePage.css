@@ -1,166 +1,180 @@
 /* --- Google Font Import --- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* --- CSS Variables for Easy Theming --- */
-:root {
+/* --- CSS Variables for Theming --- */
+:root[data-theme='light'] {
+  --bg-color: #f4f7fc;
+  --secondary-bg-color: #ffffff;
+  --panel-bg-color: #ffffff;
+  --primary-text-color: #1a202c;
+  --secondary-text-color: #718096;
+  --accent-color: #4299e1;
+  --accent-hover-color: #2b6cb0;
+  --border-color: #e2e8f0;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --switch-bg-color: #cbd5e0;
+  --switch-slider-color: #ffffff;
+}
+
+:root[data-theme='dark'] {
   --bg-color: #121212;
-  --card-bg-color: #1e1e1e;
+  --secondary-bg-color: #1e1e1e;
+  --panel-bg-color: #1a1a1a;
   --primary-text-color: #e0e0e0;
-  --secondary-text-color: #b0b0b0;
+  --secondary-text-color: #a0a0a0;
   --accent-color: #007bff;
   --accent-hover-color: #0056b3;
   --border-color: #2c2c2c;
   --shadow-color: rgba(0, 0, 0, 0.4);
-  --status-ready: #28a745;
-  --status-coming-soon: #ffc107;
-  --status-planned: #6c757d;
+  --switch-bg-color: #3e3e3e;
+  --switch-slider-color: #ffffff;
 }
 
 /* --- General Body Styles --- */
 body {
   margin: 0;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Poppins', sans-serif;
   background-color: var(--bg-color);
+  color: var(--primary-text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* --- Main App Layout --- */
+.app-layout {
+  display: flex;
+  transition: margin-left 0.4s ease;
+}
+
+.main-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  height: 100vh;
+  transition: width 0.4s ease;
+}
+
+/* --- Side Panel Styles (Updated for Toggling) --- */
+.side-panel {
+  width: 260px;
+  flex-shrink: 0;
+  background-color: var(--panel-bg-color);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  justify-content: center; /* Center content horizontally */
+  align-items: center;    /* Center content vertically */
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  transform: translateX(0);
+  transition: transform 0.4s ease, background-color 0.3s ease, border-color 0.3s ease;
+  z-index: 100;
+}
+
+.side-panel:not(.open) {
+  transform: translateX(-100%);
+}
+
+.app-layout.panel-open .main-content {
+  margin-left: 260px;
+}
+
+.app-layout.panel-closed .main-content {
+  margin-left: 0;
+}
+
+/* --- Theme Switcher --- */
+.theme-switcher { display: flex; justify-content: space-around; align-items: center; color: var(--secondary-text-color); font-size: 0.9rem; width: 100%; padding: 0 1rem; }
+.theme-label { font-weight: 500; }
+.switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-bg-color); transition: 0.4s; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: var(--switch-slider-color); transition: 0.4s; }
+input:checked + .slider { background-color: var(--accent-color); }
+input:checked + .slider:before { transform: translateX(22px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+/* --- Main Header for Content Area --- */
+.main-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.main-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
   color: var(--primary-text-color);
 }
 
-/* --- Main Homepage Container --- */
+/* --- Panel Toggle Button (Updated) --- */
+.panel-toggle-btn {
+  background: var(--secondary-bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--primary-text-color);
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.panel-toggle-btn:hover {
+  background: var(--bg-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+
+/* --- Homepage Container --- */
 .homepage-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
 }
 
-/* --- Header Styles --- */
-.homepage-header {
-  margin-bottom: 3rem;
-}
+/* --- Game Grid --- */
+.game-grid { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
 
-.homepage-header h1 {
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 0.5rem;
-}
+/* --- Game Card --- */
+.game-card { background-color: var(--secondary-bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; text-align: left; box-shadow: 0 4px 15px var(--shadow-color); transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease; }
+.game-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px var(--shadow-color); }
+.game-card-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.game-card-title { font-size: 1.5rem; font-weight: 600; color: var(--primary-text-color); margin: 0 0 0.5rem 0; }
+.game-card-description { font-size: 0.95rem; color: var(--secondary-text-color); flex-grow: 1; line-height: 1.6; }
 
-.homepage-header p {
-  font-size: 1.1rem;
-  color: var(--secondary-text-color);
-}
+.card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
 
-/* --- Game Grid Layout --- */
-.game-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-/* --- Game Card Styles --- */
-.game-card {
-  background-color: var(--card-bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  box-shadow: 0 4px 15px var(--shadow-color);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.game-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px var(--shadow-color);
-}
-
-.game-card-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.game-card-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: white;
-  margin: 0 0 0.5rem 0;
-}
-
-.game-card-description {
-  font-size: 0.95rem;
-  color: var(--secondary-text-color);
-  flex-grow: 1; /* Pushes footer to the bottom */
-  line-height: 1.6;
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
-}
-
-/* --- Status Badge --- */
-.status-badge {
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.3rem 0.6rem;
-  border-radius: 20px;
-  color: #121212;
-}
-
-.status-coming-soon { background-color: var(--status-coming-soon); }
-.status-ready { background-color: var(--status-ready); color: white;}
-.status-planned { background-color: var(--status-planned); color: white; }
-
-/* --- Play Button --- */
-.play-button {
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.play-button:hover:not(:disabled) {
-  background-color: var(--accent-hover-color);
-}
-
-.play-button:disabled {
-  background-color: #333;
-  color: #666;
-  cursor: not-allowed;
-}
+/* --- Status Badges & Buttons --- */
+.status-badge { font-size: 0.8rem; font-weight: 600; padding: 0.3rem 0.6rem; border-radius: 20px; }
+.status-ready { background-color: #28a745; color: white; }
+.status-coming-soon { background-color: #ffc107; color: #1a202c; }
+.play-button { background-color: var(--accent-color); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.3s ease; }
+.play-button:hover:not(:disabled) { background-color: var(--accent-hover-color); }
+.play-button:disabled { background-color: #333; color: #666; cursor: not-allowed; }
 
 /* --- Footer --- */
-.homepage-footer {
-  margin-top: 4rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border-color);
-  color: var(--secondary-text-color);
-  font-size: 0.9rem;
+.homepage-footer { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); color: var(--secondary-text-color); font-size: 0.9rem; text-align: center; }
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+  .app-layout.panel-open .main-content { margin-left: 0; }
+  .side-panel { box-shadow: 0 0 40px rgba(0,0,0,0.2); }
+  .main-header { padding: 1rem; }
+  .homepage-container { padding: 1rem; }
 }
 
-/* --- Responsive Design for Mobile --- */
-@media (max-width: 768px) {
-  .homepage-container {
-    padding: 1rem;
-  }
-  
-  .homepage-header h1 {
-    font-size: 2rem;
-  }
+@media (min-width: 768px) {
+  .game-grid { grid-template-columns: repeat(2, 1fr); }
+}
 
-  .game-grid {
-    grid-template-columns: 1fr;
-  }
+@media (min-width: 1200px) {
+  .game-grid { grid-template-columns: repeat(3, 1fr); }
 }

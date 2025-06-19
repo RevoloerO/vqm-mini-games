@@ -1,10 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 
-// To add real icons later, you could use a library like react-icons
-// Example: import { FaSnake, FaTableTennis, FaTrophy } from 'react-icons/fa';
-
+// --- Reusable GameCard Component ---
 const GameCard = ({ title, description, status, icon, onPlay }) => (
   <div className="game-card">
     <div className="game-card-icon">{icon}</div>
@@ -25,14 +23,41 @@ const GameCard = ({ title, description, status, icon, onPlay }) => (
   </div>
 );
 
+// --- Side Panel Component (Cleaned Up) ---
+const SidePanel = ({ theme, toggleTheme, isOpen }) => (
+  <aside className={`side-panel ${isOpen ? 'open' : ''}`}>
+    {/* The only content is now the theme switcher, centered by the new CSS */}
+    <div className="theme-switcher">
+      <span className="theme-label">Light</span>
+      <label className="switch">
+        <input type="checkbox" onChange={toggleTheme} checked={theme === 'dark'} />
+        <span className="slider round"></span>
+      </label>
+      <span className="theme-label">Dark</span>
+    </div>
+  </aside>
+);
+
+
 const HomePage = () => {
-  // Initialize the navigate function from react-router-dom
+  const [theme, setTheme] = useState('dark');
+  const [isPanelOpen, setIsPanelOpen] = useState(true); 
   const navigate = useNavigate();
 
-  // This is where you'll list all your future games.
-  // When a game is ready, change its status to 'Ready' and provide the correct path.
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
+
+  const togglePanel = () => {
+    setIsPanelOpen(!isPanelOpen);
+  };
+
   const games = [
-    {
+     {
       title: 'Mouse Stalker',
       description: 'A simple circle that follows your every move. A test of tracking.',
       status: 'Ready',
@@ -53,44 +78,37 @@ const HomePage = () => {
       icon: '🐍',
       path: '/vqm-mini-games/snake',
     },
-    {
-      title: 'Tic-Tac-Toe',
-      description: 'The ultimate strategy duel. Can you outsmart the AI?',
-      status: 'Coming Soon',
-      icon: '🕹️',
-      path: '/vqm-mini-games/tic-tac-toe',
-    },
-    {
-      title: 'Memory Match',
-      description: 'Flip the cards and find the pairs. A test of memory.',
-      status: 'Coming Soon',
-      icon: '🧠',
-      path: '/vqm-mini-games/memory-match',
-    },
   ];
 
   return (
-    <div className="homepage-container">
-      <header className="homepage-header">
-        <h1>VQM's Game Arcade</h1>
-        <p>A collection of mini-games built with React and passion.</p>
-      </header>
-      <main className="game-grid">
-        {games.map((game, index) => (
-          <GameCard
-            key={index}
-            title={game.title}
-            description={game.description}
-            status={game.status}
-            icon={game.icon}
-            // Pass a function to the onPlay prop that navigates to the game's path
-            onPlay={() => game.path && navigate(game.path)}
-          />
-        ))}
-      </main>
-      <footer className="homepage-footer">
-        <p>&copy; 2025 Vuong Quyen Mai. All rights reserved.</p>
-      </footer>
+    <div className={`app-layout ${isPanelOpen ? 'panel-open' : 'panel-closed'}`}>
+      <SidePanel theme={theme} toggleTheme={toggleTheme} isOpen={isPanelOpen} />
+      <div className="main-content">
+        <header className="main-header">
+           <button onClick={togglePanel} className="panel-toggle-btn">
+             {/* Dynamically change the icon based on the panel's state */}
+             {isPanelOpen ? '<' : '>'}
+           </button>
+          <h1>Game Arcade</h1>
+        </header>
+        <div className="homepage-container">
+          <main className="game-grid">
+            {games.map((game, index) => (
+              <GameCard
+                key={index}
+                title={game.title}
+                description={game.description}
+                status={game.status}
+                icon={game.icon}
+                onPlay={() => game.path && navigate(game.path)}
+              />
+            ))}
+          </main>
+          <footer className="homepage-footer">
+            <p>&copy; 2025 Vuong Quyen Mai. All rights reserved.</p>
+          </footer>
+        </div>
+      </div>
     </div>
   );
 };
