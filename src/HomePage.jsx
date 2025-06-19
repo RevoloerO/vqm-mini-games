@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Gamepad2,
+  MousePointer,
+  RectangleHorizontal,
+  GitBranch,
+  Menu, // modern menu icon
+  X // close icon
+} from 'lucide-react';
 import './HomePage.css';
 
-// --- Reusable GameCard Component ---
-const GameCard = ({ title, description, status, icon, onPlay }) => (
-  <div className="game-card">
+// --- GameCard Component ---
+const GameCard = ({ title, description, status, icon, onPlay, delay }) => (
+  <div className="game-card" style={{ animationDelay: `${delay}s` }}>
     <div className="game-card-icon">{icon}</div>
     <h3 className="game-card-title">{title}</h3>
     <p className="game-card-description">{description}</p>
@@ -23,14 +31,20 @@ const GameCard = ({ title, description, status, icon, onPlay }) => (
   </div>
 );
 
-// --- Side Panel Component (Cleaned Up) ---
-const SidePanel = ({ theme, toggleTheme, isOpen }) => (
+// --- SidePanel Component ---
+const SidePanel = ({ theme, toggleTheme, isOpen, togglePanel }) => (
   <aside className={`side-panel ${isOpen ? 'open' : ''}`}>
-    {/* The only content is now the theme switcher, centered by the new CSS */}
+    <button onClick={togglePanel} className="panel-close-btn">
+      <X size={20} />
+    </button>
     <div className="theme-switcher">
       <span className="theme-label">Light</span>
       <label className="switch">
-        <input type="checkbox" onChange={toggleTheme} checked={theme === 'dark'} />
+        <input
+          type="checkbox"
+          onChange={toggleTheme}
+          checked={theme === 'dark'}
+        />
         <span className="slider round"></span>
       </label>
       <span className="theme-label">Dark</span>
@@ -38,69 +52,78 @@ const SidePanel = ({ theme, toggleTheme, isOpen }) => (
   </aside>
 );
 
-
+// --- Main HomePage ---
 const HomePage = () => {
   const [theme, setTheme] = useState('dark');
-  const [isPanelOpen, setIsPanelOpen] = useState(true); 
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
-  };
-
-  const togglePanel = () => {
-    setIsPanelOpen(!isPanelOpen);
-  };
+  const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
+  const togglePanel = () => setIsPanelOpen(open => !open);
 
   const games = [
-     {
+    {
       title: 'Mouse Stalker',
       description: 'A simple circle that follows your every move. A test of tracking.',
       status: 'Ready',
-      icon: '🖱️',
+      icon: <MousePointer size={40} />,
       path: '/vqm-mini-games/mouse-stalker',
     },
     {
       title: 'Retro Pong',
-      description: 'The timeless classic. A battle of reflexes and precision.',
+      description: 'The timeless classic. Use a paddle to battle with precision.',
       status: 'Coming Soon',
-      icon: '🏓',
+      icon: <RectangleHorizontal size={40} />,
       path: '/vqm-mini-games/pong',
     },
     {
       title: 'Grid Snake',
-      description: 'Eat, grow, and avoid yourself. How long can you last?',
+      description: 'Eat, grow, and follow the path. How long can you last?',
       status: 'Coming Soon',
-      icon: '🐍',
+      icon: <GitBranch size={40} />,
       path: '/vqm-mini-games/snake',
     },
   ];
 
   return (
     <div className={`app-layout ${isPanelOpen ? 'panel-open' : 'panel-closed'}`}>
-      <SidePanel theme={theme} toggleTheme={toggleTheme} isOpen={isPanelOpen} />
+      <SidePanel
+        theme={theme}
+        toggleTheme={toggleTheme}
+        isOpen={isPanelOpen}
+        togglePanel={togglePanel}
+      />
       <div className="main-content">
         <header className="main-header">
-           <button onClick={togglePanel} className="panel-toggle-btn">
-             {/* Dynamically change the icon based on the panel's state */}
-             {isPanelOpen ? '<' : '>'}
-           </button>
-          <h1>Game Arcade</h1>
+          <button
+            onClick={togglePanel}
+            className={`panel-toggle-btn modern`}
+            aria-label={isPanelOpen ? 'Close panel' : 'Open panel'}
+          >
+            {isPanelOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
+          <div className="header-title-container">
+            <span className="header-icon">
+              <Gamepad2 />
+            </span>
+            <h1>VQM's Playground</h1>
+          </div>
         </header>
         <div className="homepage-container">
           <main className="game-grid">
-            {games.map((game, index) => (
+            {games.map((game, idx) => (
               <GameCard
-                key={index}
+                key={game.title}
                 title={game.title}
                 description={game.description}
                 status={game.status}
                 icon={game.icon}
                 onPlay={() => game.path && navigate(game.path)}
+                delay={idx * 0.1}
               />
             ))}
           </main>
