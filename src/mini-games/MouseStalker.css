@@ -1,0 +1,53 @@
+/* --- MouseStalker Container --- */
+.stalker-container {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  /* Use the background variables from the root for theme consistency */
+  background-color: var(--bg-color);
+  background-image: var(--bg-image);
+  cursor: none; /* Hide the default cursor to focus on the dragon */
+}
+
+.stalker-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- UI Elements --- */
+.stalker-ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem 2rem;
+  box-sizing: border-box;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--secondary-bg-color);
+  color: var(--primary-text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  text-decoration: none;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}

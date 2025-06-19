@@ -9,6 +9,7 @@ import {
   X // close icon
 } from 'lucide-react';
 import './HomePage.css';
+import logoImage from './assets/mini-games-logo.png'; // Assuming you have a logo image
 
 // --- GameCard Component ---
 const GameCard = ({ title, description, status, icon, onPlay, delay }) => (
@@ -106,6 +107,7 @@ const HomePage = () => {
           >
             {isPanelOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
+          <img src={logoImage} alt="VQM Mini Games Logo" className="logo-modern" />
           <div className="header-title-container">
             <span className="header-icon">
               <Gamepad2 />

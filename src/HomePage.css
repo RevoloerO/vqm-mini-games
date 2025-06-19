@@ -462,3 +462,18 @@ input:checked+.slider:before {
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+/* --- Logo Styles --- */
+.logo-modern {
+    
+    height: 44px;
+    width: auto;
+    border-radius: 10%;
+    object-fit: cover;
+    box-shadow: 0 2px 12px var(--shadow-color), 0 0 0 2px var(--accent-color);
+    margin-right: 1.2rem;
+    background: var(--secondary-bg-color);
+    border: none;
+    display: inline-block;
+    vertical-align: middle;
+}
