@@ -4,10 +4,9 @@
   height: 100vh;
   overflow: hidden;
   position: relative;
-  /* Use the background variables from the root for theme consistency */
   background-color: var(--bg-color);
   background-image: var(--bg-image);
-  cursor: none; /* Hide the default cursor to focus on the dragon */
+  cursor: none;
 }
 
 .stalker-canvas {
@@ -24,30 +23,90 @@
   width: 100%;
   padding: 1.5rem 2rem;
   box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.back-button {
-  display: inline-flex;
+/* --- Simplified Back Button --- */
+.back-button-simple {
+  display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1.5rem;
-  background-color: var(--secondary-bg-color);
-  color: var(--primary-text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
   text-decoration: none;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
-  font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
-.back-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  border-color: var(--accent-color);
-  color: var(--accent-color);
+.back-button-simple:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--primary-text-color);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* --- New Score Display --- */
+.score-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 1.2rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+.score-display span {
+  font-weight: 600;
+}
+
+/* --- Skin Selector Styles --- */
+.skin-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.skin-button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  text-transform: capitalize;
+}
+
+.skin-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.skin-button.active {
+  background: var(--accent-color);
+  color: white;
+  box-shadow: 0 0 10px var(--accent-color);
 }
