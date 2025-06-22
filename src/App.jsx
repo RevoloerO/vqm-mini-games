@@ -4,7 +4,7 @@ import viteLogo from '/vite.svg'
 import './App.css'
 import { Routes, Route, Link } from 'react-router-dom';
 import HomePage from './HomePage';
-import MouseStalkers from './mini-games/MouseStalker';
+import MouseStalkers from './mini-games/MouseStalker/MouseStalker';
 import BloomingGarden from './mini-games/BloomingGarden';
 function App() {
   const [count, setCount] = useState(0)
