@@ -21,12 +21,18 @@ function draw() {
     ctx.quadraticCurveTo( -1, -12, -7, -13 );
     ctx.lineTo(-4, -9);
 
-    ctx.quadraticCurveTo( -14, -12, -9, -3);
+    ctx.quadraticCurveTo( -15, -13, -9, -3);
+    ctx.quadraticCurveTo( -17, -2, -22, 0);
    // ctx.lineTo(-5, -15);
-
-    ctx.lineTo(-10, 0);
-
-    ctx.bezierCurveTo(-15, 16, 5, 18, 10, 0);
+    //left face
+    ctx.quadraticCurveTo( -17, 2, -9, 3);
+    ctx.quadraticCurveTo( -15, 13, -4, 9);
+    ctx.lineTo(-7, 13);
+    ctx.quadraticCurveTo( -1, 12,0 , 10 );
+     ctx.lineTo(-2, 16);
+    ctx.quadraticCurveTo(1, 14, 3, 10 );
+    ctx.bezierCurveTo( cheekX + 2, -cheekY + 4,cheekX - 2, -cheekY - 3, 19, 4);
+    ctx.lineTo(22, 0);
     ctx.fill();
     ctx.stroke();
     /*
@@ -75,16 +81,8 @@ function draw() {
     ctx.beginPath();
     ctx.arc(0, 0, 1, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
-    ctx.arc(cheekX - 1.5, cheekY + 3.5, 1, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
-    ctx.arc(cheekX + 1.5, cheekY - 3.5, 1, 0, Math.PI * 2);
-    ctx.fill();
-
+    
+  
     ctx.restore();
   }
 }

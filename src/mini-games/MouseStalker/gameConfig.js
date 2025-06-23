@@ -33,46 +33,37 @@ export const SKINS = {
         ctx.rotate(angle);
         ctx.scale(headScale, headScale);
         ctx.lineWidth = 2 / headScale;
+        // Draw head shape
         ctx.strokeStyle = `hsl(130, 80%, 20%)`;
-        
         ctx.fillStyle = `hsl(130, 70%, 50%)`;
-        const leaves = 3;
-        for (let i = 0; i < leaves; i++) {
-            const leafAngle = (i - (leaves - 1) / 2) * 0.5;
-            ctx.save();
-            ctx.rotate(leafAngle);
-            ctx.beginPath();
-            ctx.moveTo(-12, -15);
-            ctx.quadraticCurveTo(0, -25, 12, -15);
-            ctx.quadraticCurveTo(0, -20, -12, -15);
-            ctx.fill();
-            ctx.restore();
-        }
+        var cheekX = 7;
+        var cheekY = -7;
+        ctx.beginPath();
+        ctx.moveTo(22, 0);
+        ctx.lineTo(19, -4);
+        ctx.bezierCurveTo(cheekX - 2, cheekY + 3, cheekX + 2, cheekY - 4, 3, -10);
+        ctx.quadraticCurveTo(1, -14, -2, -16);
 
-        ctx.beginPath();
-        ctx.moveTo(10, 0);
-        ctx.bezierCurveTo(5, -18, -15, -16, -10, 0);
-        ctx.bezierCurveTo(-15, 16, 5, 18, 10, 0);
-        ctx.fill();
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(8, -5);
-        ctx.lineTo(18, -3);
-        ctx.lineTo(18, 3);
-        ctx.lineTo(8, 5);
+        ctx.lineTo(0, -10);
+        ctx.quadraticCurveTo(-1, -12, -7, -13);
+        ctx.lineTo(-4, -9);
+
+        ctx.quadraticCurveTo(-15, -13, -9, -3);
+        ctx.quadraticCurveTo(-17, -2, -22, 0);
+        // ctx.lineTo(-5, -15);
+        //left face
+        ctx.quadraticCurveTo(-17, 2, -9, 3);
+        ctx.quadraticCurveTo(-15, 13, -4, 9);
+        ctx.lineTo(-7, 13);
+        ctx.quadraticCurveTo(-1, 12, 0, 10);
+        ctx.lineTo(-2, 16);
+        ctx.quadraticCurveTo(1, 14, 3, 10);
+        ctx.bezierCurveTo(cheekX + 2, -cheekY + 4, cheekX - 2, -cheekY - 3, 19, 4);
+        ctx.lineTo(22, 0);
         ctx.fill();
         ctx.stroke();
         //
-        ctx.fillStyle = `hsl(130, 60%, 40%)`;
-        ctx.beginPath();
-        ctx.moveTo(-5, -8);
-        ctx.bezierCurveTo(-10, -15, -5, -20, 0, -18);
-        ctx.closePath();
-        ctx.fill();
-        ctx.moveTo(-5, 8);
-        ctx.bezierCurveTo(-10, 15, -5, 20, 0, 18);
-        ctx.closePath();
-        ctx.fill();
+        
         // Draw eyes
         ctx.fillStyle = 'white';
         ctx.beginPath();
@@ -105,7 +96,7 @@ export const SKINS = {
         ctx.moveTo(18, 2);
         ctx.bezierCurveTo(25, 5, 25, 15, 15, 20);
         ctx.stroke();
-        
+
         ctx.restore();
     },
     snake: (ctx, segments) => {
