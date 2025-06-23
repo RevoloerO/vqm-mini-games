@@ -17,7 +17,7 @@ export const SKINS = {
     default: (ctx, segments, targetPos) => {
         const head = segments[0];
         if (!head) return;
-        for (let i = segments.length-1; i > 0; i--) {
+        for (let i = segments.length - 1; i > 0; i--) {
             const segment = segments[i];
             const percent = (segments.length - i) / segments.length;
             const colorLightness = 50 + percent * 20;
@@ -26,15 +26,21 @@ export const SKINS = {
             ctx.arc(segment.x, segment.y, segment.size, 0, Math.PI * 2);
             ctx.fill();
             ctx.strokeStyle = `hsl(130, 80%, 20%)`;
-            ctx.beginPath();
-            
-            ctx.moveTo(segments[i - 1].x, segments[i - 1].y);
-            ctx.lineTo(segment.x, segment.y);
-            ctx.lineTo(segment.x + segment.size * Math.cos(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)),
-                       segment.y + segment.size * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
+            ctx.strokeStyle = `hsl(130, 70%, 50%)`;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.lineWidth = segment.size / 2;  
+            ctx.lineWidth = segment.size / 2;
+            ctx.beginPath();
+            ctx.moveTo(segments[i - 1].x, segments[i - 1].y);
+            ctx.lineTo(segment.x, segment.y);
+            ctx.stroke();
+
+            ctx.strokeStyle = `hsl(130, 80%, 20%)`;
+            ctx.beginPath();
+            ctx.moveTo(segment.x, segment.y);
+            ctx.lineTo(segment.x - segment.size * Math.cos(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)),
+                segment.y - segment.size * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
+
             ctx.stroke();
         }
         const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
@@ -52,7 +58,7 @@ export const SKINS = {
         ctx.quadraticCurveTo(-5, -17, -30, -15);
         ctx.quadraticCurveTo(-9, -10, -7, 0);
         ctx.quadraticCurveTo(-9, 10, -30, 15);
-        ctx.quadraticCurveTo(-5, 17, 0, 0); 
+        ctx.quadraticCurveTo(-5, 17, 0, 0);
         ctx.fill();
         ctx.stroke();
         // Draw head shape
@@ -85,7 +91,7 @@ export const SKINS = {
         ctx.fill();
         ctx.stroke();
         //
-        
+
         // Draw eyes
         // right eye
         ctx.fillStyle = 'white';
@@ -111,7 +117,7 @@ export const SKINS = {
         ctx.quadraticCurveTo(2, 9, 2, 4);
         ctx.fill();
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
-        ctx.stroke();   
+        ctx.stroke();
 
         // Draw swhiskers
         ctx.strokeStyle = `hsl(130, 40%, 30%)`;
