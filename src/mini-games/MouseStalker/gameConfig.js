@@ -34,7 +34,7 @@ export const SKINS = {
             ctx.moveTo(segments[i - 1].x, segments[i - 1].y);
             ctx.lineTo(segment.x, segment.y);
             ctx.stroke();
-
+``          // Draw fur segment 
             ctx.strokeStyle = `hsl(130, 80%, 20%)`;
             ctx.beginPath();
             ctx.moveTo(segment.x, segment.y);
@@ -104,8 +104,6 @@ export const SKINS = {
         ctx.moveTo(-3, -8);
         ctx.quadraticCurveTo(2, -9, 2, -4);
         ctx.fill();
-        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
-        ctx.stroke();
         // left eye
         ctx.beginPath();
         ctx.moveTo(-7, 13);
@@ -116,6 +114,18 @@ export const SKINS = {
         ctx.moveTo(-3, 8);
         ctx.quadraticCurveTo(2, 9, 2, 4);
         ctx.fill();
+        //draw eyebrows
+        ctx.beginPath();
+        ctx.fillStyle = `hsl(130, 80%, 20%)`;
+        ctx.moveTo(2, -4);
+        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
+        ctx.moveTo(4.5, -3);
+        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(2, 4);
+        ctx.quadraticCurveTo(-1, 2, -6.5, 6);
+        ctx.moveTo(4.5, 3);
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
         ctx.stroke();
 

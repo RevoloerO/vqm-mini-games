@@ -1,9 +1,11 @@
-// /src/components/MouseStalker/useDragonGame.js
+// Custom hook for the Dragon Mouse Stalker mini-game
+// Handles dragon movement, wandering, fruit spawning, and rendering
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
 
 export const useDragonGame = () => {
+  // Canvas and game state refs
   const canvasRef = useRef(null);
   const mousePosition = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const wanderTarget = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
@@ -13,22 +15,27 @@ export const useDragonGame = () => {
   const idleTimerId = useRef(null);
   const wanderChangeTimerId = useRef(null);
 
+  // React state for skin, dragon, and wandering
   const [activeSkin, setActiveSkin] = useState('default');
   const [dragonState, setDragonState] = useState({ segments: [] });
   const [isWandering, setIsWandering] = useState(false);
 
+  // Start wandering mode after idle
   const startWandering = useCallback(() => {
     if (isWandering) return;
     setIsWandering(true);
     
+    // Set initial wander target to dragon head
     if (dragonState.segments.length > 0) {
         wanderTarget.current = { x: dragonState.segments[0].x, y: dragonState.segments[0].y };
     }
 
+    // Randomize initial wander direction and speed
     const angle = Math.random() * 2 * Math.PI;
     const speed = 1 + Math.random() * 2;
     wanderVelocity.current = { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
 
+    // Function to change wander direction periodically
     const changeCourse = () => {
         const angleChange = (Math.random() - 0.5) * 1.5;
         const currentAngle = Math.atan2(wanderVelocity.current.vy, wanderVelocity.current.vx);
@@ -41,11 +48,13 @@ export const useDragonGame = () => {
     changeCourse();
   }, [dragonState.segments, isWandering]);
 
+  // Stop wandering mode
   const stopWandering = useCallback(() => {
       setIsWandering(false);
       clearTimeout(wanderChangeTimerId.current);
   }, []);
   
+  // Initialize game state (dragon and fruits)
   const initGame = useCallback(() => {
       const initialSegments = Array.from({ length: GAME_CONFIG.numInitialSegments }, () => ({
         x: window.innerWidth / 2,
@@ -57,6 +66,7 @@ export const useDragonGame = () => {
   }, []);
 
   useEffect(() => {
+    // Set theme from localStorage
     const savedTheme = localStorage.getItem('vqm-game-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -64,6 +74,7 @@ export const useDragonGame = () => {
     const ctx = canvas.getContext('2d');
     let lastFruitSpawn = Date.now();
 
+    // Resize canvas to window size
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -73,10 +84,12 @@ export const useDragonGame = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
+    // Initialize dragon if not present
     if (dragonState.segments.length === 0) {
         initGame();
     }
 
+    // Mouse movement handler: update position and reset idle timer
     const handleMouseMove = (e) => {
       mousePosition.current = { x: e.clientX, y: e.clientY };
       if (isWandering) stopWandering();
@@ -85,9 +98,11 @@ export const useDragonGame = () => {
       idleTimerId.current = setTimeout(startWandering, 5000);
     };
 
+    // Start idle timer for wandering
     idleTimerId.current = setTimeout(startWandering, 5000);
     window.addEventListener('mousemove', handleMouseMove);
 
+    // Spawn a fruit at a random position and type
     const spawnFruit = () => {
         const rand = Math.random();
         let fruitType;
@@ -97,14 +112,17 @@ export const useDragonGame = () => {
         fruits.current.push({ ...fruitType, x: Math.random() * canvas.width, y: Math.random() * canvas.height, createdAt: Date.now() });
     };
 
+    // Main game loop: update and render dragon and fruits
     const gameLoop = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
+      // Determine leader (mouse or wander target)
       let leader;
       if (isWandering) {
         wanderTarget.current.x += wanderVelocity.current.vx;
         wanderTarget.current.y += wanderVelocity.current.vy;
 
+        // Bounce off canvas edges
         if (wanderTarget.current.x < 0 || wanderTarget.current.x > canvas.width) {
             wanderVelocity.current.vx *= -1 * (0.9 + Math.random() * 0.2);
         }
@@ -118,6 +136,7 @@ export const useDragonGame = () => {
       
       const currentSegments = dragonState.segments;
 
+      // Move each dragon segment towards the leader
       currentSegments.forEach((segment) => {
         const dx = leader.x - segment.x;
         const dy = leader.y - segment.y;
@@ -126,14 +145,17 @@ export const useDragonGame = () => {
         leader = segment;
       });
       
+      // Draw dragon using the active skin
       const drawSkin = SKINS[activeSkin];
       if (drawSkin && currentSegments.length > 0) {
         drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current);
       }
 
+      // Spawn fruits periodically, limit to 8
       if (Date.now() - lastFruitSpawn > GAME_CONFIG.fruitSpawnRate && fruits.current.length < 8) { spawnFruit(); lastFruitSpawn = Date.now(); }
       fruits.current = fruits.current.filter(f => Date.now() - f.createdAt < f.lifespan);
       
+      // Draw fruits with special effects for rare/epic
       fruits.current.forEach((fruit) => {
         if (fruit.type === 'EPIC') {
             const lifePercent = (Date.now() - fruit.createdAt) / 1000;
@@ -159,6 +181,7 @@ export const useDragonGame = () => {
         ctx.shadowBlur = 0;
       });
       
+      // Check for fruit collision with dragon head
       fruits.current.forEach((fruit, fruitIndex) => {
         const head = currentSegments[0];
         if (!head) return;
@@ -181,6 +204,7 @@ export const useDragonGame = () => {
 
     animationFrameId.current = requestAnimationFrame(gameLoop);
 
+    // Cleanup event listeners and timers on unmount
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', resizeCanvas);
@@ -190,5 +214,6 @@ export const useDragonGame = () => {
     };
   }, [activeSkin, dragonState.segments, initGame, isWandering, startWandering, stopWandering]);
 
+  // Expose canvas ref and state for use in components
   return { canvasRef, dragonState, activeSkin, setActiveSkin };
 };
