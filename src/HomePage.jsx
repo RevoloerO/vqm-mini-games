@@ -10,8 +10,7 @@ import {
 } from 'lucide-react';
 import './HomePage.css';
 
-// --- GameCard Component ---
-// Displays a single game card with icon, title, description, status badge, and play button.
+// --- GameCard: Displays a single game card ---
 const GameCard = ({ title, description, status, icon, onPlay, delay }) => (
     <div className="game-card" style={{ animationDelay: `${delay}s` }}>
         <div className="game-card-icon">{icon}</div>
@@ -32,8 +31,7 @@ const GameCard = ({ title, description, status, icon, onPlay, delay }) => (
     </div>
 );
 
-// --- SidePanel Component ---
-// Renders the side panel with theme switcher and close button.
+// --- SidePanel: Theme switcher and close button ---
 const SidePanel = ({ theme, toggleTheme, isOpen, togglePanel }) => (
     <aside className={`side-panel ${isOpen ? 'open' : ''}`}>
         <button onClick={togglePanel} className="panel-close-btn">
@@ -54,35 +52,33 @@ const SidePanel = ({ theme, toggleTheme, isOpen, togglePanel }) => (
     </aside>
 );
 
-// --- Main HomePage Component ---
-// Handles theme, panel state, and renders the main layout, header, game grid, and footer.
+// --- HomePage: Main landing page ---
 const HomePage = () => {
-    // Theme state, loaded from localStorage if available
+    // --- State: Theme and Side Panel ---
     const [theme, setTheme] = useState(() => {
         const savedTheme = localStorage.getItem('vqm-game-theme');
         return savedTheme || 'dark';
     });
 
-    // Side panel open/close state
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const navigate = useNavigate();
 
-    // Apply theme to document root on change
+    // --- Theme Effect ---
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
     }, [theme]);
 
-    // Toggle theme and persist to localStorage
+    // --- Theme Toggle ---
     const toggleTheme = () => {
         const newTheme = theme === 'dark' ? 'light' : 'dark';
         setTheme(newTheme);
         localStorage.setItem('vqm-game-theme', newTheme);
     };
 
-    // Toggle side panel open/close
+    // --- Panel Toggle ---
     const togglePanel = () => setIsPanelOpen(open => !open);
 
-    // List of games to display
+    // --- Game List ---
     const games = [
         {
             title: 'Mouse Stalker',
@@ -107,8 +103,8 @@ const HomePage = () => {
         },
     ];
 
+    // --- Render ---
     return (
-        // Main layout with side panel and content
         <div className={`app-layout ${isPanelOpen ? 'panel-open' : 'panel-closed'}`}>
             {/* Side navigation panel */}
             <SidePanel
@@ -118,7 +114,7 @@ const HomePage = () => {
                 togglePanel={togglePanel}
             />
             <div className="main-content">
-                {/* Header with toggle button and title */}
+                {/* Header */}
                 <header className="main-header">
                     <button
                         onClick={togglePanel}
@@ -156,6 +152,10 @@ const HomePage = () => {
                 </div>
             </div>
         </div>
+    );
+};
+
+export default HomePage;
     );
 };
 

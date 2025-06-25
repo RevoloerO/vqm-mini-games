@@ -6,7 +6,18 @@ function draw() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.translate(50, 50);
 
-        //headshape
+         // Draw horn 
+        ctx.strokeStyle = `hsl(130, 80%, 20%)`;
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-5, -17, -30, -15);
+        ctx.quadraticCurveTo(-9, -10, -7, 0);
+        ctx.quadraticCurveTo(-9, 10, -30, 15);
+        ctx.quadraticCurveTo(-5, 17, 0, 0);
+        ctx.fill();
+        ctx.stroke();
+        // Draw head shape
         ctx.strokeStyle = `hsl(130, 80%, 20%)`;
         ctx.fillStyle = `hsl(130, 70%, 50%)`;
         var cheekX = 7;
@@ -22,10 +33,12 @@ function draw() {
         ctx.lineTo(-4, -9);
 
         ctx.quadraticCurveTo(-15, -13, -9, -3);
-        ctx.quadraticCurveTo(-17, -2, -22, 0);
+        ctx.lineTo(-7, -2);
+        ctx.quadraticCurveTo(-10, -4, -22, 0);
         // ctx.lineTo(-5, -15);
         //left face
-        ctx.quadraticCurveTo(-17, 2, -9, 3);
+        ctx.quadraticCurveTo(-10, 4, -7, 2);
+        ctx.lineTo(-9, 3);
         ctx.quadraticCurveTo(-15, 13, -4, 9);
         ctx.lineTo(-7, 13);
         ctx.quadraticCurveTo(-1, 12, 0, 10);
@@ -35,28 +48,60 @@ function draw() {
         ctx.lineTo(22, 0);
         ctx.fill();
         ctx.stroke();
-        /*
-        ctx.beginPath();
-        ctx.moveTo(8, -5);
-        ctx.lineTo(18, -3);
-        ctx.lineTo(18, 3);
-        ctx.lineTo(8, 5);
-        ctx.fill();
-        ctx.stroke();*/
         //
 
         // Draw eyes
+        // right eye
         ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.moveTo(-7, -13);
-        ctx.quadraticCurveTo(0, -5, 5, -3);
+        ctx.quadraticCurveTo(-3, -5, 5, -3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-7, -13);
         ctx.moveTo(-3, -8);
-        ctx.quadraticCurveTo(0, -6, 2, -4);
-        ctx.quadraticCurveTo(2, -4, -6.5, -6);
+        ctx.quadraticCurveTo(2, -9, 2, -4);
         ctx.fill();
+        // left eye
+        ctx.beginPath();
+        ctx.moveTo(-7, 13);
+        ctx.quadraticCurveTo(-3, 5, 5, 3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-7, 13);
+        ctx.moveTo(-3, 8);
+        ctx.quadraticCurveTo(2, 9, 2, 4);
+        ctx.fill();
+        //draw eyebrows
+        ctx.beginPath();
+        ctx.fillStyle = `hsl(130, 80%, 20%)`;
+        ctx.moveTo(2, -4);
+        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
+        ctx.moveTo(4.5, -3);
+        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(2, 4);
+        ctx.quadraticCurveTo(-1, 2, -6.5, 6);
+        ctx.moveTo(4.5, 3);
+        ctx.quadraticCurveTo(-1, 2, -6.5, 6);
+        ctx.stroke();
+        // Draw nose
+        ctx.beginPath();
+        ctx.moveTo(19, -4);
+        ctx.quadraticCurveTo(13, -3.5, 17, -1);
+        ctx.moveTo(19, 4);
+        ctx.quadraticCurveTo(13, 3.5, 17, 1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(20, -1);
+        ctx.lineTo(18, -3);
+        //ctx.quadraticCurveTo(15,-4, 16, -3);
+        ctx.stroke();
 
-        // Draw whiskers
+        // Draw swhiskers
         ctx.strokeStyle = `hsl(130, 40%, 30%)`;
+        ctx.lineWidth = 1.5 / headScale;
         // Left whiskers
         ctx.beginPath();
         ctx.moveTo(18, -2);
@@ -67,6 +112,7 @@ function draw() {
         ctx.moveTo(18, 2);
         ctx.bezierCurveTo(25, 5, 25, 15, 15, 20);
         ctx.stroke();
+
 
         ctx.fillStyle = 'red';
         ctx.beginPath();

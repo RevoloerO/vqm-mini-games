@@ -77,10 +77,12 @@ export const SKINS = {
         ctx.lineTo(-4, -9);
 
         ctx.quadraticCurveTo(-15, -13, -9, -3);
-        ctx.quadraticCurveTo(-17, -2, -22, 0);
+        ctx.lineTo(-7, -2);
+        ctx.quadraticCurveTo(-10, -4, -22, 0);
         // ctx.lineTo(-5, -15);
         //left face
-        ctx.quadraticCurveTo(-17, 2, -9, 3);
+        ctx.quadraticCurveTo(-10, 4, -7, 2);
+        ctx.lineTo(-9, 3);
         ctx.quadraticCurveTo(-15, 13, -4, 9);
         ctx.lineTo(-7, 13);
         ctx.quadraticCurveTo(-1, 12, 0, 10);
@@ -127,6 +129,18 @@ export const SKINS = {
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
         ctx.moveTo(4.5, 3);
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
+        ctx.stroke();
+        // Draw nose
+        ctx.beginPath();
+        ctx.moveTo(19, -4);
+        ctx.quadraticCurveTo(13, -3.5, 17, -1);
+        ctx.moveTo(19, 4);
+        ctx.quadraticCurveTo(13, 3.5, 17, 1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(20, -1);
+        ctx.lineTo(18, -3);
+        //ctx.quadraticCurveTo(15,-4, 16, -3);
         ctx.stroke();
 
         // Draw swhiskers

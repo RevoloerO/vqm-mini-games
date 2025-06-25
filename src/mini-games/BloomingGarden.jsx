@@ -12,6 +12,7 @@ const FLOWER_TYPES = 6;
 // --- Helper Functions ---
 const createEmptyBoard = () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
 
+// Pathfinding for flower movement
 const findPath = (start, end, board) => {
   if (board[start.r][start.c] === 0 || board[end.r][end.c] !== 0) return null;
   const queue = [[start]];
@@ -37,6 +38,7 @@ const findPath = (start, end, board) => {
   return null;
 };
 
+// Check for matching lines of flowers
 const checkForMatches = (board) => {
     const matchedTiles = new Set();
     const directions = [ { dr: 0, dc: 1 }, { dr: 1, dc: 0 }, { dr: 1, dc: 1 }, { dr: 1, dc: -1 } ];
@@ -66,7 +68,7 @@ const checkForMatches = (board) => {
     return Array.from(matchedTiles).map(s => { const [r, c] = s.split('-').map(Number); return { r, c }; });
 };
 
-// --- New Flower Component ---
+// --- Flower Component ---
 const Flower = ({ type, isSelected, isBursting }) => {
     const classNames = `flower flower-${type} ${isSelected ? 'selected' : ''} ${isBursting ? 'burst' : ''}`;
     return <div className={classNames}><span></span></div>;
@@ -74,26 +76,29 @@ const Flower = ({ type, isSelected, isBursting }) => {
 
 // --- Main Game Component ---
 const BloomingGarden = () => {
+  // --- State ---
   const [board, setBoard] = useState(createEmptyBoard);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
   const [nextFlowers, setNextFlowers] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
-  
-  // --- ADDED THIS USE EFFECT HOOK ---
+
+  // --- Theme Sync ---
   useEffect(() => {
-    // Read the theme from localStorage and apply it to the document
+    // Sync theme from localStorage
     const savedTheme = localStorage.getItem('vqm-game-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []); // The empty array ensures this runs only once when the component loads
+  }, []);
 
+  // --- Flower Generation ---
   const generateNextFlowers = useCallback(() => {
     const newNext = Array.from({ length: FLOWERS_TO_SPAWN }, () => Math.ceil(Math.random() * FLOWER_TYPES));
     setNextFlowers(newNext);
     return newNext;
   }, []);
 
+  // --- Flower Spawning ---
   const spawnFlowers = useCallback((currentBoard, flowersToSpawn) => {
     const newBoard = currentBoard.map(row => [...row]);
     const emptyTiles = [];
@@ -113,6 +118,7 @@ const BloomingGarden = () => {
     return newBoard;
   }, []);
   
+  // --- Match Processing ---
   const processMatches = useCallback(async (boardWithMatches) => {
     setIsProcessing(true);
     const matches = checkForMatches(boardWithMatches);
@@ -137,6 +143,7 @@ const BloomingGarden = () => {
     return await processMatches(clearedBoard);
   }, []);
   
+  // --- Tile Click Handler ---
   const handleTileClick = useCallback(async (r, c) => {
     if (isProcessing || isGameOver) return;
 
@@ -170,6 +177,7 @@ const BloomingGarden = () => {
     }
   }, [board, isProcessing, isGameOver, selected, spawnFlowers, generateNextFlowers, processMatches, nextFlowers]);
   
+  // --- Game Reset ---
   const resetGame = useCallback(() => {
     const initialFlowers = generateNextFlowers();
     const newBoard = spawnFlowers(createEmptyBoard(), initialFlowers);
@@ -181,18 +189,22 @@ const BloomingGarden = () => {
     setIsProcessing(false);
   }, [spawnFlowers, generateNextFlowers]);
 
+  // --- Initial Game Setup ---
   useEffect(() => {
     resetGame();
   }, [resetGame]);
 
+  // --- Render ---
   return (
     <div className="blooming-garden-container">
+      {/* Top UI: Back, Score, Reset */}
       <div className="blooming-garden-ui top">
         <Link to="/vqm-mini-games" className="garden-back-button"><ArrowLeft size={16} /> Back</Link>
         <div className="garden-score-box">Score: <span>{score}</span></div>
         <button onClick={resetGame} className="garden-reset-button"><RefreshCw size={16} /></button>
       </div>
 
+      {/* Game Board */}
       <div className="garden-board-perspective">
         <div className="garden-board">
           {board.map((row, r) => (
@@ -213,6 +225,7 @@ const BloomingGarden = () => {
         </div>
       </div>
       
+      {/* Bottom UI: Next Flowers */}
       <div className="blooming-garden-ui bottom">
           <div className="next-flowers-box">
               <span>Next:</span>
@@ -222,6 +235,7 @@ const BloomingGarden = () => {
           </div>
       </div>
 
+      {/* Game Over Overlay */}
       {isGameOver && (
           <div className="game-over-overlay">
               <div className="game-over-box">
