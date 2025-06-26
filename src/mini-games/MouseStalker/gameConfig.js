@@ -14,7 +14,7 @@ export const GAME_CONFIG = {
 };
 
 export const SKINS = {
-    default: (ctx, segments, targetPos) => {
+    dragon: (ctx, segments, targetPos) => {
         const head = segments[0];
         if (!head) return;
         for (let i = segments.length - 1; i > 0; i--) {
@@ -160,100 +160,117 @@ export const SKINS = {
         ctx.restore();
     },
     snake: (ctx, segments) => {
-        if (segments.length === 0) return;
+    if (segments.length < 2) return;
 
-        // Draw body
-        for (let i = 1; i < segments.length; i++) {
-            const segment = segments[i];
-            const prevSegment = segments[i - 1];
-            const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x, segment.y);
-            gradient.addColorStop(0, '#38a3a5');
-            gradient.addColorStop(1, '#57cc99');
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(segment.x, segment.y, segment.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-        // Draw head
-        const head = segments[0];
-        ctx.fillStyle = '#38a3a5';
+    // Draw body with a gradient
+    for (let i = 1; i < segments.length; i++) {
+        const segment = segments[i];
+        const prevSegment = segments[i - 1];
+        
+        const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x, segment.y);
+        gradient.addColorStop(0, '#38a3a5'); // Teal
+        gradient.addColorStop(1, '#80ed99'); // Light Green
+
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = segment.size * 2; // Use lineWidth for thickness
         ctx.beginPath();
-        ctx.arc(head.x, head.y, head.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Draw eyes
-        const angle = Math.atan2(segments[1].y - head.y, segments[1].x - head.x);
-        ctx.save();
-        ctx.translate(head.x, head.y);
-        ctx.rotate(angle + Math.PI); // Rotate to face forward
-
-        const eyeOffsetX = head.size * 0.5;
-        const eyeOffsetY = head.size * 0.5;
-        const eyeRadius = head.size * 0.2;
-
-        ctx.fillStyle = 'white';
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX, -eyeOffsetY, eyeRadius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX + eyeRadius * 0.2, -eyeOffsetY, eyeRadius * 0.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX + eyeRadius * 0.2, eyeOffsetY, eyeRadius * 0.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-    },
-    ghost: (ctx, segments) => {
-        if (segments.length === 0) return;
-
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        for (let i = segments.length - 1; i > 0; i--) {
-            const segment = segments[i];
-            const prevSegment = segments[i - 1];
-            const opacity = (i / segments.length) * 0.5;
-
-            ctx.strokeStyle = `rgba(236, 239, 241, ${opacity})`;
-            ctx.lineWidth = segment.size * 2;
-            ctx.beginPath();
-            ctx.moveTo(prevSegment.x, prevSegment.y);
-            ctx.lineTo(segment.x, segment.y);
-            ctx.stroke();
-        }
-
-        // Draw head
-        const head = segments[0];
-        ctx.fillStyle = 'rgba(236, 239, 241, 0.8)';
-        ctx.beginPath();
-        ctx.arc(head.x, head.y, head.size, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Draw eyes
-        const angle = Math.atan2(segments[1].y - head.y, segments[1].x - head.x);
-        ctx.save();
-        ctx.translate(head.x, head.y);
-        ctx.rotate(angle + Math.PI);
-
-        const eyeOffsetX = head.size * 0.4;
-        const eyeOffsetY = head.size * 0.5;
-        const eyeRadius = head.size * 0.25;
-
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX, -eyeOffsetY, eyeRadius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
+        ctx.moveTo(prevSegment.x, prevSegment.y);
+        ctx.lineTo(segment.x, segment.y);
+        ctx.stroke();
     }
+
+    // Draw head
+    const head = segments[0];
+    const next_seg = segments[1];
+    ctx.fillStyle = '#38a3a5';
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, head.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw eyes
+    const angle = Math.atan2(next_seg.y - head.y, next_seg.x - head.x);
+    ctx.save();
+    ctx.translate(head.x, head.y);
+    ctx.rotate(angle + Math.PI);
+
+    const eyeOffsetX = head.size * 0.5;
+    const eyeOffsetY = head.size * 0.5;
+    const eyeRadius = head.size * 0.2;
+
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(eyeOffsetX, -eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(eyeOffsetX + eyeRadius * 0.2, -eyeOffsetY, eyeRadius * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(eyeOffsetX + eyeRadius * 0.2, eyeOffsetY, eyeRadius * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  },
+  ghost: (ctx, segments) => {
+    if (segments.length === 0) return;
+  
+    // Set up properties for the ghost trail
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(236, 239, 241, 0.7)'; // White shadow for glow
+    
+    // Draw the tail with blur and decreasing opacity
+    for (let i = segments.length - 1; i > 0; i--) {
+      const segment = segments[i];
+      const prevSegment = segments[i-1];
+      const opacity = (i / segments.length) * 0.4; // Make it more transparent
+      
+      ctx.strokeStyle = `rgba(236, 239, 241, ${opacity})`;
+      ctx.lineWidth = segment.size * 2;
+      ctx.shadowBlur = segment.size * 2; // Add blur based on size
+      
+      ctx.beginPath();
+      ctx.moveTo(prevSegment.x, prevSegment.y);
+      ctx.lineTo(segment.x, segment.y);
+      ctx.stroke();
+    }
+  
+    // Reset shadow for the head
+    ctx.shadowBlur = 0;
+
+    // Draw head
+    const head = segments[0];
+    const next_seg = segments[1];
+    ctx.fillStyle = 'rgba(236, 239, 241, 0.8)';
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, head.size, 0, 2 * Math.PI);
+    ctx.fill();
+  
+    // Draw eyes
+    const angle = Math.atan2(next_seg.y - head.y, next_seg.x - head.x);
+    ctx.save();
+    ctx.translate(head.x, head.y);
+    ctx.rotate(angle + Math.PI);
+    
+    const eyeOffsetX = head.size * 0.4;
+    const eyeOffsetY = head.size * 0.5;
+    const eyeRadius = head.size * 0.25;
+
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(eyeOffsetX, -eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  }
 };

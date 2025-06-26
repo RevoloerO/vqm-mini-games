@@ -19,7 +19,7 @@ export const useDragonGame = () => {
 
   // --- React State (for UI that needs to re-render) ---
   const [score, setScore] = useState(0);
-  const [activeSkin, setActiveSkin] = useState('default');
+  const [activeSkin, setActiveSkin] = useState('dragon'); // Changed default to 'dragon'
   const [isWandering, setIsWandering] = useState(false);
 
   // --- Wandering Logic ---
