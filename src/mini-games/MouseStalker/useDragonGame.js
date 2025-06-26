@@ -1,5 +1,5 @@
-// useDragonGame: Custom React hook for the Mouse Stalker mini-game
-// Manages dragon state, movement, wandering, fruit spawning, and rendering
+// useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
+// Manages game state efficiently using useRef for animations and useState for UI updates.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
@@ -8,6 +8,7 @@ import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
 export const useDragonGame = () => {
   // --- Refs for Canvas and Game State ---
   const canvasRef = useRef(null);
+  const segmentsRef = useRef([]); // Use ref for game state to prevent re-renders
   const mousePosition = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const wanderTarget = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const wanderVelocity = useRef({ vx: 0, vy: 0 });
@@ -16,9 +17,9 @@ export const useDragonGame = () => {
   const idleTimerId = useRef(null);
   const wanderChangeTimerId = useRef(null);
 
-  // --- React State ---
+  // --- React State (for UI that needs to re-render) ---
+  const [score, setScore] = useState(0);
   const [activeSkin, setActiveSkin] = useState('default');
-  const [dragonState, setDragonState] = useState({ segments: [] });
   const [isWandering, setIsWandering] = useState(false);
 
   // --- Wandering Logic ---
@@ -26,17 +27,14 @@ export const useDragonGame = () => {
     if (isWandering) return;
     setIsWandering(true);
 
-    // Set wander target to dragon head if available
-    if (dragonState.segments.length > 0) {
-      wanderTarget.current = { x: dragonState.segments[0].x, y: dragonState.segments[0].y };
+    if (segmentsRef.current.length > 0) {
+      wanderTarget.current = { x: segmentsRef.current[0].x, y: segmentsRef.current[0].y };
     }
 
-    // Randomize wander direction and speed
     const angle = Math.random() * 2 * Math.PI;
     const speed = 1 + Math.random() * 2;
     wanderVelocity.current = { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
 
-    // Periodically change wander direction
     const changeCourse = () => {
       const angleChange = (Math.random() - 0.5) * 1.5;
       const currentAngle = Math.atan2(wanderVelocity.current.vy, wanderVelocity.current.vx);
@@ -47,7 +45,7 @@ export const useDragonGame = () => {
       wanderChangeTimerId.current = setTimeout(changeCourse, nextChangeDelay);
     };
     changeCourse();
-  }, [dragonState.segments, isWandering]);
+  }, [isWandering]);
 
   const stopWandering = useCallback(() => {
     setIsWandering(false);
@@ -56,18 +54,17 @@ export const useDragonGame = () => {
 
   // --- Game Initialization ---
   const initGame = useCallback(() => {
-    const initialSegments = Array.from({ length: GAME_CONFIG.numInitialSegments }, () => ({
+    segmentsRef.current = Array.from({ length: GAME_CONFIG.numInitialSegments }, () => ({
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
       size: GAME_CONFIG.initialSize,
     }));
-    setDragonState({ segments: initialSegments });
+    setScore(segmentsRef.current.length);
     fruits.current = [];
   }, []);
 
   // --- Main Effect: Handles Game Loop, Events, and Rendering ---
   useEffect(() => {
-    // Set theme from localStorage
     const savedTheme = localStorage.getItem('vqm-game-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -75,7 +72,6 @@ export const useDragonGame = () => {
     const ctx = canvas.getContext('2d');
     let lastFruitSpawn = Date.now();
 
-    // Resize canvas to window size
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -85,25 +81,20 @@ export const useDragonGame = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Initialize dragon if not present
-    if (dragonState.segments.length === 0) {
+    if (segmentsRef.current.length === 0) {
       initGame();
     }
 
-    // Mouse movement: update position and reset idle timer
     const handleMouseMove = (e) => {
       mousePosition.current = { x: e.clientX, y: e.clientY };
       if (isWandering) stopWandering();
-
       clearTimeout(idleTimerId.current);
       idleTimerId.current = setTimeout(startWandering, 5000);
     };
 
-    // Start idle timer for wandering
     idleTimerId.current = setTimeout(startWandering, 5000);
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Fruit spawning logic
     const spawnFruit = () => {
       const rand = Math.random();
       let fruitType;
@@ -113,17 +104,14 @@ export const useDragonGame = () => {
       fruits.current.push({ ...fruitType, x: Math.random() * canvas.width, y: Math.random() * canvas.height, createdAt: Date.now() });
     };
 
-    // --- Main Game Loop ---
     const gameLoop = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Determine leader (mouse or wander target)
       let leader;
       if (isWandering) {
         wanderTarget.current.x += wanderVelocity.current.vx;
         wanderTarget.current.y += wanderVelocity.current.vy;
 
-        // Bounce off canvas edges
         if (wanderTarget.current.x < 0 || wanderTarget.current.x > canvas.width) {
           wanderVelocity.current.vx *= -1 * (0.9 + Math.random() * 0.2);
         }
@@ -135,9 +123,8 @@ export const useDragonGame = () => {
         leader = mousePosition.current;
       }
 
-      const currentSegments = dragonState.segments;
+      const currentSegments = segmentsRef.current;
 
-      // Move each dragon segment towards the leader
       currentSegments.forEach((segment) => {
         const dx = leader.x - segment.x;
         const dy = leader.y - segment.y;
@@ -146,37 +133,34 @@ export const useDragonGame = () => {
         leader = segment;
       });
 
-      // Draw dragon using the active skin
       const drawSkin = SKINS[activeSkin];
       if (drawSkin && currentSegments.length > 0) {
         drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current);
       }
 
-      // Spawn fruits periodically, limit to 8
       if (Date.now() - lastFruitSpawn > GAME_CONFIG.fruitSpawnRate && fruits.current.length < 8) {
         spawnFruit();
         lastFruitSpawn = Date.now();
       }
       fruits.current = fruits.current.filter(f => Date.now() - f.createdAt < f.lifespan);
 
-      // Draw fruits with effects
       fruits.current.forEach((fruit) => {
         if (fruit.type === 'EPIC') {
-          const lifePercent = (Date.now() - fruit.createdAt) / 1000;
-          const rippleRadius = fruit.size + (lifePercent * 15) % 20;
-          const rippleOpacity = 1 - ((rippleRadius - fruit.size) / 20);
-          ctx.strokeStyle = `rgba(255, 159, 243, ${rippleOpacity * 0.7})`;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(fruit.x, fruit.y, rippleRadius, 0, Math.PI * 2);
-          ctx.stroke();
-          if (Math.floor(timestamp / 200) % 2) return;
+            const lifePercent = (Date.now() - fruit.createdAt) / 1000;
+            const rippleRadius = fruit.size + (lifePercent * 15) % 20;
+            const rippleOpacity = 1 - ((rippleRadius - fruit.size) / 20);
+            ctx.strokeStyle = `rgba(255, 159, 243, ${rippleOpacity * 0.7})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(fruit.x, fruit.y, rippleRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            if (Math.floor(timestamp / 200) % 2) return;
         } else if (fruit.type === 'RARE') {
-          ctx.shadowBlur = 15 + (Math.abs(Math.sin(timestamp / 300)) * 10);
-          ctx.shadowColor = fruit.color;
+            ctx.shadowBlur = 15 + (Math.abs(Math.sin(timestamp / 300)) * 10);
+            ctx.shadowColor = fruit.color;
         } else {
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = fruit.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = fruit.color;
         }
         ctx.fillStyle = fruit.color;
         ctx.beginPath();
@@ -185,7 +169,6 @@ export const useDragonGame = () => {
         ctx.shadowBlur = 0;
       });
 
-      // Check for fruit collision with dragon head
       fruits.current.forEach((fruit, fruitIndex) => {
         const head = currentSegments[0];
         if (!head) return;
@@ -194,31 +177,28 @@ export const useDragonGame = () => {
           fruits.current.splice(fruitIndex, 1);
           const bonus = Math.floor(Math.random() * (fruit.maxBonus - fruit.minBonus + 1)) + fruit.minBonus;
           
-          // Add new segments for score
           for (let i = 0; i < bonus; i++) {
             currentSegments.push({ ...currentSegments[currentSegments.length - 1] });
           }
 
-          // Determine growth factor based on score (length)
-          const score = currentSegments.length;
+          const currentScore = currentSegments.length;
           let growthFactor;
-          if (score < 500) {
+          if (currentScore < 500) {
             growthFactor = 0.1;
-          } else if (score < 1000) {
-            growthFactor = 0.05; // Slower growth after 500
+          } else if (currentScore < 1000) {
+            growthFactor = 0.05;
           } else {
-            growthFactor = 0.02; // Even slower growth after 1000
+            growthFactor = 0.02;
           }
 
-          // Apply growth to each segment
           currentSegments.forEach(seg => {
             if (seg.size < GAME_CONFIG.maxSize) {
-                // Ensure size doesn't exceed maxSize
                 seg.size = Math.min(GAME_CONFIG.maxSize, seg.size + bonus * growthFactor);
             }
           });
           
-          setDragonState({ segments: [...currentSegments] });
+          // Only update the score state, not the entire segments array
+          setScore(currentScore);
         }
       });
 
@@ -227,7 +207,6 @@ export const useDragonGame = () => {
 
     animationFrameId.current = requestAnimationFrame(gameLoop);
 
-    // --- Cleanup ---
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', resizeCanvas);
@@ -235,8 +214,7 @@ export const useDragonGame = () => {
       clearTimeout(wanderChangeTimerId.current);
       cancelAnimationFrame(animationFrameId.current);
     };
-  }, [activeSkin, dragonState.segments, initGame, isWandering, startWandering, stopWandering]);
+  }, [activeSkin, initGame, isWandering, startWandering, stopWandering]);
 
-  // --- Expose API ---
-  return { canvasRef, dragonState, activeSkin, setActiveSkin };
+  return { canvasRef, score, activeSkin, setActiveSkin };
 };
