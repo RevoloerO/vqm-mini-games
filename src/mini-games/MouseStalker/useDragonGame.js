@@ -193,12 +193,31 @@ export const useDragonGame = () => {
         if (dist < head.size + fruit.size) {
           fruits.current.splice(fruitIndex, 1);
           const bonus = Math.floor(Math.random() * (fruit.maxBonus - fruit.minBonus + 1)) + fruit.minBonus;
+          
+          // Add new segments for score
           for (let i = 0; i < bonus; i++) {
             currentSegments.push({ ...currentSegments[currentSegments.length - 1] });
           }
+
+          // Determine growth factor based on score (length)
+          const score = currentSegments.length;
+          let growthFactor;
+          if (score < 500) {
+            growthFactor = 0.1;
+          } else if (score < 1000) {
+            growthFactor = 0.05; // Slower growth after 500
+          } else {
+            growthFactor = 0.02; // Even slower growth after 1000
+          }
+
+          // Apply growth to each segment
           currentSegments.forEach(seg => {
-            if (seg.size < GAME_CONFIG.maxSize) seg.size += bonus * 0.1;
+            if (seg.size < GAME_CONFIG.maxSize) {
+                // Ensure size doesn't exceed maxSize
+                seg.size = Math.min(GAME_CONFIG.maxSize, seg.size + bonus * growthFactor);
+            }
           });
+          
           setDragonState({ segments: [...currentSegments] });
         }
       });
