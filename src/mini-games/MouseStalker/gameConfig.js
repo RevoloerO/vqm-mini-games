@@ -169,7 +169,7 @@ export const SKINS = {
         ctx.moveTo(15.3, 3);
         ctx.quadraticCurveTo(10, 2, 5, 6);
         ctx.stroke();
-        ctx.endPath();
+    
 
         // Draw whiskers
         ctx.strokeStyle = `hsl(130, 40%, 30%)`;
