@@ -1,6 +1,6 @@
 // useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
 // Manages game state efficiently using useRef for animations and useState for UI updates.
-// NEW: Includes a trailing spore effect for the dragon skin.
+// NEW: Includes a trailing spore effect for the dragon skin and a wisp effect for the ghost skin.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
@@ -15,7 +15,8 @@ export const useDragonGame = () => {
   const wanderVelocity = useRef({ vx: 0, vy: 0 });
   const fruits = useRef([]);
   const particles = useRef([]); 
-  const dragonSpores = useRef([]); // NEW: Particles for dragon skin effect
+  const dragonSpores = useRef([]);
+  const ghostWisps = useRef([]); // NEW: Particles for the reworked ghost skin
   const clouds = useRef([]); 
   const animationFrameId = useRef(null);
   const idleTimerId = useRef(null);
@@ -63,7 +64,8 @@ export const useDragonGame = () => {
     setScore(segmentsRef.current.length);
     fruits.current = [];
     particles.current = [];
-    dragonSpores.current = []; // Clear spores on init
+    dragonSpores.current = [];
+    ghostWisps.current = []; // NEW: Clear wisps on init
     const canvas = canvasRef.current;
     if (canvas) {
         clouds.current = Array.from({ length: 20 }, () => ({
@@ -295,33 +297,44 @@ export const useDragonGame = () => {
           ctx.fill();
       });
       
-      // NEW: Dragon Spore particles
+      // Dragon Spore particles
       if (activeSkin === 'dragon' && segmentsRef.current.length > 0) {
-        // Spawn new spores periodically from the tail
-        if (timestamp % 150 < 16.6) { // roughly every 150ms
+        if (timestamp % 150 < 16.6) {
             const tail = segmentsRef.current[segmentsRef.current.length - 1];
             dragonSpores.current.push({
-                x: tail.x,
-                y: tail.y,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5 - 0.2, // Tend to float up
-                alpha: 1,
-                size: 1 + Math.random() * 2,
-                decay: 0.01 + Math.random() * 0.01
+                x: tail.x, y: tail.y,
+                vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 - 0.2,
+                alpha: 1, size: 1 + Math.random() * 2, decay: 0.01 + Math.random() * 0.01
             });
         }
       }
       dragonSpores.current = dragonSpores.current.filter(s => s.alpha > 0);
       dragonSpores.current.forEach(spore => {
-          spore.x += spore.vx;
-          spore.y += spore.vy;
-          spore.alpha -= spore.decay;
-          
+          spore.x += spore.vx; spore.y += spore.vy; spore.alpha -= spore.decay;
           ctx.globalAlpha = spore.alpha;
-          ctx.fillStyle = `hsl(85, 100%, ${70 + spore.alpha * 30}%)`; // Golden-green
-          ctx.beginPath();
-          ctx.arc(spore.x, spore.y, spore.size, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.fillStyle = `hsl(85, 100%, ${70 + spore.alpha * 30}%)`;
+          ctx.beginPath(); ctx.arc(spore.x, spore.y, spore.size, 0, Math.PI * 2); ctx.fill();
+      });
+
+      // NEW: Ghost skin's "trailing tendrils of vapor"
+      if (activeSkin === 'ghost' && segmentsRef.current.length > 0) {
+          const head = segmentsRef.current[0];
+          if (timestamp % 100 < 16.6) { // Spawn rate
+              ghostWisps.current.push({
+                  x: head.x, y: head.y,
+                  vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
+                  alpha: 0.8, size: 1 + Math.random() * 2.5,
+                  decay: 0.02 + Math.random() * 0.02,
+                  color: `hsl(270, 100%, ${85 + Math.random() * 15}%)`
+              });
+          }
+      }
+      ghostWisps.current = ghostWisps.current.filter(w => w.alpha > 0);
+      ghostWisps.current.forEach(wisp => {
+          wisp.x += wisp.vx; wisp.y += wisp.vy; wisp.alpha -= wisp.decay;
+          ctx.globalAlpha = wisp.alpha;
+          ctx.fillStyle = wisp.color;
+          ctx.beginPath(); ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2); ctx.fill();
       });
 
       ctx.globalAlpha = 1; // Reset global alpha

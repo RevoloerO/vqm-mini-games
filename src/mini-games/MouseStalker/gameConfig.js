@@ -29,16 +29,12 @@ export const SKINS = {
             }
             const displaySize = segment.size * sizeScale;
             
-            // --- NEW: Shimmering Scales Effect ---
-            // The base hue is green (130), and it shifts by up to 30 degrees (into teal/yellow)
-            // The wave flows down the body based on the segment index (i) and time (timestamp)
             const shimmer = Math.sin(timestamp / 500 + i * 0.4) * 30;
             const shimmerHue = 130 + shimmer;
 
             const percent = (segments.length - i) / segments.length;
             const colorLightness = 50 - percent * 20;
 
-            // Use the new shimmering hue for the fill and stroke
             ctx.fillStyle = `hsl(${shimmerHue}, 70%, ${colorLightness}%)`;
             ctx.beginPath();
             ctx.arc(segment.x, segment.y, displaySize, 0, Math.PI * 2);
@@ -69,7 +65,6 @@ export const SKINS = {
             ctx.stroke();
         }
         
-        // Head drawing remains the same
         const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
         const headScale = head.size / 8;
         ctx.save();
@@ -218,7 +213,7 @@ export const SKINS = {
             ctx.lineTo(segment.x, segment.y);
             ctx.stroke();
         }
-const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
         const headScale = head.size / 8;
         ctx.save();
         ctx.translate(head.x, head.y);
@@ -369,44 +364,145 @@ const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
         ctx.fill();
         ctx.restore();
     },
-    ghost: (ctx, segments, timestamp) => {
-        if (segments.length === 0) return;
+    // --- UPDATED: Ghost skin with a center line for bone definition ---
+    ghost: (ctx, segments, targetPos, timestamp) => {
+        if (segments.length < 2) return;
+
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.shadowColor = 'rgba(236, 239, 241, 0.7)';
+
+        // --- 1. Draw Body: Smoky, ethereal, and threaded with veins ---
         for (let i = segments.length - 1; i > 0; i--) {
             const segment = segments[i];
             const prevSegment = segments[i - 1];
-            const opacity = (i / segments.length) * 0.4;
-            ctx.strokeStyle = `rgba(236, 239, 241, ${opacity})`;
-            ctx.lineWidth = segment.size * 2;
-            ctx.shadowBlur = segment.size * 2;
+
+            // "shadowy wisps that curl and vanish" between segments.
+            const wispOpacity = Math.max(0, 0.3 + Math.sin(timestamp / 300 + i * 0.5) * 0.3);
+            ctx.strokeStyle = `rgba(100, 80, 150, ${wispOpacity})`;
+            ctx.lineWidth = Math.random() * segment.size * 0.5;
             ctx.beginPath();
-            ctx.moveTo(prevSegment.x, prevSegment.y);
-            ctx.lineTo(segment.x, segment.y);
+            ctx.moveTo(prevSegment.x + (Math.random() - 0.5) * 20, prevSegment.y + (Math.random() - 0.5) * 20);
+            ctx.quadraticCurveTo(
+                (segment.x + prevSegment.x) / 2 + (Math.random() - 0.5) * 30,
+                (segment.y + prevSegment.y) / 2 + (Math.random() - 0.5) * 30,
+                segment.x + (Math.random() - 0.5) * 20,
+                segment.y + (Math.random() - 0.5) * 20
+            );
             ctx.stroke();
+
+            // --- Bone Shape Logic ---
+            const angle = Math.atan2(prevSegment.y - segment.y, prevSegment.x - segment.x);
+            
+            ctx.save();
+            ctx.translate(segment.x, segment.y);
+            ctx.rotate(angle);
+
+            const boneLength = segment.size * 1.8;
+            const boneWidth = segment.size * 0.9;
+
+            const gradient = ctx.createLinearGradient(-boneLength / 2, 0, boneLength / 2, 0);
+            gradient.addColorStop(0, 'rgba(210, 200, 255, 0)');
+            gradient.addColorStop(0.3, 'rgba(230, 230, 255, 0.6)');
+            gradient.addColorStop(0.7, 'rgba(230, 230, 255, 0.6)');
+            gradient.addColorStop(1, 'rgba(210, 200, 255, 0)');
+            ctx.fillStyle = gradient;
+
+            // Draw the capsule/bone shape
+            ctx.beginPath();
+            ctx.arc(-boneLength / 2, 0, boneWidth / 2, Math.PI * 0.5, Math.PI * 1.5);
+            ctx.arc(boneLength / 2, 0, boneWidth / 2, Math.PI * 1.5, Math.PI * 0.5);
+            ctx.closePath();
+            ctx.fill();
+
+            // NEW: Add a horizontal line for bone definition
+            ctx.strokeStyle = `rgba(230, 230, 255, 0.4)`; // A brighter, misty highlight
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-boneLength / 2, 0);
+            ctx.lineTo(boneLength / 2, 0);
+            ctx.stroke();
+
+            // "threaded with pale violet veins"
+            const veinCount = Math.floor(segment.size / 4);
+            ctx.strokeStyle = `rgba(180, 160, 255, 0.5)`;
+            ctx.lineWidth = 1 + Math.random();
+            ctx.lineCap = 'butt';
+            for (let j = 0; j < veinCount; j++) {
+                ctx.beginPath();
+                const startX = -boneLength / 2;
+                const endX = boneLength / 2;
+                const yOffset = (Math.random() - 0.5) * (boneWidth * 0.7);
+                ctx.moveTo(startX, yOffset);
+                ctx.quadraticCurveTo(0, yOffset + (Math.random() - 0.5) * boneWidth, endX, yOffset);
+                ctx.stroke();
+            }
+            ctx.lineCap = 'round';
+
+            ctx.restore();
         }
-        ctx.shadowBlur = 0;
+
+        // --- 2. Draw Head: A hollow skull-mask (remains the same) ---
         const head = segments[0];
-        const next_seg = segments[1];
-        ctx.fillStyle = 'rgba(236, 239, 241, 0.8)';
-        ctx.beginPath();
-        ctx.arc(head.x, head.y, head.size, 0, 2 * Math.PI);
-        ctx.fill();
-        const angle = Math.atan2(next_seg.y - head.y, next_seg.x - head.x);
+        const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const headScale = head.size / 8;
+
         ctx.save();
         ctx.translate(head.x, head.y);
-        ctx.rotate(angle + Math.PI);
-        const eyeOffsetX = head.size * 0.4;
-        const eyeOffsetY = head.size * 0.5;
-        const eyeRadius = head.size * 0.25;
-        ctx.fillStyle = 'black';
+        ctx.rotate(angle);
+        ctx.scale(headScale, headScale);
+
+        const spikeOpacity = 0.4 + Math.abs(Math.sin(timestamp / 150)) * 0.6;
+        ctx.strokeStyle = `rgba(230, 230, 255, ${spikeOpacity})`;
+        ctx.lineWidth = 1.5 / headScale;
         ctx.beginPath();
-        ctx.arc(eyeOffsetX, -eyeOffsetY, eyeRadius, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(-10, -12);
+        ctx.lineTo(-5, -22);
+        ctx.lineTo(0, -15);
+        ctx.lineTo(5, -25);
+        ctx.lineTo(10, -14);
+        ctx.lineTo(15, -20);
+        ctx.lineTo(20, -12);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(240, 240, 255, 0.8)';
+        ctx.strokeStyle = 'rgba(180, 160, 255, 0.7)';
+        ctx.lineWidth = 2 / headScale;
         ctx.beginPath();
-        ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+        ctx.moveTo(20, 0);
+        ctx.quadraticCurveTo(10, -18, -15, -15);
+        ctx.quadraticCurveTo(-25, -5, -25, 0);
+        ctx.quadraticCurveTo(-25, 5, -15, 15);
+        ctx.quadraticCurveTo(10, 18, 20, 0);
         ctx.fill();
+        ctx.stroke();
+
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 20 / headScale;
+        ctx.fillStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.arc(5, -6, 4, 0, Math.PI * 2);
+        ctx.arc(5, 6, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        const frillPulse = Math.sin(timestamp / 400) * 5;
+        ctx.fillStyle = `rgba(180, 160, 255, 0.2)`;
+        ctx.beginPath();
+        ctx.moveTo(-15, -15);
+        ctx.quadraticCurveTo(-30, -30 - frillPulse, -45, -10);
+        ctx.quadraticCurveTo(-25, 0, -45, 10);
+        ctx.quadraticCurveTo(-30, 30 + frillPulse, -15, 15);
+        ctx.closePath();
+        ctx.fill();
+
+        const starPulse = 1 + Math.sin(timestamp / 200) * 0.8;
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(-28, -15, starPulse, 0, Math.PI * 2);
+        ctx.arc(-35, 0, starPulse * 0.8, 0, Math.PI * 2);
+        ctx.arc(-29, 12, starPulse * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.restore();
-    }
+    },
 };
