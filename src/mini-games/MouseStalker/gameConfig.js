@@ -1,4 +1,3 @@
-
 export const FRUIT_TYPES = {
     NORMAL: { type: 'NORMAL', color: 'gold', size: 10, lifespan: Infinity, minBonus: 1, maxBonus: 1 },
     RARE: { type: 'RARE', color: '#48dbfb', size: 7, lifespan: 10000, minBonus: 3, maxBonus: 5 },
@@ -19,42 +18,57 @@ export const SKINS = {
         if (!head) return;
         for (let i = segments.length - 1; i > 0; i--) {
             const segment = segments[i];
+
+            // --- Tapering Logic ---
+            // This makes the dragon's body smaller towards the tail, starting from the middle.
+            let sizeScale = 1.0;
+            const midPoint = segments.length * 0.75;
+            if (i > midPoint) {
+                // 'i' is in the tail half of the body.
+                // Calculate 't' as a value from 0 (at the middle) to ~1 (at the tail).
+                const t = (i - midPoint) / (segments.length - midPoint);
+                const minScale = 0.1; // The tail will be 10% of the normal size.
+                sizeScale = 1 - t * (1 - minScale);
+            }
+            const displaySize = segment.size * sizeScale;
+            // --- End Tapering Logic ---
+
             const percent = (segments.length - i) / segments.length;
-            const colorLightness = 50 + percent * 20;
+            const colorLightness = 50 - percent * 20;
             ctx.fillStyle = `hsl(130, 70%, ${colorLightness}%)`;
             ctx.beginPath();
-            ctx.arc(segment.x, segment.y, segment.size, 0, Math.PI * 2);
+            ctx.arc(segment.x, segment.y, displaySize, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = `hsl(130, 80%, 20%)`;
-            ctx.strokeStyle = `hsl(130, 70%, 50%)`;
+            ctx.strokeStyle = `hsl(130, 70%, ${colorLightness}%)`;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.lineWidth = segment.size / 2;
+            ctx.lineWidth = displaySize / 2;
             ctx.beginPath();
             ctx.moveTo(segments[i - 1].x, segments[i - 1].y);
             ctx.lineTo(segment.x, segment.y);
             ctx.stroke();
             // Draw body with a gradient
             const prevSegment = segments[i - 1];
-            const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x, segment.y);
-            gradient.addColorStop(0, '#80ed99');
-            gradient.addColorStop(0.8, 'hsl(130, 70%, 50%)'); 
-            gradient.addColorStop(1, 'hsl(130, 80%, 20%)');
+            const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x - displaySize * Math.cos(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)), segment.y - displaySize * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
+            gradient.addColorStop(0, 'white');
+            gradient.addColorStop(0.2, `hsl(130, 70%, ${colorLightness}%)`);
+            gradient.addColorStop(0.7, `hsl(130, 70%, ${colorLightness}%)`); 
+            gradient.addColorStop(1, `hsl(130, 90%, ${colorLightness}%)`);
             
 
             ctx.strokeStyle = gradient;
-            ctx.lineWidth = segment.size * 2; // Use lineWidth for thickness
+            ctx.lineWidth = displaySize * 2; // Use lineWidth for thickness
             ctx.beginPath();
             ctx.moveTo(prevSegment.x, prevSegment.y);
             ctx.lineTo(segment.x, segment.y);
             ctx.stroke();
-            ``          // Draw fur segment 
-            ctx.strokeStyle = `hsl(130, 80%, 20%)`;
-            ctx.lineWidth = segment.size / 2;
+            // Draw fur segment 
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = displaySize / 2;
             ctx.beginPath();
             ctx.moveTo(segment.x, segment.y);
-            ctx.lineTo(segment.x - segment.size * Math.cos(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)),
-                segment.y - segment.size * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
+            ctx.lineTo(segment.x - displaySize * Math.cos(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)),
+                segment.y - displaySize * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
             ctx.stroke();
         }
         const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
