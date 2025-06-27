@@ -2,6 +2,8 @@ export const FRUIT_TYPES = {
     NORMAL: { type: 'NORMAL', color: 'gold', size: 10, lifespan: Infinity, minBonus: 1, maxBonus: 1 },
     RARE: { type: 'RARE', color: '#48dbfb', size: 7, lifespan: 10000, minBonus: 3, maxBonus: 5 },
     EPIC: { type: 'EPIC', color: '#ff9ff3', size: 5, lifespan: 3000, minBonus: 7, maxBonus: 10 },
+    // NEW: Legendary fruit with high reward and special properties
+    LEGENDARY: { type: 'LEGENDARY', color: '#FFFFFF', size: 12, lifespan: 5000, minBonus: 20, maxBonus: 30 },
 };
 
 export const GAME_CONFIG = {
