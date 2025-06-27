@@ -132,6 +132,7 @@ export const SKINS = {
         ctx.quadraticCurveTo(2, 9, 2, 4);
         ctx.fill();
         
+        
         ctx.beginPath();
         ctx.fillStyle = `hsl(130, 80%, 20%)`;
         ctx.moveTo(2, -4);
@@ -146,6 +147,7 @@ export const SKINS = {
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
         ctx.stroke();
         
+        // Draw nose
         ctx.beginPath();
         ctx.moveTo(19, -4);
         ctx.quadraticCurveTo(13, -3.5, 17, -1);
@@ -155,17 +157,32 @@ export const SKINS = {
         ctx.beginPath();
         ctx.moveTo(20, -1);
         ctx.lineTo(18, -3);
+        ctx.moveTo(20, 1);
+        ctx.lineTo(18, 3);
         ctx.stroke();
+        ctx.moveTo(8, -2.5);
+        ctx.quadraticCurveTo(6, 0, 8, 2.5);
+        ctx.moveTo(10, -2.5);
+        ctx.quadraticCurveTo(8, 0, 10, 2.5);
+        ctx.moveTo(15.3, -3);
+        ctx.quadraticCurveTo(10, -2, 5, -6);
+        ctx.moveTo(15.3, 3);
+        ctx.quadraticCurveTo(10, 2, 5, 6);
+        ctx.stroke();
+        ctx.endPath();
 
+        // Draw whiskers
         ctx.strokeStyle = `hsl(130, 40%, 30%)`;
         ctx.lineWidth = 1.5 / headScale;
         ctx.beginPath();
-        ctx.moveTo(18, -2);
-        ctx.bezierCurveTo(25, -5, 25, -15, 15, -20);
+        ctx.moveTo(16.5, -4);
+        ctx.bezierCurveTo(22, -10, 27, -1 ,29 , -7);
+        ctx.bezierCurveTo(28, -10,25, -7 ,27 , -6);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(18, 2);
-        ctx.bezierCurveTo(25, 5, 25, 15, 15, 20);
+        ctx.moveTo(16.5, 4);
+        ctx.bezierCurveTo(22, 10, 27, 1 ,29 , 7);
+        ctx.bezierCurveTo(28, 10,25, 7 ,27 , 6);
         ctx.stroke();
 
         ctx.restore();
@@ -303,6 +320,8 @@ export const SKINS = {
         ctx.beginPath();
         ctx.moveTo(20, -1);
         ctx.lineTo(18, -3);
+        ctx.moveTo(20, 1);
+        ctx.lineTo(18, 3);
         ctx.stroke();
 
         ctx.strokeStyle = `hsl(45, 100%, 50%)`;
