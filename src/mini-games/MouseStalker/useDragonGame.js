@@ -1,6 +1,6 @@
 // useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
 // Manages game state efficiently using useRef for animations and useState for UI updates.
-// NEW: Includes tiered particle effects, a dynamic background, and touch/mobile support.
+// NEW: Includes a trailing spore effect for the dragon skin.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
@@ -15,6 +15,7 @@ export const useDragonGame = () => {
   const wanderVelocity = useRef({ vx: 0, vy: 0 });
   const fruits = useRef([]);
   const particles = useRef([]); 
+  const dragonSpores = useRef([]); // NEW: Particles for dragon skin effect
   const clouds = useRef([]); 
   const animationFrameId = useRef(null);
   const idleTimerId = useRef(null);
@@ -62,6 +63,7 @@ export const useDragonGame = () => {
     setScore(segmentsRef.current.length);
     fruits.current = [];
     particles.current = [];
+    dragonSpores.current = []; // Clear spores on init
     const canvas = canvasRef.current;
     if (canvas) {
         clouds.current = Array.from({ length: 20 }, () => ({
@@ -144,29 +146,19 @@ export const useDragonGame = () => {
       initGame();
     }
 
-    // --- NEW: Unified handler for mouse and touch input ---
     const handlePointerInteraction = (e) => {
-      // Update target position on any pointer event (mouse, touch, pen)
       mousePosition.current = { x: e.clientX, y: e.clientY };
-
-      // If the dragon is wandering, user interaction should stop it.
       if (isWandering) {
         stopWandering();
       }
-
-      // Reset the idle timer. It will restart the wandering state after a period of inactivity.
       clearTimeout(idleTimerId.current);
       idleTimerId.current = setTimeout(startWandering, 5000);
     };
 
-    // Set the initial idle timer to start wandering
     idleTimerId.current = setTimeout(startWandering, 5000);
-    
-    // Listen for pointer events to support both mouse and touch
     window.addEventListener('pointerdown', handlePointerInteraction);
     window.addEventListener('pointermove', handlePointerInteraction);
 
-    // Spawn fruit with new probabilities
     const spawnFruit = () => {
       const rand = Math.random();
       let fruitType;
@@ -215,7 +207,7 @@ export const useDragonGame = () => {
       });
       const drawSkin = SKINS[activeSkin];
       if (drawSkin && currentSegments.length > 0) {
-        drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current);
+        drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current, timestamp);
       }
 
       // --- 3. Update and Draw Fruits ---
@@ -226,7 +218,7 @@ export const useDragonGame = () => {
       fruits.current = fruits.current.filter(f => Date.now() - f.createdAt < f.lifespan);
 
       fruits.current.forEach((fruit) => {
-        ctx.shadowBlur = 0; // Reset shadow
+        ctx.shadowBlur = 0;
         if (fruit.type === 'LEGENDARY') {
             const pulse = Math.abs(Math.sin(timestamp / 200)) * 5;
             const grad = ctx.createRadialGradient(fruit.x, fruit.y, 0, fruit.x, fruit.y, fruit.size + pulse);
@@ -287,7 +279,8 @@ export const useDragonGame = () => {
         }
       });
 
-      // --- 5. Update and Draw Particles ---
+      // --- 5. Update and Draw All Particle Systems ---
+      // Fruit particles
       particles.current = particles.current.filter(p => p.alpha > 0);
       particles.current.forEach(p => {
           p.x += p.vx;
@@ -301,7 +294,37 @@ export const useDragonGame = () => {
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fill();
       });
-      ctx.globalAlpha = 1;
+      
+      // NEW: Dragon Spore particles
+      if (activeSkin === 'dragon' && segmentsRef.current.length > 0) {
+        // Spawn new spores periodically from the tail
+        if (timestamp % 150 < 16.6) { // roughly every 150ms
+            const tail = segmentsRef.current[segmentsRef.current.length - 1];
+            dragonSpores.current.push({
+                x: tail.x,
+                y: tail.y,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5 - 0.2, // Tend to float up
+                alpha: 1,
+                size: 1 + Math.random() * 2,
+                decay: 0.01 + Math.random() * 0.01
+            });
+        }
+      }
+      dragonSpores.current = dragonSpores.current.filter(s => s.alpha > 0);
+      dragonSpores.current.forEach(spore => {
+          spore.x += spore.vx;
+          spore.y += spore.vy;
+          spore.alpha -= spore.decay;
+          
+          ctx.globalAlpha = spore.alpha;
+          ctx.fillStyle = `hsl(85, 100%, ${70 + spore.alpha * 30}%)`; // Golden-green
+          ctx.beginPath();
+          ctx.arc(spore.x, spore.y, spore.size, 0, Math.PI * 2);
+          ctx.fill();
+      });
+
+      ctx.globalAlpha = 1; // Reset global alpha
 
       animationFrameId.current = requestAnimationFrame(gameLoop);
     };
@@ -309,10 +332,8 @@ export const useDragonGame = () => {
     animationFrameId.current = requestAnimationFrame(gameLoop);
 
     return () => {
-      // Clean up the new pointer event listeners
       window.removeEventListener('pointerdown', handlePointerInteraction);
       window.removeEventListener('pointermove', handlePointerInteraction);
-      
       window.removeEventListener('resize', resizeCanvas);
       clearTimeout(idleTimerId.current);
       clearTimeout(wanderChangeTimerId.current);
