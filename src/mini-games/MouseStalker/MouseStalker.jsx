@@ -1,5 +1,6 @@
 // MouseStalker.jsx: Main component for the game.
 // Uses the optimized useDragonGame hook and renders the canvas and UI.
+// UPDATED: Replaced skin buttons with a dropdown select menu.
 
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -26,15 +27,18 @@ const MouseStalker = () => {
         </div>
         <div className="skin-selector">
           <Wand2 size={18} />
-          {Object.keys(SKINS).map((skinName) => (
-            <button
-              key={skinName}
-              className={`skin-button ${activeSkin === skinName ? 'active' : ''}`}
-              onClick={() => setActiveSkin(skinName)}
-            >
-              {skinName}
-            </button>
-          ))}
+          {/* NEW: Dropdown for skin selection */}
+          <select
+            className="skin-dropdown"
+            value={activeSkin}
+            onChange={(e) => setActiveSkin(e.target.value)}
+          >
+            {Object.keys(SKINS).map((skinName) => (
+              <option key={skinName} value={skinName}>
+                {skinName.replace('-', ' ')}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
