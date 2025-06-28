@@ -37,8 +37,8 @@ export const SKINS = {
             const shimmer = Math.sin(timestamp / 500 + i * 0.4) * 30;
             const shimmerHue = baseHue + shimmer;
 
-            const percent = (segments.length - i) / segments.length;
-            const colorLightness = 50 - percent * 20;
+            const percent = i / segments.length;
+            const colorLightness = 70 - percent * 40;
 
             ctx.fillStyle = `hsl(${shimmerHue}, 70%, ${colorLightness}%)`;
             ctx.beginPath();
@@ -178,24 +178,7 @@ export const SKINS = {
         ctx.moveTo(4.5, 3);
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
         ctx.stroke();
-        // --- Eye Animation Logic ---
-        if (!isWandering) {
-            // "Lock-on" glow effect when not wandering
-            const lockOnPulse = 2 + Math.sin(timestamp / 200) * 2;
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter'; // Additive blending for a nice glow
-            const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20 + lockOnPulse);
-            glowGradient.addColorStop(0, `hsla(0, 100.00%, 50.20%, 0.69)`);
-            glowGradient.addColorStop(0.7,`hsla(${baseHue}, 100%, 80%, 0.3)` );
-            glowGradient.addColorStop(1, `hsla(${baseHue}, 100%, 50%, 0)`);
-
-            ctx.fillStyle = glowGradient;
-            ctx.beginPath();
-            ctx.arc(0, 0, 20 + lockOnPulse, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.restore();
-        }
+        
         // --- Blinking Animation ---
         if (isWandering) {
             const timeInCycle = timestamp % 3500; // Blink cycle of 3.5 seconds
@@ -271,6 +254,24 @@ export const SKINS = {
         ctx.bezierCurveTo(28 + whiskerWiggleX, 10 - whiskerWiggleY, 25 + whiskerWiggleX, 7 - whiskerWiggleY, 27 + whiskerWiggleX, 6 - whiskerWiggleY);
         ctx.stroke();
 
+        // --- Eye Animation Logic ---
+        if (!isWandering) {
+            // "Lock-on" glow effect when not wandering
+            const lockOnPulse = 2 + Math.sin(timestamp / 200) * 2;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter'; // Additive blending for a nice glow
+            const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20 + lockOnPulse);
+            glowGradient.addColorStop(0, `hsla(0, 100.00%, 50.20%, 0.69)`);
+            glowGradient.addColorStop(0.7,`hsla(${baseHue}, 100%, 80%, 0.3)` );
+            glowGradient.addColorStop(1, `hsla(${baseHue}, 100%, 50%, 0)`);
+
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, 20 + lockOnPulse, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
         ctx.restore();
     },
     'fire-wyrm': (ctx, segments, targetPos, timestamp, isWandering) => {
