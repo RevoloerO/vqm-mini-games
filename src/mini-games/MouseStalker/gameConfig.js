@@ -14,11 +14,16 @@ export const GAME_CONFIG = {
 };
 
 export const SKINS = {
-    dragon: (ctx, segments, targetPos, timestamp) => {
+    dragon: (ctx, segments, targetPos, timestamp, isWandering) => {
         const head = segments[0];
         if (!head) return;
+
+        const baseHue = 130; // The classic green hue
+
+        // --- Body Segments ---
         for (let i = segments.length - 1; i > 0; i--) {
             const segment = segments[i];
+            const prevSegment = segments[i - 1];
 
             let sizeScale = 1.0;
             const midPoint = segments.length * 0.75;
@@ -28,9 +33,9 @@ export const SKINS = {
                 sizeScale = 1 - t * (1 - minScale);
             }
             const displaySize = segment.size * sizeScale;
-            
+
             const shimmer = Math.sin(timestamp / 500 + i * 0.4) * 30;
-            const shimmerHue = 130 + shimmer;
+            const shimmerHue = baseHue + shimmer;
 
             const percent = (segments.length - i) / segments.length;
             const colorLightness = 50 - percent * 20;
@@ -39,14 +44,13 @@ export const SKINS = {
             ctx.beginPath();
             ctx.arc(segment.x, segment.y, displaySize, 0, Math.PI * 2);
             ctx.fill();
-            
-            const prevSegment = segments[i - 1];
+
             const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x - displaySize * Math.cos(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)), segment.y - displaySize * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
             gradient.addColorStop(0, 'white');
-            gradient.addColorStop(0.2, `hsl(${shimmerHue}, 70%, ${colorLightness}%)`); 
-            gradient.addColorStop(0.7, `hsl(${shimmerHue}, 70%, ${colorLightness}%)`); 
+            gradient.addColorStop(0.2, `hsl(${shimmerHue}, 70%, ${colorLightness}%)`);
+            gradient.addColorStop(0.7, `hsl(${shimmerHue}, 70%, ${colorLightness}%)`);
             gradient.addColorStop(1, `hsl(${shimmerHue}, 90%, ${colorLightness}%)`);
-            
+
             ctx.strokeStyle = gradient;
             ctx.lineWidth = displaySize * 2;
             ctx.lineCap = 'round';
@@ -55,7 +59,7 @@ export const SKINS = {
             ctx.moveTo(prevSegment.x, prevSegment.y);
             ctx.lineTo(segment.x, segment.y);
             ctx.stroke();
-            
+
             ctx.strokeStyle = gradient;
             ctx.lineWidth = displaySize / 2;
             ctx.beginPath();
@@ -64,7 +68,8 @@ export const SKINS = {
                 segment.y - displaySize * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
             ctx.stroke();
         }
-        
+
+        // --- Head Drawing ---
         const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
         const headScale = head.size / 8;
         ctx.save();
@@ -72,8 +77,11 @@ export const SKINS = {
         ctx.rotate(angle);
         ctx.scale(headScale, headScale);
         ctx.lineWidth = 2 / headScale;
-        
-        ctx.strokeStyle = `hsl(130, 80%, 20%)`;
+
+        const darkOutlineColor = `hsl(${baseHue}, 80%, 20%)`;
+
+        // Draw the back frills/horns
+        ctx.strokeStyle = darkOutlineColor;
         ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -83,58 +91,82 @@ export const SKINS = {
         ctx.quadraticCurveTo(-5, 17, 0, 0);
         ctx.fill();
         ctx.stroke();
-        
-        ctx.strokeStyle = `hsl(130, 80%, 20%)`;
-        ctx.fillStyle = `hsl(130, 70%, 50%)`;
-        var cheekX = 7;
-        var cheekY = -7;
-        ctx.beginPath();
-        ctx.moveTo(22, 0);
-        ctx.lineTo(19, -4);
-        ctx.bezierCurveTo(cheekX - 2, cheekY + 3, cheekX + 2, cheekY - 4, 3, -10);
-        ctx.quadraticCurveTo(1, -14, -2, -16);
-        ctx.lineTo(0, -10);
-        ctx.quadraticCurveTo(-1, -12, -7, -13);
-        ctx.lineTo(-4, -9);
-        ctx.quadraticCurveTo(-15, -13, -9, -3);
-        ctx.lineTo(-7, -2);
-        ctx.quadraticCurveTo(-10, -4, -22, 0);
-        ctx.quadraticCurveTo(-10, 4, -7, 2);
-        ctx.lineTo(-9, 3);
-        ctx.quadraticCurveTo(-15, 13, -4, 9);
-        ctx.lineTo(-7, 13);
-        ctx.quadraticCurveTo(-1, 12, 0, 10);
-        ctx.lineTo(-2, 16);
-        ctx.quadraticCurveTo(1, 14, 3, 10);
-        ctx.bezierCurveTo(cheekX + 2, -cheekY + 4, cheekX - 2, -cheekY - 3, 19, 4);
-        ctx.lineTo(22, 0);
-        ctx.fill();
-        ctx.stroke();
 
+        // --- Main head shape with gradient layer ---
+        ctx.strokeStyle = darkOutlineColor;
+        const headGradient = ctx.createRadialGradient(5, 0, 1, 0, 0, 30);
+        headGradient.addColorStop(0, `hsl(${baseHue}, 70%, 65%)`);
+        headGradient.addColorStop(1, `hsl(${baseHue}, 70%, 50%)`);
+        ctx.fillStyle = headGradient;
+
+        const mainHeadPath = new Path2D();
+        mainHeadPath.moveTo(22, 0);
+        mainHeadPath.lineTo(19, -4);
+        const cheekX = 7;
+        const cheekY = -7;
+        mainHeadPath.bezierCurveTo(cheekX - 2, cheekY + 3, cheekX + 2, cheekY - 4, 3, -10);
+        mainHeadPath.quadraticCurveTo(1, -14, -2, -16);
+        mainHeadPath.lineTo(0, -10);
+        mainHeadPath.quadraticCurveTo(-1, -12, -7, -13);
+        mainHeadPath.lineTo(-4, -9);
+        mainHeadPath.quadraticCurveTo(-15, -13, -9, -3);
+        mainHeadPath.lineTo(-7, -2);
+        mainHeadPath.quadraticCurveTo(-10, -4, -22, 0);
+        mainHeadPath.quadraticCurveTo(-10, 4, -7, 2);
+        mainHeadPath.lineTo(-9, 3);
+        mainHeadPath.quadraticCurveTo(-15, 13, -4, 9);
+        mainHeadPath.lineTo(-7, 13);
+        mainHeadPath.quadraticCurveTo(-1, 12, 0, 10);
+        mainHeadPath.lineTo(-2, 16);
+        mainHeadPath.quadraticCurveTo(1, 14, 3, 10);
+        mainHeadPath.bezierCurveTo(cheekX + 2, -cheekY + 4, cheekX - 2, -cheekY - 3, 19, 4);
+        mainHeadPath.lineTo(22, 0);
+        ctx.fill(mainHeadPath);
+        ctx.stroke(mainHeadPath);
+
+        // --- Add extra highlight layer for scales ---
+        ctx.save();
+        ctx.clip(mainHeadPath);
+        const shimmer = Math.sin(timestamp / 400) * 5;
+        ctx.strokeStyle = `hsla(${baseHue}, 90%, ${75 + shimmer}%, 0.5)`;
+        ctx.lineWidth = 1.5 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(15, -3);
+        ctx.quadraticCurveTo(10, -8, 5, -9);
+        ctx.moveTo(15, 3);
+        ctx.quadraticCurveTo(10, 8, 5, 9);
+        ctx.moveTo(-5, -12);
+        ctx.quadraticCurveTo(-10, -8, -12, -2);
+        ctx.moveTo(-5, 12);
+        ctx.quadraticCurveTo(-10, 8, -12, 2);
+        ctx.stroke();
+        ctx.restore();
+
+        
+
+        // --- Static Eye Details ---
+        // Eye ridges
         ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.moveTo(-7, -13);
         ctx.quadraticCurveTo(-3, -5, 5, -3);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(-7, -13);
         ctx.moveTo(-3, -8);
         ctx.quadraticCurveTo(2, -9, 2, -4);
         ctx.fill();
-        
         ctx.beginPath();
         ctx.moveTo(-7, 13);
         ctx.quadraticCurveTo(-3, 5, 5, 3);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(-7, 13);
         ctx.moveTo(-3, 8);
         ctx.quadraticCurveTo(2, 9, 2, 4);
         ctx.fill();
-        
-        
+
+        // Eye details
         ctx.beginPath();
-        ctx.fillStyle = `hsl(130, 80%, 20%)`;
+        ctx.fillStyle = `hsl(${baseHue}, 80%, 20%)`;
         ctx.moveTo(2, -4);
         ctx.quadraticCurveTo(-1, -2, -6.5, -6);
         ctx.moveTo(4.5, -3);
@@ -146,8 +178,56 @@ export const SKINS = {
         ctx.moveTo(4.5, 3);
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
         ctx.stroke();
-        
-        // Draw nose
+        // --- Eye Animation Logic ---
+        if (!isWandering) {
+            // "Lock-on" glow effect when not wandering
+            const lockOnPulse = 2 + Math.sin(timestamp / 200) * 2;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter'; // Additive blending for a nice glow
+            const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20 + lockOnPulse);
+            glowGradient.addColorStop(0, `hsla(0, 100.00%, 50.20%, 0.69)`);
+            glowGradient.addColorStop(0.7,`hsla(${baseHue}, 100%, 80%, 0.3)` );
+            glowGradient.addColorStop(1, `hsla(${baseHue}, 100%, 50%, 0)`);
+
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, 20 + lockOnPulse, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        // --- Blinking Animation ---
+        if (isWandering) {
+            const timeInCycle = timestamp % 3500; // Blink cycle of 3.5 seconds
+            const blinkDuration = 150; // Blink lasts 250ms
+            if (timeInCycle < blinkDuration) {
+                // Creates a smooth 0 -> 1 -> 0 curve for the blink
+                const blinkProgress = Math.sin((timeInCycle / blinkDuration) * Math.PI);
+
+                ctx.fillStyle = `hsl(${baseHue}, 70%, 50%)`; // Eyelid color
+                ctx.strokeStyle = darkOutlineColor;
+                ctx.lineWidth = 1.5 / headScale;
+
+                // Draw top eyelid as a simple arc
+                ctx.beginPath();
+                ctx.moveTo(-3, -8);
+                ctx.quadraticCurveTo(2, -9, 2, -4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Draw bottom eyelid
+                ctx.beginPath();
+                ctx.moveTo(-3, 8);
+                ctx.quadraticCurveTo(2, 9, 2, 4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        // --- Nose and Whiskers ---
+        // Nose
         ctx.beginPath();
         ctx.moveTo(19, -4);
         ctx.quadraticCurveTo(13, -3.5, 17, -1);
@@ -160,8 +240,8 @@ export const SKINS = {
         ctx.moveTo(20, 1);
         ctx.lineTo(18, 3);
         ctx.stroke();
-        ctx.moveTo(8, -2.5);
-        ctx.quadraticCurveTo(6, 0, 8, 2.5);
+        ctx.moveTo(8, -3);
+        ctx.quadraticCurveTo(6, 0, 8, 3);
         ctx.moveTo(10, -2.5);
         ctx.quadraticCurveTo(8, 0, 10, 2.5);
         ctx.moveTo(15.3, -3);
@@ -169,28 +249,34 @@ export const SKINS = {
         ctx.moveTo(15.3, 3);
         ctx.quadraticCurveTo(10, 2, 5, 6);
         ctx.stroke();
-    
 
-        // Draw whiskers
-        ctx.strokeStyle = `hsl(130, 40%, 30%)`;
+        // Whiskers with motion
+        ctx.strokeStyle = `hsl(${baseHue}, 40%, 30%)`;
         ctx.lineWidth = 1.5 / headScale;
+        const whiskerWiggleX = Math.sin(timestamp / 480) * 1.5;
+        const whiskerWiggleY = Math.cos(timestamp / 550) * 2;
+        const whiskerRoll = Math.sin(timestamp / 550) * 2;
+
+        // Top whisker
         ctx.beginPath();
         ctx.moveTo(16.5, -4);
-        ctx.bezierCurveTo(22, -10, 27, -1 ,29 , -7);
-        ctx.bezierCurveTo(28, -10,25, -7 ,27 , -6);
+        ctx.bezierCurveTo(22 + whiskerWiggleX, -10 + whiskerWiggleY, 27 + whiskerWiggleX, -1 + whiskerWiggleY, 29 + whiskerWiggleX, -7 + whiskerWiggleY);
+        ctx.bezierCurveTo(28 + whiskerWiggleX, -10 + whiskerWiggleY - whiskerRoll, 25 + whiskerWiggleX, -7 + whiskerWiggleY, 27 + whiskerWiggleX, -6 + whiskerWiggleY);
         ctx.stroke();
+
+        // Bottom whisker
         ctx.beginPath();
         ctx.moveTo(16.5, 4);
-        ctx.bezierCurveTo(22, 10, 27, 1 ,29 , 7);
-        ctx.bezierCurveTo(28, 10,25, 7 ,27 , 6);
+        ctx.bezierCurveTo(22 + whiskerWiggleX, 10 - whiskerWiggleY, 27 + whiskerWiggleX, 1 - whiskerWiggleY, 29 + whiskerWiggleX, 7 - whiskerWiggleY);
+        ctx.bezierCurveTo(28 + whiskerWiggleX, 10 - whiskerWiggleY, 25 + whiskerWiggleX, 7 - whiskerWiggleY, 27 + whiskerWiggleX, 6 - whiskerWiggleY);
         ctx.stroke();
 
         ctx.restore();
     },
-    'fire-wyrm': (ctx, segments, targetPos, timestamp) => {
+    'fire-wyrm': (ctx, segments, targetPos, timestamp, isWandering) => {
         const head = segments[0];
         if (!head) return;
-        
+
         ctx.shadowBlur = 0;
 
         for (let i = segments.length - 1; i > 0; i--) {
@@ -205,22 +291,22 @@ export const SKINS = {
                 sizeScale = 1 - t * (1 - minScale);
             }
             const displaySize = segment.size * sizeScale;
-            
+
             const flicker = Math.abs(Math.sin(timestamp / 250 + i * 0.2));
             const percent = (segments.length - i) / segments.length;
-            const colorHue = 50 - percent * 50; 
+            const colorHue = 50 - percent * 50;
             const colorLightness = 45 + flicker * 15;
 
             ctx.fillStyle = `hsla(${45 + flicker * 10}, 100%, 60%, 0.25)`;
             ctx.beginPath();
             ctx.arc(segment.x, segment.y, displaySize + 3 + flicker * 3, 0, Math.PI * 2);
             ctx.fill();
-            
+
             const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x, segment.y);
             gradient.addColorStop(0, `hsl(${colorHue + 10}, 100%, 60%)`);
-            gradient.addColorStop(0.5, `hsl(${colorHue}, 100%, ${colorLightness}%)`); 
+            gradient.addColorStop(0.5, `hsl(${colorHue}, 100%, ${colorLightness}%)`);
             gradient.addColorStop(1, `hsl(${colorHue - 10}, 100%, 40%)`);
-            
+
             ctx.strokeStyle = gradient;
             ctx.lineWidth = displaySize * 2;
             ctx.lineCap = 'round';
@@ -237,7 +323,7 @@ export const SKINS = {
         ctx.rotate(angle);
         ctx.scale(headScale, headScale);
         ctx.lineWidth = 2 / headScale;
-        
+
         ctx.strokeStyle = `hsl(0, 0%, 20%)`;
         ctx.fillStyle = `hsl(30, 100%, 85%)`;
         ctx.beginPath();
@@ -248,7 +334,7 @@ export const SKINS = {
         ctx.quadraticCurveTo(-5, 17, 0, 0);
         ctx.fill();
         ctx.stroke();
-        
+
         ctx.strokeStyle = `hsl(0, 80%, 30%)`;
         ctx.fillStyle = `hsl(25, 100%, 50%)`;
         var cheekX = 7;
@@ -286,7 +372,7 @@ export const SKINS = {
         ctx.moveTo(-3, -8);
         ctx.quadraticCurveTo(2, -9, 2, -4);
         ctx.fill();
-        
+
         ctx.beginPath();
         ctx.moveTo(-7, 13);
         ctx.quadraticCurveTo(-3, 5, 5, 3);
@@ -296,7 +382,7 @@ export const SKINS = {
         ctx.moveTo(-3, 8);
         ctx.quadraticCurveTo(2, 9, 2, 4);
         ctx.fill();
-        
+
         ctx.beginPath();
         ctx.fillStyle = `hsl(0, 80%, 30%)`;
         ctx.moveTo(2, -4);
@@ -310,7 +396,7 @@ export const SKINS = {
         ctx.moveTo(4.5, 3);
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
         ctx.stroke();
-        
+
         ctx.beginPath();
         ctx.moveTo(19, -4);
         ctx.quadraticCurveTo(13, -3.5, 17, -1);
@@ -337,7 +423,7 @@ export const SKINS = {
 
         ctx.restore();
     },
-    snake: (ctx, segments, timestamp) => {
+    snake: (ctx, segments, targetPos, timestamp, isWandering) => {
         if (segments.length < 2) return;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -383,19 +469,16 @@ export const SKINS = {
         ctx.fill();
         ctx.restore();
     },
-    // --- UPDATED: Ghost skin with a center line for bone definition ---
-    ghost: (ctx, segments, targetPos, timestamp) => {
+    ghost: (ctx, segments, targetPos, timestamp, isWandering) => {
         if (segments.length < 2) return;
 
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // --- 1. Draw Body: Smoky, ethereal, and threaded with veins ---
         for (let i = segments.length - 1; i > 0; i--) {
             const segment = segments[i];
             const prevSegment = segments[i - 1];
 
-            // "shadowy wisps that curl and vanish" between segments.
             const wispOpacity = Math.max(0, 0.3 + Math.sin(timestamp / 300 + i * 0.5) * 0.3);
             ctx.strokeStyle = `rgba(100, 80, 150, ${wispOpacity})`;
             ctx.lineWidth = Math.random() * segment.size * 0.5;
@@ -409,9 +492,8 @@ export const SKINS = {
             );
             ctx.stroke();
 
-            // --- Bone Shape Logic ---
             const angle = Math.atan2(prevSegment.y - segment.y, prevSegment.x - segment.x);
-            
+
             ctx.save();
             ctx.translate(segment.x, segment.y);
             ctx.rotate(angle);
@@ -426,22 +508,19 @@ export const SKINS = {
             gradient.addColorStop(1, 'rgba(210, 200, 255, 0)');
             ctx.fillStyle = gradient;
 
-            // Draw the capsule/bone shape
             ctx.beginPath();
             ctx.arc(-boneLength / 2, 0, boneWidth / 2, Math.PI * 0.5, Math.PI * 1.5);
             ctx.arc(boneLength / 2, 0, boneWidth / 2, Math.PI * 1.5, Math.PI * 0.5);
             ctx.closePath();
             ctx.fill();
 
-            // NEW: Add a horizontal line for bone definition
-            ctx.strokeStyle = `rgba(230, 230, 255, 0.4)`; // A brighter, misty highlight
+            ctx.strokeStyle = `rgba(230, 230, 255, 0.4)`;
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(-boneLength / 2, 0);
             ctx.lineTo(boneLength / 2, 0);
             ctx.stroke();
 
-            // "threaded with pale violet veins"
             const veinCount = Math.floor(segment.size / 4);
             ctx.strokeStyle = `rgba(180, 160, 255, 0.5)`;
             ctx.lineWidth = 1 + Math.random();
@@ -460,14 +539,13 @@ export const SKINS = {
             ctx.restore();
         }
 
-        // --- 2. Draw Head: A hollow skull-mask (remains the same) ---
         const head = segments[0];
-        const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const headAngle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
         const headScale = head.size / 8;
 
         ctx.save();
         ctx.translate(head.x, head.y);
-        ctx.rotate(angle);
+        ctx.rotate(headAngle);
         ctx.scale(headScale, headScale);
 
         const spikeOpacity = 0.4 + Math.abs(Math.sin(timestamp / 150)) * 0.6;

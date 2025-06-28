@@ -209,7 +209,8 @@ export const useDragonGame = () => {
       });
       const drawSkin = SKINS[activeSkin];
       if (drawSkin && currentSegments.length > 0) {
-        drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current, timestamp);
+        // UPDATED: Pass isWandering state to the skin drawing function
+        drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current, timestamp, isWandering);
       }
 
       // --- 3. Update and Draw Fruits ---
