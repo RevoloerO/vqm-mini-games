@@ -14,6 +14,7 @@ export const GAME_CONFIG = {
 };
 
 export const SKINS = {
+    
     dragon: (ctx, segments, targetPos, timestamp, isWandering) => {
         const head = segments[0];
         if (!head) return;
@@ -422,6 +423,134 @@ export const SKINS = {
         ctx.bezierCurveTo(25, 5, 25, 15, 15, 20);
         ctx.stroke();
 
+        ctx.restore();
+    },
+    nagini: (ctx, segments, targetPos, timestamp, isWandering) => {
+        const head = segments[0];
+        if (!head) return;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // --- Body Segments ---
+        for (let i = segments.length - 1; i > 0; i--) {
+            const segment = segments[i];
+            const prevSegment = segments[i - 1];
+            const angle = Math.atan2(prevSegment.y - segment.y, prevSegment.x - segment.x);
+            const dist = Math.hypot(prevSegment.x - segment.x, prevSegment.y - segment.y);
+
+            // --- 1. Glossy Obsidian Scales (Main Body) ---
+            const bodyGradient = ctx.createLinearGradient(0, -segment.size, 0, segment.size);
+            bodyGradient.addColorStop(0, '#4a4a4f'); // Highlight
+            bodyGradient.addColorStop(0.5, '#1b1b1e'); // Main color
+            bodyGradient.addColorStop(1, '#000000'); // Shadow
+            ctx.strokeStyle = bodyGradient;
+            ctx.lineWidth = segment.size * 1.2; // Slender but with presence
+            ctx.beginPath();
+            ctx.moveTo(prevSegment.x, prevSegment.y);
+            ctx.lineTo(segment.x, segment.y);
+            ctx.stroke();
+
+            // --- 2. Silver Filigree & Faint Runes ---
+            if (dist > 1) { // Only draw details if segment is stretched
+                ctx.save();
+                ctx.translate(segment.x, segment.y);
+                ctx.rotate(angle);
+                
+                // Silver Filigree - a shimmering, winding pattern
+                const filigreeWave = Math.sin(i * 0.5 + timestamp / 200) * (segment.size * 0.4);
+                ctx.strokeStyle = `rgba(200, 220, 255, 0.6)`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(-dist, -filigreeWave);
+                ctx.lineTo(0, filigreeWave);
+                ctx.stroke();
+
+                // Faint Rune Patterns - pulsing along the spine
+                const runePulse = 0.4 + Math.sin(timestamp / 500 + i * 0.8) * 0.3;
+                ctx.fillStyle = `hsla(175, 100%, 80%, ${runePulse})`;
+                ctx.shadowColor = `hsl(175, 100%, 50%)`;
+                ctx.shadowBlur = 5;
+                // Draw a simple rune shape (e.g., a small diamond)
+                ctx.beginPath();
+                ctx.moveTo(-dist / 2, 0);
+                ctx.lineTo(-dist / 2 + 2, -2);
+                ctx.lineTo(-dist / 2 + 4, 0);
+                ctx.lineTo(-dist / 2 + 2, 2);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        // --- Head Drawing ---
+        const headAngle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const headScale = head.size / 10;
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        ctx.rotate(headAngle);
+        ctx.scale(headScale, headScale);
+        ctx.lineWidth = 2 / headScale;
+        
+        // Head shape
+        ctx.strokeStyle = '#aab';
+        const headGradient = ctx.createRadialGradient(0, 0, 1, 10, 0, 25);
+        headGradient.addColorStop(0, '#555');
+        headGradient.addColorStop(1, '#111');
+        ctx.fillStyle = headGradient;
+
+        ctx.beginPath();
+        ctx.moveTo(25, 0); // Nose tip
+        ctx.quadraticCurveTo(5, -12, -15, -8); // Top of head
+        ctx.quadraticCurveTo(-20, 0, -15, 8); // Back of head
+        ctx.quadraticCurveTo(5, 12, 25, 0);   // Bottom of head
+        ctx.fill();
+        ctx.stroke();
+
+        // Eyes
+        ctx.shadowColor = `hsl(175, 100%, 60%)`;
+        ctx.shadowBlur = 20 / headScale;
+        ctx.fillStyle = `hsl(175, 100%, 80%)`; // Bright teal
+        ctx.beginPath();
+        ctx.arc(5, -4.5, 3, 0, Math.PI * 2); // Left eye
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(5, 4.5, 3, 0, Math.PI * 2); // Right eye
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Pupils
+        ctx.fillStyle = '#111';
+        ctx.beginPath();
+        ctx.ellipse(5, -4.5, 0.8, 1.5, 0, 0, Math.PI * 2); // Left pupil
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(5, 4.5, 0.8, 1.5, 0, 0, Math.PI * 2); // Right pupil
+        ctx.fill();
+
+        // --- Forked Tongue Animation ---
+        if (!isWandering) {
+            const cycle = timestamp % 2500;
+            if (cycle < 250) { // Flick tongue out and in
+                const t = cycle / 250;
+                // Use a sine wave to create a smooth flicking motion (out and back in)
+                const flickProgress = Math.sin(t * Math.PI);
+                const tongueLength = 25 * flickProgress;
+
+                ctx.strokeStyle = `hsl(175, 80%, 60%)`;
+                ctx.lineWidth = 1.5 / headScale;
+                ctx.beginPath();
+                ctx.moveTo(25, 0); // Start from nose
+                ctx.lineTo(25 + tongueLength, 0); // Main part of tongue
+                // Forked tips
+                ctx.moveTo(25 + tongueLength, 0);
+                ctx.lineTo(22 + tongueLength, -3);
+                ctx.moveTo(25 + tongueLength, 0);
+                ctx.lineTo(22 + tongueLength, 3);
+                ctx.stroke();
+            }
+        }
         ctx.restore();
     },
     snake: (ctx, segments, targetPos, timestamp, isWandering) => {

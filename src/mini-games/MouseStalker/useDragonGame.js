@@ -1,6 +1,6 @@
 // useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
 // Manages game state efficiently using useRef for animations and useState for UI updates.
-// NEW: Includes a trailing spore effect for the dragon skin and a wisp effect for the ghost skin.
+// NEW: Includes a trailing spore effect for the dragon skin, a wisp effect for the ghost skin, and a magic spark effect for the Nagini skin.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
@@ -16,7 +16,8 @@ export const useDragonGame = () => {
   const fruits = useRef([]);
   const particles = useRef([]); 
   const dragonSpores = useRef([]);
-  const ghostWisps = useRef([]); // NEW: Particles for the reworked ghost skin
+  const ghostWisps = useRef([]);
+  const naginiSparks = useRef([]); // NEW: Particles for the Nagini skin's magic
   const clouds = useRef([]); 
   const animationFrameId = useRef(null);
   const idleTimerId = useRef(null);
@@ -24,7 +25,7 @@ export const useDragonGame = () => {
 
   // --- React State (for UI that needs to re-render) ---
   const [score, setScore] = useState(0);
-  const [activeSkin, setActiveSkin] = useState('dragon');
+  const [activeSkin, setActiveSkin] = useState('dragon'); // NEW: Set Nagini as default for showcase
   const [isWandering, setIsWandering] = useState(false);
 
   // --- Wandering Logic ---
@@ -65,7 +66,8 @@ export const useDragonGame = () => {
     fruits.current = [];
     particles.current = [];
     dragonSpores.current = [];
-    ghostWisps.current = []; // NEW: Clear wisps on init
+    ghostWisps.current = [];
+    naginiSparks.current = []; // NEW: Clear sparks on init
     const canvas = canvasRef.current;
     if (canvas) {
         clouds.current = Array.from({ length: 20 }, () => ({
@@ -209,7 +211,6 @@ export const useDragonGame = () => {
       });
       const drawSkin = SKINS[activeSkin];
       if (drawSkin && currentSegments.length > 0) {
-        // UPDATED: Pass isWandering state to the skin drawing function
         drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current, timestamp, isWandering);
       }
 
@@ -317,7 +318,7 @@ export const useDragonGame = () => {
           ctx.beginPath(); ctx.arc(spore.x, spore.y, spore.size, 0, Math.PI * 2); ctx.fill();
       });
 
-      // NEW: Ghost skin's "trailing tendrils of vapor"
+      // Ghost skin's "trailing tendrils of vapor"
       if (activeSkin === 'ghost' && segmentsRef.current.length > 0) {
           const head = segmentsRef.current[0];
           if (timestamp % 100 < 16.6) { // Spawn rate
@@ -336,6 +337,41 @@ export const useDragonGame = () => {
           ctx.globalAlpha = wisp.alpha;
           ctx.fillStyle = wisp.color;
           ctx.beginPath(); ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2); ctx.fill();
+      });
+
+      // NEW: Nagini's magic tongue sparks
+      if (activeSkin === 'nagini' && segmentsRef.current.length > 0 && !isWandering) {
+        const head = segmentsRef.current[0];
+        const timeInCycle = timestamp % 2500; // Animation cycle
+        // Check if it's time to flick the tongue and create sparks
+        if (timeInCycle > 100 && timeInCycle < 250) {
+          if (Math.random() > 0.4) { // Spawn sparks intermittently during the flick
+            const angle = Math.atan2(mousePosition.current.y - head.y, mousePosition.current.x - head.x);
+            const tongueTipLength = head.size * 2.8; // Position sparks at the tip of the tongue
+            const sparkX = head.x + Math.cos(angle) * tongueTipLength;
+            const sparkY = head.y + Math.sin(angle) * tongueTipLength;
+            
+            naginiSparks.current.push({
+              x: sparkX, y: sparkY,
+              vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3,
+              alpha: 1, size: 1 + Math.random() * 2,
+              decay: 0.04 + Math.random() * 0.02, // Fast-fading sparks
+              color: `hsl(175, 100%, ${70 + Math.random() * 30}%)` // Teal color
+            });
+          }
+        }
+      }
+      naginiSparks.current = naginiSparks.current.filter(s => s.alpha > 0);
+      naginiSparks.current.forEach(spark => {
+          spark.x += spark.vx; spark.y += spark.vy; spark.alpha -= spark.decay;
+          ctx.globalAlpha = spark.alpha;
+          ctx.strokeStyle = spark.color;
+          ctx.lineWidth = spark.size;
+          ctx.beginPath();
+          // Draw lines for a "spark" look instead of circles
+          ctx.moveTo(spark.x, spark.y);
+          ctx.lineTo(spark.x - spark.vx * 2, spark.y - spark.vy * 2);
+          ctx.stroke();
       });
 
       ctx.globalAlpha = 1; // Reset global alpha
