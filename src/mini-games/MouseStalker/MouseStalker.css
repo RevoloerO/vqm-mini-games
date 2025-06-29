@@ -26,6 +26,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+}
+
+/* NEW: UI layout containers */
+.ui-left, .ui-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.ui-center {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
 }
 
 /* --- Simplified Back Button --- */
@@ -43,6 +59,7 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .back-button-simple:hover {
@@ -68,6 +85,7 @@
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
   font-size: 1.1rem;
+  flex-shrink: 0;
 }
 .score-display span {
   font-weight: 600;
@@ -85,22 +103,20 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
 }
 
-/* NEW: Dropdown styles */
 .skin-dropdown {
   background: transparent;
   border: none;
   color: white;
-  padding: 0.5rem 2rem 0.5rem 0.5rem; /* Right padding for arrow */
+  padding: 0.5rem 2rem 0.5rem 0.5rem;
   border-radius: 30px;
   cursor: pointer;
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
   text-transform: capitalize;
   transition: all 0.2s ease-in-out;
-
-  /* Remove default arrow and add custom one */
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -119,7 +135,6 @@
   box-shadow: 0 0 10px var(--accent-color, #48dbfb);
 }
 
-/* Style for the options in the dropdown */
 .skin-dropdown option {
   background: rgba(30, 30, 30, 0.9);
   color: white;
@@ -127,4 +142,569 @@
   font-family: 'Poppins', sans-serif;
 }
 
-/* REMOVED .skin-button styles as they are no longer needed */
+/* --- Milestone Tracker Styles --- */
+.milestone-tracker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  gap: 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  max-width: 400px;
+}
+
+.milestone {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.4s ease-in-out;
+}
+
+.milestone.achieved {
+  background-color: #ffc107;
+  color: #1a1a1a;
+  box-shadow: 0 0 15px #ffc107, 0 0 25px #ffc107aa;
+  transform: scale(1.1);
+}
+
+.milestone-connector-wrapper {
+  flex-grow: 1;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  min-width: 30px;
+}
+
+.milestone-connector-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #ffc107, #ff9800);
+  border-radius: 2px;
+  transition: width 0.5s ease-out;
+}
+
+/* --- Fruit Info Styles --- */
+.fruit-info-container {
+    position: relative;
+}
+
+.fruit-info-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.fruit-info-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: var(--primary-text-color);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.fruit-info-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    width: 280px;
+    background: rgba(20, 20, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 1rem;
+    z-index: 110;
+    animation: popIn 0.3s ease-out;
+}
+
+.fruit-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fruit-info-header h3 {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.fruit-info-header button {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    transition: color 0.2s ease;
+}
+
+.fruit-info-header button:hover {
+    color: white;
+}
+
+.fruit-info-panel ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.fruit-info-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.fruit-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.fruit-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.fruit-name {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    text-transform: capitalize;
+    color: white;
+}
+
+.fruit-reward {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+
+/* --- Victory Message Styles --- */
+.victory-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.5s ease-out;
+  z-index: 100;
+}
+
+.victory-box {
+  background: rgba(20, 20, 25, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 2.5rem 3rem;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  color: white;
+  max-width: 500px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  transform: scale(0.9);
+  animation: popIn 0.5s 0.2s ease-out forwards;
+  position: relative;
+}
+
+.victory-box h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  background: -webkit-linear-gradient(45deg, #ffeb3b, #ffc107, #ff9800);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.victory-box p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.5rem;
+}
+
+.victory-subtext {
+  font-size: 0.9rem !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-style: italic;
+}
+
+.victory-trophy {
+  color: #ffc107;
+  filter: drop-shadow(0 0 15px #ffc107);
+}
+
+.victory-close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.victory-close-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: scale(1.1);
+}
+
+.victory-continue-button {
+  margin-top: 2rem;
+  padding: 0.8rem 2.5rem;
+  background: #ffc107;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 50px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+}
+
+.victory-continue-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 193, 7, 0.6);
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .stalker-ui {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .ui-center {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+  .ui-left, .ui-right {
+      width: 100%;
+      justify-content: space-between;
+  }
+  .ui-left { order: 2; }
+  .ui-right { order: 3; }
+  
+  .fruit-info-panel {
+      left: 0;
+      right: auto;
+  }
+}
+
+@media (max-width: 480px) {
+    .milestone-tracker {
+        transform: scale(0.9);
+    }
+    .score-display, .skin-selector {
+        padding: 0.4rem 0.8rem;
+    }
+}
+@media (max-width: 360px) {
+    .stalker-ui {
+        padding: 0.5rem;
+    }
+    .score-display, .skin-selector {
+        font-size: 0.9rem;
+        padding: 0.3rem 0.6rem;
+    }
+    .milestone-tracker {
+        flex-direction: column;
+        align-items: center;
+    }
+    .milestone-connector-wrapper {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+  .stalker-ui {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .ui-left, .ui-right {
+    width: 100%;
+    justify-content: center;
+  }
+  .ui-center {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (max-width: 480px) {
+  .stalker-ui {
+    padding: 1rem;
+  }
+  .score-display, .skin-selector {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+  .milestone-tracker {
+    flex-direction: column;
+    align-items: center;
+  }
+  .milestone-connector-wrapper {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+@media (max-width: 360px) {
+  .stalker-ui {
+    padding: 0.5rem;
+  }
+  .score-display, .skin-selector {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+  }
+  .milestone-tracker {
+    transform: scale(0.9);
+  }
+}
+/* --- Animation for Stars Background --- */
+@keyframes move-stars {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 -100%;
+  }
+}
+
+/* --- Animation for Pop-in Effect --- */
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* --- Animation for Fade-in Effect --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* --- Animation for Victory Box --- */
+@keyframes victoryPopIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* --- Animation for Floral Crescendo --- */
+@keyframes floralCrescendo {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+/* --- Animation for Victory Trophy --- */
+@keyframes victoryTrophyGlow {
+  0% {
+    filter: drop-shadow(0 0 10px #ffc107);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px #ffc107);
+  }
+  100% {
+    filter: drop-shadow(0 0 10px #ffc107);
+  }
+}
+/* --- Animation for Victory Close Button --- */
+@keyframes victoryCloseButtonPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* --- Animation for Victory Continue Button --- */
+@keyframes victoryContinueButtonHover {
+  
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+  }
+  50% {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+  }
+}
+/* --- Animation for Fruit Info Panel --- */
+@keyframes fruitInfoPanelSlide {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+/* --- Animation for Milestone Tracker Progress --- */
+@keyframes milestoneProgress {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--milestone-progress-width);
+  }
+}
+/* --- Animation for Skin Selector Dropdown --- */
+@keyframes skinSelectorDropdown {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+/* --- Animation for Score Display --- */
+@keyframes scoreDisplayFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* --- Animation for Back Button Hover --- */
+@keyframes backButtonHover {
+  from {
+    transform: scale(1);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  to {
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+}
+/* --- Animation for Stalker Canvas --- */
+@keyframes stalkerCanvasFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* --- Animation for UI Elements --- */
+@keyframes uiElementsSlideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+/* --- Animation for Milestone Achieved --- */
+@keyframes milestoneAchieved {
+  from {
+    transform: scale(1);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.4);
+  }
+  to {
+    transform: scale(1.1);
+    background-color: #ffc107;
+    color: #1a1a1a;
+    box-shadow: 0 0 15px #ffc107, 0 0 25px #ffc107aa;
+  }
+}
+

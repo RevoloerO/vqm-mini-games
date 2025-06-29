@@ -1,6 +1,6 @@
 // useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
 // Manages game state efficiently using useRef for animations and useState for UI updates.
-// NEW: Includes a trailing spore effect for the dragon skin, a wisp effect for the ghost skin, and a magic spark effect for the Nagini skin.
+// UPDATED: Milestones changed to 100, 250, 500. Growth stops at 500.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
@@ -10,23 +10,27 @@ export const useDragonGame = () => {
   // --- Refs for Canvas and Game State ---
   const canvasRef = useRef(null);
   const segmentsRef = useRef([]);
+  const scoreRef = useRef(0); // Ref for internal score tracking
   const mousePosition = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const wanderTarget = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const wanderVelocity = useRef({ vx: 0, vy: 0 });
   const fruits = useRef([]);
-  const particles = useRef([]); 
+  const particles = useRef([]);
   const dragonSpores = useRef([]);
   const ghostWisps = useRef([]);
-  const naginiSparks = useRef([]); // NEW: Particles for the Nagini skin's magic
-  const clouds = useRef([]); 
+  const naginiSparks = useRef([]);
+  const clouds = useRef([]);
   const animationFrameId = useRef(null);
   const idleTimerId = useRef(null);
   const wanderChangeTimerId = useRef(null);
+  const announcedMilestones = useRef(new Set());
 
   // --- React State (for UI that needs to re-render) ---
-  const [score, setScore] = useState(0);
-  const [activeSkin, setActiveSkin] = useState('dragon'); // NEW: Set Nagini as default for showcase
+  const [score, setScore] = useState(0); // State for displaying the score
+  const [activeSkin, setActiveSkin] = useState('dragon');
   const [isWandering, setIsWandering] = useState(false);
+  const [victoryAchieved, setVictoryAchieved] = useState(false); // Tracks if victory has been reached
+  const [showVictoryModal, setShowVictoryModal] = useState(false); // Controls victory modal visibility
 
   // --- Wandering Logic ---
   const startWandering = useCallback(() => {
@@ -62,12 +66,13 @@ export const useDragonGame = () => {
       y: window.innerHeight / 2,
       size: GAME_CONFIG.initialSize,
     }));
-    setScore(segmentsRef.current.length);
+    scoreRef.current = segmentsRef.current.length; // Init score ref
+    setScore(scoreRef.current); // Sync UI
     fruits.current = [];
     particles.current = [];
     dragonSpores.current = [];
     ghostWisps.current = [];
-    naginiSparks.current = []; // NEW: Clear sparks on init
+    naginiSparks.current = [];
     const canvas = canvasRef.current;
     if (canvas) {
         clouds.current = Array.from({ length: 20 }, () => ({
@@ -101,6 +106,10 @@ export const useDragonGame = () => {
             numParticles = 250;
             particleConfig = { speedRange: 12, sizeRange: 5, decayRange: 0.025, friction: 0.95 };
             break;
+        case 'MILESTONE':
+            numParticles = 300;
+            particleConfig = { speedRange: 15, sizeRange: 6, decayRange: 0.015, friction: 0.96 };
+            break;
         default:
              particleConfig = { speedRange: 4, sizeRange: 2, decayRange: 0.01, friction: 0.98 };
     }
@@ -110,7 +119,7 @@ export const useDragonGame = () => {
         const speed = 1 + Math.random() * particleConfig.speedRange;
         let particleColor = color;
         
-        if (type === 'LEGENDARY') {
+        if (type === 'LEGENDARY' || type === 'MILESTONE') {
             particleColor = `hsl(${Math.random() * 360}, 100%, 70%)`;
         }
 
@@ -272,19 +281,38 @@ export const useDragonGame = () => {
           for (let i = 0; i < bonus; i++) {
             currentSegments.push({ ...currentSegments[currentSegments.length - 1] });
           }
-          const currentScore = currentSegments.length;
-          let growthFactor = (currentScore < 500) ? 0.1 : (currentScore < 1000) ? 0.05 : 0.02;
-          currentSegments.forEach(seg => {
-            if (seg.size < GAME_CONFIG.maxSize) {
-                seg.size = Math.min(GAME_CONFIG.maxSize, seg.size + bonus * growthFactor);
-            }
-          });
-          setScore(currentScore);
+          
+          const oldScore = scoreRef.current;
+          scoreRef.current = currentSegments.length;
+          setScore(scoreRef.current);
+          const currentScore = scoreRef.current;
+
+          // Stop growth after 500 points
+          if (oldScore < 500) {
+            let growthFactor = (currentScore < 100) ? 0.1 : (currentScore < 250) ? 0.05 : 0.02;
+            currentSegments.forEach(seg => {
+              if (seg.size < GAME_CONFIG.maxSize) {
+                  seg.size = Math.min(GAME_CONFIG.maxSize, seg.size + bonus * growthFactor);
+              }
+            });
+          }
+
+          // Milestone check
+          const milestones = { 100: 'MILESTONE_1', 250: 'MILESTONE_2', 500: 'VICTORY' };
+          for (const [milestoneScore, key] of Object.entries(milestones)) {
+              if (currentScore >= milestoneScore && !announcedMilestones.current.has(key)) {
+                  announcedMilestones.current.add(key);
+                  createParticleBurst(head.x, head.y, 'white', 'MILESTONE');
+                  if (key === 'VICTORY') {
+                      setVictoryAchieved(true);
+                      setShowVictoryModal(true);
+                  }
+              }
+          }
         }
       });
 
       // --- 5. Update and Draw All Particle Systems ---
-      // Fruit particles
       particles.current = particles.current.filter(p => p.alpha > 0);
       particles.current.forEach(p => {
           p.x += p.vx;
@@ -299,7 +327,6 @@ export const useDragonGame = () => {
           ctx.fill();
       });
       
-      // Dragon Spore particles
       if (activeSkin === 'dragon' && segmentsRef.current.length > 0) {
         if (timestamp % 150 < 16.6) {
             const tail = segmentsRef.current[segmentsRef.current.length - 1];
@@ -318,10 +345,9 @@ export const useDragonGame = () => {
           ctx.beginPath(); ctx.arc(spore.x, spore.y, spore.size, 0, Math.PI * 2); ctx.fill();
       });
 
-      // Ghost skin's "trailing tendrils of vapor"
       if (activeSkin === 'ghost' && segmentsRef.current.length > 0) {
           const head = segmentsRef.current[0];
-          if (timestamp % 100 < 16.6) { // Spawn rate
+          if (timestamp % 100 < 16.6) {
               ghostWisps.current.push({
                   x: head.x, y: head.y,
                   vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
@@ -339,15 +365,13 @@ export const useDragonGame = () => {
           ctx.beginPath(); ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2); ctx.fill();
       });
 
-      // NEW: Nagini's magic tongue sparks
       if (activeSkin === 'nagini' && segmentsRef.current.length > 0 && !isWandering) {
         const head = segmentsRef.current[0];
-        const timeInCycle = timestamp % 2500; // Animation cycle
-        // Check if it's time to flick the tongue and create sparks
+        const timeInCycle = timestamp % 2500;
         if (timeInCycle > 100 && timeInCycle < 250) {
-          if (Math.random() > 0.4) { // Spawn sparks intermittently during the flick
+          if (Math.random() > 0.4) {
             const angle = Math.atan2(mousePosition.current.y - head.y, mousePosition.current.x - head.x);
-            const tongueTipLength = head.size * 2.8; // Position sparks at the tip of the tongue
+            const tongueTipLength = head.size * 2.8;
             const sparkX = head.x + Math.cos(angle) * tongueTipLength;
             const sparkY = head.y + Math.sin(angle) * tongueTipLength;
             
@@ -355,8 +379,8 @@ export const useDragonGame = () => {
               x: sparkX, y: sparkY,
               vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3,
               alpha: 1, size: 1 + Math.random() * 2,
-              decay: 0.04 + Math.random() * 0.02, // Fast-fading sparks
-              color: `hsl(175, 100%, ${70 + Math.random() * 30}%)` // Teal color
+              decay: 0.04 + Math.random() * 0.02,
+              color: `hsl(175, 100%, ${70 + Math.random() * 30}%)`
             });
           }
         }
@@ -368,13 +392,12 @@ export const useDragonGame = () => {
           ctx.strokeStyle = spark.color;
           ctx.lineWidth = spark.size;
           ctx.beginPath();
-          // Draw lines for a "spark" look instead of circles
           ctx.moveTo(spark.x, spark.y);
           ctx.lineTo(spark.x - spark.vx * 2, spark.y - spark.vy * 2);
           ctx.stroke();
       });
 
-      ctx.globalAlpha = 1; // Reset global alpha
+      ctx.globalAlpha = 1;
 
       animationFrameId.current = requestAnimationFrame(gameLoop);
     };
@@ -391,5 +414,5 @@ export const useDragonGame = () => {
     };
   }, [activeSkin, initGame, isWandering, startWandering, stopWandering]);
 
-  return { canvasRef, score, activeSkin, setActiveSkin };
+  return { canvasRef, score, activeSkin, setActiveSkin, victoryAchieved, showVictoryModal, setShowVictoryModal, announcedMilestones: announcedMilestones.current };
 };
