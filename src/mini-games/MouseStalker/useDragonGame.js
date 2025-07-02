@@ -1,16 +1,54 @@
 // useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
 // Manages game state efficiently using useRef for animations and useState for UI updates.
-// UPDATED: Milestones changed to 100, 250, 500. Growth stops at 500.
+// UPDATED: Reworked audio manager and implemented unique, particle-based visual effects for each skin's click event.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
+
+// --- NEW: A simple audio manager to preload and play sounds ---
+const audioManager = {
+  clips: {},
+  isInitialized: false,
+  
+  // Initialize and load all audio files once.
+  init() {
+    if (this.isInitialized) return;
+    // NOTE: Using more reliable sound sources.
+    this.clips = {
+      'click_dragon': new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_7028c8052a.mp3'), // Radar ping
+      'click_fire-wyrm': new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_a64e083984.mp3'), // Fire whoosh
+      'click_nagini': new Audio('https://cdn.pixabay.com/audio/2022/03/23/audio_a8c98c09d3.mp3'), // Poison splash
+      'click_snake': new Audio('https://cdn.pixabay.com/audio/2022/03/10/audio_a6822d2c1c.mp3'), // Water splash
+      'click_ghost': new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_458b43350a.mp3'), // Electric discharge
+      'eat_NORMAL': new Audio('https://actions.google.com/sounds/v1/switches/switch_on.ogg'),
+      'eat_RARE': new Audio('https://actions.google.com/sounds/v1/magical/magic_chime.ogg'),
+      'eat_EPIC': new Audio('https://actions.google.com/sounds/v1/magical/sparkle.ogg'),
+      'eat_LEGENDARY': new Audio('https://actions.google.com/sounds/v1/magical/spell_cast_blast.ogg'),
+      'milestone': new Audio('https://actions.google.com/sounds/v1/achievements/achievement_simple.ogg'),
+      'victory': new Audio('https://actions.google.com/sounds/v1/achievements/achievement_fanfare.ogg'),
+    };
+    // Set a default volume for all clips.
+    Object.values(this.clips).forEach(clip => clip.volume = 0.5);
+    this.clips.victory.volume = 0.7;
+    this.isInitialized = true;
+  },
+
+  // Play a sound by name.
+  play(name) {
+    if (this.clips[name]) {
+      this.clips[name].currentTime = 0; // Rewind to start
+      this.clips[name].play().catch(e => console.error(`Audio play failed for "${name}": ${e}`));
+    }
+  }
+};
+
 
 // --- Hook Definition ---
 export const useDragonGame = () => {
   // --- Refs for Canvas and Game State ---
   const canvasRef = useRef(null);
   const segmentsRef = useRef([]);
-  const scoreRef = useRef(0); // Ref for internal score tracking
+  const scoreRef = useRef(0);
   const mousePosition = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const wanderTarget = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const wanderVelocity = useRef({ vx: 0, vy: 0 });
@@ -20,19 +58,20 @@ export const useDragonGame = () => {
   const ghostWisps = useRef([]);
   const naginiSparks = useRef([]);
   const clouds = useRef([]);
+  const clickEffects = useRef([]); // NEW: Stores active click visual effects
   const animationFrameId = useRef(null);
   const idleTimerId = useRef(null);
   const wanderChangeTimerId = useRef(null);
   const announcedMilestones = useRef(new Set());
 
   // --- React State (for UI that needs to re-render) ---
-  const [score, setScore] = useState(0); // State for displaying the score
+  const [score, setScore] = useState(0);
   const [activeSkin, setActiveSkin] = useState('dragon');
   const [isWandering, setIsWandering] = useState(false);
-  const [victoryAchieved, setVictoryAchieved] = useState(false); // Tracks if victory has been reached
-  const [showVictoryModal, setShowVictoryModal] = useState(false); // Controls victory modal visibility
+  const [victoryAchieved, setVictoryAchieved] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
 
-  // --- Wandering Logic ---
+  // --- Wandering Logic (unchanged) ---
   const startWandering = useCallback(() => {
     if (isWandering) return;
     setIsWandering(true);
@@ -58,7 +97,7 @@ export const useDragonGame = () => {
     setIsWandering(false);
     clearTimeout(wanderChangeTimerId.current);
   }, []);
-
+  
   // --- Game Initialization ---
   const initGame = useCallback(() => {
     segmentsRef.current = Array.from({ length: GAME_CONFIG.numInitialSegments }, () => ({
@@ -66,13 +105,14 @@ export const useDragonGame = () => {
       y: window.innerHeight / 2,
       size: GAME_CONFIG.initialSize,
     }));
-    scoreRef.current = segmentsRef.current.length; // Init score ref
-    setScore(scoreRef.current); // Sync UI
+    scoreRef.current = segmentsRef.current.length;
+    setScore(scoreRef.current);
     fruits.current = [];
     particles.current = [];
     dragonSpores.current = [];
     ghostWisps.current = [];
     naginiSparks.current = [];
+    clickEffects.current = []; // NEW: Initialize click effects array
     const canvas = canvasRef.current;
     if (canvas) {
         clouds.current = Array.from({ length: 20 }, () => ({
@@ -84,7 +124,7 @@ export const useDragonGame = () => {
     }
   }, []);
 
-  // --- Tiered Particle Creation ---
+  // --- Tiered Particle Creation (unchanged) ---
   const createParticleBurst = (x, y, color, type) => {
     let numParticles = 30;
     let particleConfig = {};
@@ -124,10 +164,8 @@ export const useDragonGame = () => {
         }
 
         particles.current.push({
-            x,
-            y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
+            x, y,
+            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
             color: particleColor,
             size: 2 + Math.random() * particleConfig.sizeRange,
             alpha: 1,
@@ -139,6 +177,9 @@ export const useDragonGame = () => {
 
   // --- Main Effect: Handles Game Loop, Events, and Rendering ---
   useEffect(() => {
+    // --- NEW: Initialize Audio Manager on component mount ---
+    audioManager.init();
+
     const savedTheme = localStorage.getItem('vqm-game-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 
@@ -159,7 +200,7 @@ export const useDragonGame = () => {
       initGame();
     }
 
-    const handlePointerInteraction = (e) => {
+    const handlePointerMove = (e) => {
       mousePosition.current = { x: e.clientX, y: e.clientY };
       if (isWandering) {
         stopWandering();
@@ -168,9 +209,78 @@ export const useDragonGame = () => {
       idleTimerId.current = setTimeout(startWandering, 5000);
     };
 
+    // --- NEW: Click handler for visual and sound effects ---
+    const handlePointerDown = (e) => {
+        const effect = {
+            x: e.clientX,
+            y: e.clientY,
+            skin: activeSkin,
+            createdAt: Date.now(),
+            duration: (activeSkin === 'fire-wyrm' || activeSkin === 'nagini' || activeSkin === 'ghost') ? 1200 : 800,
+            particles: [],
+            angle: 0,
+        };
+
+        // --- Generate particles based on skin type ---
+        switch (activeSkin) {
+            case 'fire-wyrm': { // Dragon blow fire
+                const head = segmentsRef.current[0] || { x: e.clientX - 1, y: e.clientY };
+                effect.angle = Math.atan2(e.clientY - head.y, e.clientX - head.x);
+                for (let i = 0; i < 60; i++) {
+                    const angle = (Math.random() - 0.5) * 0.8; // Cone shape
+                    const speed = 5 + Math.random() * 10;
+                    effect.particles.push({
+                        x: 0, y: 0,
+                        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                        size: 2 + Math.random() * 4,
+                        alpha: 1,
+                        decay: 0.01 + Math.random() * 0.01, // Slower decay
+                        hue: 10 + Math.random() * 40
+                    });
+                }
+                break;
+            }
+            case 'nagini': { // Poison / Venom
+                for (let i = 0; i < 40; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1 + Math.random() * 4;
+                    effect.particles.push({
+                        x: (Math.random() - 0.5) * 10, y: (Math.random() - 0.5) * 10,
+                        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                        gravity: 0.1,
+                        size: 3 + Math.random() * 5,
+                        alpha: 1,
+                        decay: 0.01 + Math.random() * 0.005, // Slower decay
+                        hue: 100 + Math.random() * 40
+                    });
+                }
+                break;
+            }
+            case 'ghost': { // Discharge / Voltage release
+                for (let i = 0; i < 5; i++) { // 5 main bolts
+                    const bolt = { points: [{x:0, y:0}], angle: Math.random() * Math.PI * 2, alpha: 1 };
+                    let lastX = 0, lastY = 0;
+                    const len = 40 + Math.random() * 40;
+                    for (let j = 0; j < 10; j++) {
+                        lastX += Math.cos(bolt.angle) * (len/10) + (Math.random() - 0.5) * 20;
+                        lastY += Math.sin(bolt.angle) * (len/10) + (Math.random() - 0.5) * 20;
+                        bolt.points.push({ x: lastX, y: lastY });
+                    }
+                    effect.particles.push(bolt);
+                }
+                break;
+            }
+            // Dragon and Snake effects are handled directly in the draw loop
+        }
+
+        clickEffects.current.push(effect);
+        audioManager.play(`click_${activeSkin}`);
+        handlePointerMove(e);
+    };
+
     idleTimerId.current = setTimeout(startWandering, 5000);
-    window.addEventListener('pointerdown', handlePointerInteraction);
-    window.addEventListener('pointermove', handlePointerInteraction);
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
 
     const spawnFruit = () => {
       const rand = Math.random();
@@ -185,7 +295,7 @@ export const useDragonGame = () => {
     const gameLoop = (timestamp) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // --- 1. Draw Dynamic Background ---
+      // --- 1. Draw Dynamic Background (unchanged) ---
       clouds.current.forEach(cloud => {
           cloud.x += cloud.speed;
           if (isWandering) {
@@ -202,7 +312,7 @@ export const useDragonGame = () => {
           ctx.fill();
       });
 
-      // --- 2. Update and Draw Dragon ---
+      // --- 2. Update and Draw Dragon (unchanged) ---
       let leader = isWandering ? wanderTarget.current : mousePosition.current;
       if (isWandering) {
         wanderTarget.current.x += wanderVelocity.current.vx;
@@ -223,13 +333,12 @@ export const useDragonGame = () => {
         drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current, timestamp, isWandering);
       }
 
-      // --- 3. Update and Draw Fruits ---
+      // --- 3. Update and Draw Fruits (unchanged) ---
       if (Date.now() - lastFruitSpawn > GAME_CONFIG.fruitSpawnRate && fruits.current.length < 8) {
         spawnFruit();
         lastFruitSpawn = Date.now();
       }
       fruits.current = fruits.current.filter(f => Date.now() - f.createdAt < f.lifespan);
-
       fruits.current.forEach((fruit) => {
         ctx.shadowBlur = 0;
         if (fruit.type === 'LEGENDARY') {
@@ -267,27 +376,24 @@ export const useDragonGame = () => {
             ctx.shadowBlur = 0;
         }
       });
-
-      // --- 4. Handle Fruit Collision ---
+      
+      // --- 4. Handle Fruit Collision (with new sound effects) ---
       fruits.current.forEach((fruit, fruitIndex) => {
         const head = currentSegments[0];
         if (!head) return;
         const dist = Math.hypot(head.x - fruit.x, head.y - fruit.y);
         if (dist < head.size + fruit.size) {
           createParticleBurst(fruit.x, fruit.y, fruit.color, fruit.type);
-          
+          audioManager.play(`eat_${fruit.type}`);
           fruits.current.splice(fruitIndex, 1);
           const bonus = Math.floor(Math.random() * (fruit.maxBonus - fruit.minBonus + 1)) + fruit.minBonus;
           for (let i = 0; i < bonus; i++) {
             currentSegments.push({ ...currentSegments[currentSegments.length - 1] });
           }
-          
           const oldScore = scoreRef.current;
           scoreRef.current = currentSegments.length;
           setScore(scoreRef.current);
           const currentScore = scoreRef.current;
-
-          // Stop growth after 500 points
           if (oldScore < 500) {
             let growthFactor = (currentScore < 100) ? 0.1 : (currentScore < 250) ? 0.05 : 0.02;
             currentSegments.forEach(seg => {
@@ -296,8 +402,6 @@ export const useDragonGame = () => {
               }
             });
           }
-
-          // Milestone check
           const milestones = { 100: 'MILESTONE_1', 250: 'MILESTONE_2', 500: 'VICTORY' };
           for (const [milestoneScore, key] of Object.entries(milestones)) {
               if (currentScore >= milestoneScore && !announcedMilestones.current.has(key)) {
@@ -306,27 +410,23 @@ export const useDragonGame = () => {
                   if (key === 'VICTORY') {
                       setVictoryAchieved(true);
                       setShowVictoryModal(true);
+                      audioManager.play('victory');
+                  } else {
+                      audioManager.play('milestone');
                   }
               }
           }
         }
       });
 
-      // --- 5. Update and Draw All Particle Systems ---
+      // --- 5. Update and Draw Particle Systems (unchanged) ---
       particles.current = particles.current.filter(p => p.alpha > 0);
       particles.current.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.alpha -= p.decay;
-          p.vx *= p.friction;
-          p.vy *= p.friction;
-          ctx.globalAlpha = p.alpha;
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
+          p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
+          p.vx *= p.friction; p.vy *= p.friction;
+          ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
       });
-      
       if (activeSkin === 'dragon' && segmentsRef.current.length > 0) {
         if (timestamp % 150 < 16.6) {
             const tail = segmentsRef.current[segmentsRef.current.length - 1];
@@ -344,7 +444,6 @@ export const useDragonGame = () => {
           ctx.fillStyle = `hsl(85, 100%, ${70 + spore.alpha * 30}%)`;
           ctx.beginPath(); ctx.arc(spore.x, spore.y, spore.size, 0, Math.PI * 2); ctx.fill();
       });
-
       if (activeSkin === 'ghost' && segmentsRef.current.length > 0) {
           const head = segmentsRef.current[0];
           if (timestamp % 100 < 16.6) {
@@ -364,7 +463,6 @@ export const useDragonGame = () => {
           ctx.fillStyle = wisp.color;
           ctx.beginPath(); ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2); ctx.fill();
       });
-
       if (activeSkin === 'nagini' && segmentsRef.current.length > 0 && !isWandering) {
         const head = segmentsRef.current[0];
         const timeInCycle = timestamp % 2500;
@@ -374,7 +472,6 @@ export const useDragonGame = () => {
             const tongueTipLength = head.size * 2.8;
             const sparkX = head.x + Math.cos(angle) * tongueTipLength;
             const sparkY = head.y + Math.sin(angle) * tongueTipLength;
-            
             naginiSparks.current.push({
               x: sparkX, y: sparkY,
               vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3,
@@ -397,16 +494,119 @@ export const useDragonGame = () => {
           ctx.stroke();
       });
 
-      ctx.globalAlpha = 1;
 
+      // --- NEW: 6. Draw Click Visual Effects ---
+      clickEffects.current = clickEffects.current.filter(effect => {
+          const age = Date.now() - effect.createdAt;
+          return age < effect.duration;
+      });
+      
+      clickEffects.current.forEach(effect => {
+          ctx.save();
+          ctx.translate(effect.x, effect.y);
+          const age = Date.now() - effect.createdAt;
+          const progress = age / effect.duration;
+
+          switch (effect.skin) {
+              case 'dragon': { // Radar Scan
+                  const alpha = Math.sin(progress * Math.PI);
+                  ctx.globalAlpha = alpha;
+                  for(let i=1; i<=3; i++){
+                    const radius = (progress * 100 + i*30) % 120;
+                    ctx.strokeStyle = `hsla(130, 80%, 70%, ${alpha * (1 - radius/120)})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                  }
+                  const sweepAngle = progress * Math.PI * 4;
+                  ctx.rotate(sweepAngle);
+                  const grad = ctx.createLinearGradient(0, 0, 120, 0);
+                  grad.addColorStop(0, `hsla(130, 80%, 70%, ${alpha * 0.5})`);
+                  grad.addColorStop(1, `hsla(130, 80%, 70%, 0)`);
+                  ctx.strokeStyle = grad;
+                  ctx.beginPath();
+                  ctx.moveTo(0,0);
+                  ctx.lineTo(120, 0);
+                  ctx.stroke();
+                  break;
+              }
+              case 'fire-wyrm': { // Fire Breath
+                  ctx.rotate(effect.angle);
+                  effect.particles.forEach(p => {
+                      if (p.alpha > 0) {
+                          p.alpha -= p.decay;
+                          p.x += p.vx;
+                          p.y += p.vy;
+                          ctx.globalAlpha = p.alpha;
+                          ctx.fillStyle = `hsl(${p.hue}, 100%, ${60 + p.alpha * 40}%)`;
+                          ctx.beginPath();
+                          ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2);
+                          ctx.fill();
+                      }
+                  });
+                  break;
+              }
+              case 'nagini': { // Venom Splash
+                  effect.particles.forEach(p => {
+                      if (p.alpha > 0) {
+                          p.alpha -= p.decay;
+                          p.vx *= 0.98;
+                          p.vy *= 0.98;
+                          p.vy += p.gravity;
+                          p.x += p.vx;
+                          p.y += p.vy;
+                          ctx.globalAlpha = p.alpha;
+                          ctx.fillStyle = `hsl(${p.hue}, 80%, 60%)`;
+                          ctx.beginPath();
+                          ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2);
+                          ctx.fill();
+                      }
+                  });
+                  break;
+              }
+              case 'ghost': { // Electric Discharge
+                  effect.particles.forEach(p => {
+                      p.alpha -= 0.05;
+                      if(p.alpha < 0) p.alpha = 0;
+                      ctx.strokeStyle = `hsla(180, 100%, 85%, ${p.alpha * (0.5 + Math.random() * 0.5)})`;
+                      ctx.lineWidth = 1 + Math.random() * 2;
+                      ctx.shadowColor = 'cyan';
+                      ctx.shadowBlur = 15;
+                      ctx.beginPath();
+                      ctx.moveTo(p.points[0].x, p.points[0].y);
+                      for(let i=1; i < p.points.length; i++) {
+                          ctx.lineTo(p.points[i].x, p.points[i].y);
+                      }
+                      ctx.stroke();
+                  });
+                  break;
+              }
+              case 'snake': { // Water Splash
+                  const alpha = Math.sin(progress * Math.PI);
+                  const radius = progress * 50;
+                  ctx.globalAlpha = alpha;
+                  ctx.strokeStyle = `hsla(182, 65%, 60%, ${alpha})`;
+                  ctx.lineWidth = 3 * (1 - progress);
+                  ctx.beginPath();
+                  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                  ctx.stroke();
+                  break;
+              }
+          }
+          ctx.restore();
+      });
+
+      ctx.globalAlpha = 1; // Reset global alpha
       animationFrameId.current = requestAnimationFrame(gameLoop);
     };
 
     animationFrameId.current = requestAnimationFrame(gameLoop);
 
+    // Cleanup function
     return () => {
-      window.removeEventListener('pointerdown', handlePointerInteraction);
-      window.removeEventListener('pointermove', handlePointerInteraction);
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('resize', resizeCanvas);
       clearTimeout(idleTimerId.current);
       clearTimeout(wanderChangeTimerId.current);
@@ -414,5 +614,6 @@ export const useDragonGame = () => {
     };
   }, [activeSkin, initGame, isWandering, startWandering, stopWandering]);
 
+  // Return state and setters for the component to use
   return { canvasRef, score, activeSkin, setActiveSkin, victoryAchieved, showVictoryModal, setShowVictoryModal, announcedMilestones: announcedMilestones.current };
 };
