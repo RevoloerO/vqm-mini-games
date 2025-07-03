@@ -171,62 +171,51 @@ export const useDragonGame = () => {
     // --- Click handler for visual effects ---
     const handlePointerDown = (e) => {
         let effect;
+        const head = segmentsRef.current[0];
 
         switch (activeSkin) {
             case 'fire-wyrm': {
-                const head = segmentsRef.current[0];
                 if (!head) break;
-
                 const angle = Math.atan2(e.clientY - head.y, e.clientX - head.x);
-                
+                const speed = 20;
                 effect = {
                     skin: 'fire-wyrm',
                     createdAt: Date.now(),
-                    duration: 1000,
+                    duration: 1500,
                     x: head.x,
                     y: head.y,
-                    angle: angle,
-                    particles: [],
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: 10 + Math.random() * 5,
+                    trail: [],
                 };
-
-                for (let i = 0; i < 70; i++) {
-                    const speed = 5 + Math.random() * 10;
-                    const angleOffset = (Math.random() - 0.5) * 0.6; // Cone shape
-                    effect.particles.push({
-                        vx: Math.cos(angleOffset) * speed,
-                        vy: Math.sin(angleOffset) * speed,
-                        x: 0,
-                        y: 0,
-                        size: 2 + Math.random() * 4,
-                        alpha: 1,
-                        decay: 0.02 + Math.random() * 0.01,
-                        hue: 15 + Math.random() * 30,
-                    });
-                }
                 clickEffects.current.push(effect);
                 break;
             }
             case 'nagini': {
-                 effect = {
+                if (!head) break;
+                const angle = Math.atan2(e.clientY - head.y, e.clientX - head.x);
+                const speed = 25; // Faster spell
+                effect = {
                     skin: 'nagini',
                     createdAt: Date.now(),
-                    duration: 1200,
-                    x: e.clientX,
-                    y: e.clientY,
-                    particles: [],
+                    duration: 1200, // Shorter lifespan
+                    x: head.x,
+                    y: head.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: 6,
+                    state: 'charging',
+                    chargeDuration: 400, // Longer charge time
+                    chargeParticles: [],
+                    trail: [],
                 };
-                for (let i = 0; i < 50; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 1 + Math.random() * 6;
-                    effect.particles.push({
-                        x: 0, y: 0,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        size: 2 + Math.random() * 4,
-                        alpha: 1,
-                        decay: 0.015 + Math.random() * 0.01,
-                        gravity: 0.1,
-                        hue: 100 + Math.random() * 40,
+                // Create more charging particles for a better visual
+                for (let i = 0; i < 40; i++) {
+                    effect.chargeParticles.push({
+                        angle: Math.random() * Math.PI * 2,
+                        dist: 10 + Math.random() * 30, // Increased radius for a bigger visual
+                        size: 1.5 + Math.random() * 3, // Slightly larger particles
                     });
                 }
                 clickEffects.current.push(effect);
@@ -512,45 +501,123 @@ export const useDragonGame = () => {
                   break;
               }
               case 'fire-wyrm': {
-                  ctx.translate(effect.x, effect.y);
-                  ctx.rotate(effect.angle);
-                  effect.particles.forEach(p => {
-                      if (p.alpha > 0) {
-                          p.x += p.vx;
-                          p.y += p.vy;
-                          p.alpha -= p.decay;
-                          p.vx *= 0.98;
-                          p.vy *= 0.98;
-
-                          ctx.globalAlpha = p.alpha;
-                          ctx.fillStyle = `hsl(${p.hue}, 100%, ${60 + p.alpha * 40}%)`;
-                          ctx.shadowColor = 'orange';
-                          ctx.shadowBlur = p.size * 2;
-                          ctx.beginPath();
-                          ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2);
-                          ctx.fill();
-                      }
-                  });
+                  effect.x += effect.vx;
+                  effect.y += effect.vy;
+                  effect.trail.push({ x: effect.x, y: effect.y, alpha: 1 });
+                  if (effect.trail.length > 25) {
+                      effect.trail.shift();
+                  }
+                  
+                  // Draw trail
+                  ctx.lineCap = 'round';
+                  for (let i = effect.trail.length - 1; i > 0; i--) {
+                      const p1 = effect.trail[i];
+                      const p2 = effect.trail[i-1];
+                      p1.alpha -= 0.04;
+                      if (p1.alpha <= 0) continue;
+                      const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+                      grad.addColorStop(0, `hsla(50, 100%, 60%, ${p1.alpha * 0.7})`);
+                      grad.addColorStop(1, `hsla(20, 100%, 50%, 0)`);
+                      ctx.strokeStyle = grad;
+                      ctx.lineWidth = (effect.size * (i / effect.trail.length)) * 1.5;
+                      ctx.beginPath();
+                      ctx.moveTo(p1.x, p1.y);
+                      ctx.lineTo(p2.x, p2.y);
+                      ctx.stroke();
+                  }
+                  
+                  // Draw fireball head
+                  const alpha = 1 - progress;
+                  ctx.globalAlpha = alpha;
+                  const headGrad = ctx.createRadialGradient(effect.x, effect.y, 0, effect.x, effect.y, effect.size);
+                  headGrad.addColorStop(0, 'hsl(60, 100%, 90%)');
+                  headGrad.addColorStop(0.5, 'hsl(50, 100%, 70%)');
+                  headGrad.addColorStop(1, 'hsl(30, 100%, 50%)');
+                  ctx.fillStyle = headGrad;
+                  ctx.shadowColor = 'red';
+                  ctx.shadowBlur = 30;
+                  ctx.beginPath();
+                  ctx.arc(effect.x, effect.y, effect.size, 0, Math.PI * 2);
+                  ctx.fill();
                   break;
               }
               case 'nagini': {
-                  ctx.translate(effect.x, effect.y);
-                  effect.particles.forEach(p => {
-                      if (p.alpha > 0) {
-                          p.x += p.vx;
-                          p.y += p.vy;
-                          p.vy += p.gravity;
-                          p.alpha -= p.decay;
-                          
-                          ctx.globalAlpha = p.alpha;
-                          ctx.fillStyle = `hsl(${p.hue}, 80%, 60%)`;
-                          ctx.shadowColor = `hsl(${p.hue}, 80%, 40%)`;
-                          ctx.shadowBlur = p.size;
+                  const head = segmentsRef.current[0];
+                  if (!head) break;
+
+                  if (effect.state === 'charging') {
+                      const chargeProgress = age / effect.chargeDuration;
+                      const chargeAlpha = Math.sin(chargeProgress * Math.PI);
+                      ctx.globalAlpha = chargeAlpha;
+                      ctx.shadowBlur = 25;
+                      ctx.shadowColor = 'hsl(120, 100%, 50%)';
+                      
+                      // Draw swirling, pulsing charge particles
+                      effect.chargeParticles.forEach(p => {
+                          const pulse = Math.sin(chargeProgress * Math.PI * 2 + p.angle) * 5;
+                          const currentAngle = p.angle + timestamp / 300; // Swirl
+                          const currentDist = p.dist * (1 - chargeProgress) + pulse; // Move inward and pulse
+                          const x = head.x + Math.cos(currentAngle) * currentDist;
+                          const y = head.y + Math.sin(currentAngle) * currentDist;
+                          ctx.fillStyle = `hsl(120, 100%, ${75 + Math.random() * 25}%)`;
                           ctx.beginPath();
-                          ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2);
+                          ctx.arc(x, y, p.size * chargeProgress, 0, 2 * Math.PI);
                           ctx.fill();
+                      });
+
+                      if (age >= effect.chargeDuration) {
+                          effect.state = 'traveling';
                       }
-                  });
+                  } else if (effect.state === 'traveling') {
+                      // Add a wobble to the path
+                      const wobble = Math.sin(age / 50) * 4;
+                      const perpAngle = Math.atan2(effect.vy, effect.vx) + Math.PI / 2;
+                      effect.x += effect.vx + Math.cos(perpAngle) * wobble;
+                      effect.y += effect.vy + Math.sin(perpAngle) * wobble;
+
+                      effect.trail.push({ x: effect.x, y: effect.y, alpha: 1 });
+                      if (effect.trail.length > 20) {
+                          effect.trail.shift();
+                      }
+
+                      // Draw trail
+                      ctx.lineCap = 'round';
+                      for (let i = effect.trail.length - 1; i > 0; i--) {
+                          const p1 = effect.trail[i];
+                          const p2 = effect.trail[i-1];
+                          p1.alpha -= 0.06;
+                          if (p1.alpha <= 0) continue;
+                          ctx.strokeStyle = `hsla(120, 100%, 70%, ${p1.alpha * 0.4})`;
+                          ctx.lineWidth = effect.size * (i / effect.trail.length) * 0.8; // Thinner trail
+                          ctx.beginPath();
+                          ctx.moveTo(p1.x, p1.y);
+                          ctx.lineTo(p2.x, p2.y);
+                          ctx.stroke();
+                      }
+
+                      // Draw spell head
+                      const spellAlpha = 1 - (age - effect.chargeDuration) / (effect.duration - effect.chargeDuration);
+                      ctx.globalAlpha = spellAlpha;
+                      ctx.fillStyle = 'white';
+                      ctx.shadowColor = 'hsl(120, 100%, 50%)';
+                      ctx.shadowBlur = 30;
+                      
+                      // Main spell core
+                      ctx.beginPath();
+                      ctx.arc(effect.x, effect.y, effect.size, 0, Math.PI * 2);
+                      ctx.fill();
+                      
+                      // Add distinctive sparks
+                      ctx.shadowBlur = 10;
+                      for(let i=0; i<3; i++) {
+                         ctx.fillStyle = `hsla(120, 100%, 80%, ${Math.random() * 0.7})`;
+                         ctx.beginPath();
+                         const sparkX = effect.x + (Math.random() - 0.5) * 15;
+                         const sparkY = effect.y + (Math.random() - 0.5) * 15;
+                         ctx.arc(sparkX, sparkY, 1 + Math.random() * 2, 0, Math.PI * 2);
+                         ctx.fill();
+                      }
+                  }
                   break;
               }
               case 'ghost': {
