@@ -1,676 +1,779 @@
-// useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
-// Manages game state efficiently using useRef for animations and useState for UI updates.
-// UPDATED: All audio effects have been removed.
+export const FRUIT_TYPES = {
+    NORMAL: { type: 'NORMAL', color: 'gold', size: 10, lifespan: Infinity, minBonus: 1, maxBonus: 1 },
+    RARE: { type: 'RARE', color: '#48dbfb', size: 7, lifespan: 10000, minBonus: 3, maxBonus: 5 },
+    EPIC: { type: 'EPIC', color: '#ff9ff3', size: 5, lifespan: 5000, minBonus: 7, maxBonus: 10 },
+    LEGENDARY: { type: 'LEGENDARY', color: '#FFFFFF', size: 12, lifespan: 2500, minBonus: 20, maxBonus: 30 },
+};
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
+export const GAME_CONFIG = {
+    numInitialSegments: 10,
+    initialSize: 5,
+    maxSize: 30,
+    easeFactor: 0.15,
+    fruitSpawnRate: 2000,
+};
 
-// --- Hook Definition ---
-export const useDragonGame = () => {
-  // --- Refs for Canvas and Game State ---
-  const canvasRef = useRef(null);
-  const segmentsRef = useRef([]);
-  const scoreRef = useRef(0);
-  const mousePosition = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-  const wanderTarget = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-  const wanderVelocity = useRef({ vx: 0, vy: 0 });
-  const fruits = useRef([]);
-  const particles = useRef([]);
-  const dragonSpores = useRef([]);
-  const ghostWisps = useRef([]);
-  const naginiSparks = useRef([]);
-  const clouds = useRef([]);
-  const clickEffects = useRef([]);
-  const animationFrameId = useRef(null);
-  const idleTimerId = useRef(null);
-  const wanderChangeTimerId = useRef(null);
-  const announcedMilestones = useRef(new Set());
+export const SKINS = {
 
-  // --- React State (for UI that needs to re-render) ---
-  const [score, setScore] = useState(0);
-  const [activeSkin, setActiveSkin] = useState('dragon');
-  const [isWandering, setIsWandering] = useState(false);
-  const [victoryAchieved, setVictoryAchieved] = useState(false);
-  const [showVictoryModal, setShowVictoryModal] = useState(false);
-
-  // --- Wandering Logic ---
-  const startWandering = useCallback(() => {
-    if (isWandering) return;
-    setIsWandering(true);
-    if (segmentsRef.current.length > 0) {
-      wanderTarget.current = { x: segmentsRef.current[0].x, y: segmentsRef.current[0].y };
-    }
-    const angle = Math.random() * 2 * Math.PI;
-    const speed = 1 + Math.random() * 2;
-    wanderVelocity.current = { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed };
-    const changeCourse = () => {
-      const angleChange = (Math.random() - 0.5) * 1.5;
-      const currentAngle = Math.atan2(wanderVelocity.current.vy, wanderVelocity.current.vx);
-      const newAngle = currentAngle + angleChange;
-      const speed = 1 + Math.random() * 2;
-      wanderVelocity.current = { vx: Math.cos(newAngle) * speed, vy: Math.sin(newAngle) * speed };
-      const nextChangeDelay = 3000 + Math.random() * 3000;
-      wanderChangeTimerId.current = setTimeout(changeCourse, nextChangeDelay);
-    };
-    changeCourse();
-  }, [isWandering]);
-
-  const stopWandering = useCallback(() => {
-    setIsWandering(false);
-    clearTimeout(wanderChangeTimerId.current);
-  }, []);
-  
-  // --- Game Initialization ---
-  const initGame = useCallback(() => {
-    segmentsRef.current = Array.from({ length: GAME_CONFIG.numInitialSegments }, () => ({
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
-      size: GAME_CONFIG.initialSize,
-    }));
-    scoreRef.current = segmentsRef.current.length;
-    setScore(scoreRef.current);
-    fruits.current = [];
-    particles.current = [];
-    dragonSpores.current = [];
-    ghostWisps.current = [];
-    naginiSparks.current = [];
-    clickEffects.current = [];
-    const canvas = canvasRef.current;
-    if (canvas) {
-        clouds.current = Array.from({ length: 20 }, () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: 60 + Math.random() * 120,
-            speed: 0.05 + Math.random() * 0.1
-        }));
-    }
-  }, []);
-
-  // --- Tiered Particle Creation ---
-  const createParticleBurst = (x, y, color, type) => {
-    let numParticles = 30;
-    let particleConfig = {};
-
-    switch (type) {
-        case 'NORMAL':
-            numParticles = 20;
-            particleConfig = { speedRange: 4, sizeRange: 2, decayRange: 0.01, friction: 0.98 };
-            break;
-        case 'RARE':
-            numParticles = 50;
-            particleConfig = { speedRange: 6, sizeRange: 3, decayRange: 0.015, friction: 0.97 };
-            break;
-        case 'EPIC':
-            numParticles = 100;
-            particleConfig = { speedRange: 8, sizeRange: 4, decayRange: 0.02, friction: 0.96 };
-            break;
-        case 'LEGENDARY':
-            numParticles = 250;
-            particleConfig = { speedRange: 12, sizeRange: 5, decayRange: 0.025, friction: 0.95 };
-            break;
-        case 'MILESTONE':
-            numParticles = 300;
-            particleConfig = { speedRange: 15, sizeRange: 6, decayRange: 0.015, friction: 0.96 };
-            break;
-        default:
-             particleConfig = { speedRange: 4, sizeRange: 2, decayRange: 0.01, friction: 0.98 };
-    }
-
-    for (let i = 0; i < numParticles; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 1 + Math.random() * particleConfig.speedRange;
-        let particleColor = color;
-        
-        if (type === 'LEGENDARY' || type === 'MILESTONE') {
-            particleColor = `hsl(${Math.random() * 360}, 100%, 70%)`;
-        }
-
-        particles.current.push({
-            x, y,
-            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-            color: particleColor,
-            size: 2 + Math.random() * particleConfig.sizeRange,
-            alpha: 1,
-            decay: 0.015 + Math.random() * particleConfig.decayRange,
-            friction: particleConfig.friction
-        });
-    }
-  };
-
-  // --- Main Effect: Handles Game Loop, Events, and Rendering ---
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('vqm-game-theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    let lastFruitSpawn = Date.now();
-
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      mousePosition.current = { x: canvas.width / 2, y: canvas.height / 2 };
-    };
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    if (segmentsRef.current.length === 0) {
-      initGame();
-    }
-
-    const handlePointerMove = (e) => {
-      mousePosition.current = { x: e.clientX, y: e.clientY };
-      if (isWandering) {
-        stopWandering();
-      }
-      clearTimeout(idleTimerId.current);
-      idleTimerId.current = setTimeout(startWandering, 5000);
-    };
-
-    // --- Click handler for visual effects ---
-    const handlePointerDown = (e) => {
-        let effect;
-        const head = segmentsRef.current[0];
-
-        switch (activeSkin) {
-            case 'fire-wyrm': {
-                if (!head) break;
-                const angle = Math.atan2(e.clientY - head.y, e.clientX - head.x);
-                const speed = 20;
-                effect = {
-                    skin: 'fire-wyrm',
-                    createdAt: Date.now(),
-                    duration: 1500,
-                    x: head.x,
-                    y: head.y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    size: 10 + Math.random() * 5,
-                    trail: [],
-                };
-                clickEffects.current.push(effect);
-                break;
-            }
-            case 'nagini': {
-                if (!head) break;
-                const angle = Math.atan2(e.clientY - head.y, e.clientX - head.x);
-                const speed = 25; // Faster spell
-                effect = {
-                    skin: 'nagini',
-                    createdAt: Date.now(),
-                    duration: 1200, // Shorter lifespan
-                    x: head.x,
-                    y: head.y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    size: 6,
-                    state: 'charging',
-                    chargeDuration: 400, // Longer charge time
-                    chargeParticles: [],
-                    trail: [],
-                };
-                // Create more charging particles for a better visual
-                for (let i = 0; i < 40; i++) {
-                    effect.chargeParticles.push({
-                        angle: Math.random() * Math.PI * 2,
-                        dist: 10 + Math.random() * 30, // Increased radius for a bigger visual
-                        size: 1.5 + Math.random() * 3, // Slightly larger particles
-                    });
-                }
-                clickEffects.current.push(effect);
-                break;
-            }
-            case 'ghost': {
-                effect = {
-                    x: e.clientX, y: e.clientY, skin: activeSkin,
-                    createdAt: Date.now(), duration: 800, particles: [], angle: 0,
-                };
-                for (let i = 0; i < 5; i++) {
-                    const bolt = { points: [{x:0, y:0}], angle: Math.random() * Math.PI * 2, alpha: 1 };
-                    let lastX = 0, lastY = 0;
-                    const len = 40 + Math.random() * 40;
-                    for (let j = 0; j < 10; j++) {
-                        lastX += Math.cos(bolt.angle) * (len/10) + (Math.random() - 0.5) * 20;
-                        lastY += Math.sin(bolt.angle) * (len/10) + (Math.random() - 0.5) * 20;
-                        bolt.points.push({ x: lastX, y: lastY });
-                    }
-                    effect.particles.push(bolt);
-                }
-                clickEffects.current.push(effect);
-                break;
-            }
-            default: { // dragon, snake
-                effect = {
-                    x: e.clientX, y: e.clientY, skin: activeSkin,
-                    createdAt: Date.now(), duration: 800, particles: [], angle: 0,
-                };
-                clickEffects.current.push(effect);
-            }
-        }
-        handlePointerMove(e);
-    };
-
-    idleTimerId.current = setTimeout(startWandering, 5000);
-    window.addEventListener('pointerdown', handlePointerDown);
-    window.addEventListener('pointermove', handlePointerMove);
-
-    const spawnFruit = () => {
-      const rand = Math.random();
-      let fruitType;
-      if (rand < 0.01) fruitType = FRUIT_TYPES.LEGENDARY;
-      else if (rand < 0.05) fruitType = FRUIT_TYPES.EPIC;
-      else if (rand < 0.25) fruitType = FRUIT_TYPES.RARE;
-      else fruitType = FRUIT_TYPES.NORMAL;
-      fruits.current.push({ ...fruitType, x: Math.random() * canvas.width, y: Math.random() * canvas.height, createdAt: Date.now() });
-    };
-
-    const gameLoop = (timestamp) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // --- 1. Draw Dynamic Background ---
-      clouds.current.forEach(cloud => {
-          cloud.x += cloud.speed;
-          if (isWandering) {
-              cloud.x += wanderVelocity.current.vx * 0.05;
-              cloud.y += wanderVelocity.current.vy * 0.05;
-          }
-          if (cloud.x - cloud.size > canvas.width) cloud.x = -cloud.size;
-          if (cloud.x + cloud.size < 0) cloud.x = canvas.width + cloud.size;
-          if (cloud.y - cloud.size > canvas.height) cloud.y = -cloud.size;
-          if (cloud.y + cloud.size < 0) cloud.y = canvas.height + cloud.size;
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-          ctx.beginPath();
-          ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
-          ctx.fill();
-      });
-
-      // --- 2. Update and Draw Dragon ---
-      let leader = isWandering ? wanderTarget.current : mousePosition.current;
-      if (isWandering) {
-        wanderTarget.current.x += wanderVelocity.current.vx;
-        wanderTarget.current.y += wanderVelocity.current.vy;
-        if (wanderTarget.current.x < 0 || wanderTarget.current.x > canvas.width) wanderVelocity.current.vx *= -1;
-        if (wanderTarget.current.y < 0 || wanderTarget.current.y > canvas.height) wanderVelocity.current.vy *= -1;
-      }
-      const currentSegments = segmentsRef.current;
-      currentSegments.forEach((segment) => {
-        const dx = leader.x - segment.x;
-        const dy = leader.y - segment.y;
-        segment.x += dx * (GAME_CONFIG.easeFactor - (currentSegments.length * 0.0001));
-        segment.y += dy * (GAME_CONFIG.easeFactor - (currentSegments.length * 0.0001));
-        leader = segment;
-      });
-      const drawSkin = SKINS[activeSkin];
-      if (drawSkin && currentSegments.length > 0) {
-        drawSkin(ctx, currentSegments, isWandering ? wanderTarget.current : mousePosition.current, timestamp, isWandering);
-      }
-
-      // --- 3. Update and Draw Fruits ---
-      if (Date.now() - lastFruitSpawn > GAME_CONFIG.fruitSpawnRate && fruits.current.length < 8) {
-        spawnFruit();
-        lastFruitSpawn = Date.now();
-      }
-      fruits.current = fruits.current.filter(f => Date.now() - f.createdAt < f.lifespan);
-      fruits.current.forEach((fruit) => {
-        ctx.shadowBlur = 0;
-        if (fruit.type === 'LEGENDARY') {
-            const pulse = Math.abs(Math.sin(timestamp / 200)) * 5;
-            const grad = ctx.createRadialGradient(fruit.x, fruit.y, 0, fruit.x, fruit.y, fruit.size + pulse);
-            grad.addColorStop(0, 'white');
-            grad.addColorStop(0.7, `hsl(${timestamp / 20 % 360}, 100%, 80%)`);
-            grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(fruit.x, fruit.y, fruit.size + pulse, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            if (fruit.type === 'EPIC') {
-                const lifePercent = (Date.now() - fruit.createdAt) / 1000;
-                const rippleRadius = fruit.size + (lifePercent * 15) % 20;
-                const rippleOpacity = 1 - ((rippleRadius - fruit.size) / 20);
-                ctx.strokeStyle = `rgba(255, 159, 243, ${rippleOpacity * 0.7})`;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(fruit.x, fruit.y, rippleRadius, 0, Math.PI * 2);
-                ctx.stroke();
-                if (Math.floor(timestamp / 200) % 2) return;
-            } else if (fruit.type === 'RARE') {
-                ctx.shadowBlur = 15 + (Math.abs(Math.sin(timestamp / 300)) * 10);
-                ctx.shadowColor = fruit.color;
-            } else {
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = fruit.color;
-            }
-            ctx.fillStyle = fruit.color;
-            ctx.beginPath();
-            ctx.arc(fruit.x, fruit.y, fruit.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        }
-      });
-      
-      // --- 4. Handle Fruit Collision ---
-      fruits.current.forEach((fruit, fruitIndex) => {
-        const head = currentSegments[0];
+    dragon: (ctx, segments, targetPos, timestamp, isWandering) => {
+        const head = segments[0];
         if (!head) return;
-        const dist = Math.hypot(head.x - fruit.x, head.y - fruit.y);
-        if (dist < head.size + fruit.size) {
-          createParticleBurst(fruit.x, fruit.y, fruit.color, fruit.type);
-          fruits.current.splice(fruitIndex, 1);
-          const bonus = Math.floor(Math.random() * (fruit.maxBonus - fruit.minBonus + 1)) + fruit.minBonus;
-          for (let i = 0; i < bonus; i++) {
-            currentSegments.push({ ...currentSegments[currentSegments.length - 1] });
-          }
-          const oldScore = scoreRef.current;
-          scoreRef.current = currentSegments.length;
-          setScore(scoreRef.current);
-          const currentScore = scoreRef.current;
-          if (oldScore < 500) {
-            let growthFactor = (currentScore < 100) ? 0.1 : (currentScore < 250) ? 0.05 : 0.02;
-            currentSegments.forEach(seg => {
-              if (seg.size < GAME_CONFIG.maxSize) {
-                  seg.size = Math.min(GAME_CONFIG.maxSize, seg.size + bonus * growthFactor);
-              }
-            });
-          }
-          const milestones = { 100: 'MILESTONE_1', 250: 'MILESTONE_2', 500: 'VICTORY' };
-          for (const [milestoneScore, key] of Object.entries(milestones)) {
-              if (currentScore >= milestoneScore && !announcedMilestones.current.has(key)) {
-                  announcedMilestones.current.add(key);
-                  createParticleBurst(head.x, head.y, 'white', 'MILESTONE');
-                  if (key === 'VICTORY') {
-                      setVictoryAchieved(true);
-                      setShowVictoryModal(true);
-                  }
-              }
-          }
+
+        const baseHue = 130; // The classic green hue
+
+        // --- Body Segments ---
+        for (let i = segments.length - 1; i > 0; i--) {
+            const segment = segments[i];
+            const prevSegment = segments[i - 1];
+
+            let sizeScale = 1.0;
+            const midPoint = segments.length * 0.75;
+            if (i > midPoint) {
+                const t = (i - midPoint) / (segments.length - midPoint);
+                const minScale = 0.1;
+                sizeScale = 1 - t * (1 - minScale);
+            }
+            const displaySize = segment.size * sizeScale;
+
+            const shimmer = Math.sin(timestamp / 500 + i * 0.4) * 30;
+            const shimmerHue = baseHue + shimmer;
+
+            const percent = i / segments.length;
+            const colorLightness = 70 - percent * 40;
+
+            ctx.fillStyle = `hsl(${shimmerHue}, 70%, ${colorLightness}%)`;
+            ctx.beginPath();
+            ctx.arc(segment.x, segment.y, displaySize, 0, Math.PI * 2);
+            ctx.fill();
+
+            const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x - displaySize * Math.cos(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)), segment.y - displaySize * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
+            gradient.addColorStop(0, 'white');
+            gradient.addColorStop(0.2, `hsl(${shimmerHue}, 70%, ${colorLightness}%)`);
+            gradient.addColorStop(0.7, `hsl(${shimmerHue}, 70%, ${colorLightness}%)`);
+            gradient.addColorStop(1, `hsl(${shimmerHue}, 90%, ${colorLightness}%)`);
+
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = displaySize * 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(prevSegment.x, prevSegment.y);
+            ctx.lineTo(segment.x, segment.y);
+            ctx.stroke();
+
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = displaySize / 2;
+            ctx.beginPath();
+            ctx.moveTo(segment.x, segment.y);
+            ctx.lineTo(segment.x - displaySize * Math.cos(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)),
+                segment.y - displaySize * Math.sin(Math.atan2(targetPos.y - segment.y, targetPos.x - segment.x)));
+            ctx.stroke();
         }
-      });
 
-      // --- 5. Update and Draw Particle Systems ---
-      particles.current = particles.current.filter(p => p.alpha > 0);
-      particles.current.forEach(p => {
-          p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
-          p.vx *= p.friction; p.vy *= p.friction;
-          ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
-          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-      });
-      if (activeSkin === 'dragon' && segmentsRef.current.length > 0) {
-        if (timestamp % 150 < 16.6) {
-            const tail = segmentsRef.current[segmentsRef.current.length - 1];
-            dragonSpores.current.push({
-                x: tail.x, y: tail.y,
-                vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5 - 0.2,
-                alpha: 1, size: 1 + Math.random() * 2, decay: 0.01 + Math.random() * 0.01
-            });
+        // --- Head Drawing ---
+        const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const headScale = head.size / 8;
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        ctx.rotate(angle);
+        ctx.scale(headScale, headScale);
+        ctx.lineWidth = 2 / headScale;
+
+        const darkOutlineColor = `hsl(${baseHue}, 80%, 20%)`;
+
+        // Draw the back frills/horns
+        ctx.strokeStyle = darkOutlineColor;
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-5, -17, -30, -15);
+        ctx.quadraticCurveTo(-9, -10, -7, 0);
+        ctx.quadraticCurveTo(-9, 10, -30, 15);
+        ctx.quadraticCurveTo(-5, 17, 0, 0);
+        ctx.fill();
+        ctx.stroke();
+
+        // --- Main head shape with gradient layer ---
+        ctx.strokeStyle = darkOutlineColor;
+        const headGradient = ctx.createRadialGradient(5, 0, 1, 0, 0, 30);
+        headGradient.addColorStop(0, `hsl(${baseHue}, 70%, 65%)`);
+        headGradient.addColorStop(1, `hsl(${baseHue}, 70%, 50%)`);
+        ctx.fillStyle = headGradient;
+
+        const mainHeadPath = new Path2D();
+        mainHeadPath.moveTo(22, 0);
+        mainHeadPath.lineTo(19, -4);
+        const cheekX = 7;
+        const cheekY = -7;
+        mainHeadPath.bezierCurveTo(cheekX - 2, cheekY + 3, cheekX + 2, cheekY - 4, 3, -10);
+        mainHeadPath.quadraticCurveTo(1, -14, -2, -16);
+        mainHeadPath.lineTo(0, -10);
+        mainHeadPath.quadraticCurveTo(-1, -12, -7, -13);
+        mainHeadPath.lineTo(-4, -9);
+        mainHeadPath.quadraticCurveTo(-15, -13, -9, -3);
+        mainHeadPath.lineTo(-7, -2);
+        mainHeadPath.quadraticCurveTo(-10, -4, -22, 0);
+        mainHeadPath.quadraticCurveTo(-10, 4, -7, 2);
+        mainHeadPath.lineTo(-9, 3);
+        mainHeadPath.quadraticCurveTo(-15, 13, -4, 9);
+        mainHeadPath.lineTo(-7, 13);
+        mainHeadPath.quadraticCurveTo(-1, 12, 0, 10);
+        mainHeadPath.lineTo(-2, 16);
+        mainHeadPath.quadraticCurveTo(1, 14, 3, 10);
+        mainHeadPath.bezierCurveTo(cheekX + 2, -cheekY + 4, cheekX - 2, -cheekY - 3, 19, 4);
+        mainHeadPath.lineTo(22, 0);
+        ctx.fill(mainHeadPath);
+        ctx.stroke(mainHeadPath);
+
+        // --- Add extra highlight layer for scales ---
+        ctx.save();
+        ctx.clip(mainHeadPath);
+        const shimmer = Math.sin(timestamp / 400) * 5;
+        ctx.strokeStyle = `hsla(${baseHue}, 90%, ${75 + shimmer}%, 0.5)`;
+        ctx.lineWidth = 1.5 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(15, -3);
+        ctx.quadraticCurveTo(10, -8, 5, -9);
+        ctx.moveTo(15, 3);
+        ctx.quadraticCurveTo(10, 8, 5, 9);
+        ctx.moveTo(-5, -12);
+        ctx.quadraticCurveTo(-10, -8, -12, -2);
+        ctx.moveTo(-5, 12);
+        ctx.quadraticCurveTo(-10, 8, -12, 2);
+        ctx.stroke();
+        ctx.restore();
+
+
+
+        // --- Static Eye Details ---
+        // Eye ridges
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.moveTo(-7, -13);
+        ctx.quadraticCurveTo(-3, -5, 5, -3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-3, -8);
+        ctx.quadraticCurveTo(2, -9, 2, -4);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-7, 13);
+        ctx.quadraticCurveTo(-3, 5, 5, 3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-3, 8);
+        ctx.quadraticCurveTo(2, 9, 2, 4);
+        ctx.fill();
+
+        // Eye details
+        ctx.beginPath();
+        ctx.fillStyle = `hsl(${baseHue}, 80%, 20%)`;
+        ctx.moveTo(2, -4);
+        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
+        ctx.moveTo(4.5, -3);
+        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(2, 4);
+        ctx.quadraticCurveTo(-1, 2, -6.5, 6);
+        ctx.moveTo(4.5, 3);
+        ctx.quadraticCurveTo(-1, 2, -6.5, 6);
+        ctx.stroke();
+
+        // --- Blinking Animation ---
+        if (isWandering) {
+            const timeInCycle = timestamp % 3500; // Blink cycle of 3.5 seconds
+            const blinkDuration = 150; // Blink lasts 250ms
+            if (timeInCycle < blinkDuration) {
+                // Creates a smooth 0 -> 1 -> 0 curve for the blink
+                const blinkProgress = Math.sin((timeInCycle / blinkDuration) * Math.PI);
+
+                ctx.fillStyle = `hsl(${baseHue}, 70%, 50%)`; // Eyelid color
+                ctx.strokeStyle = darkOutlineColor;
+                ctx.lineWidth = 1.5 / headScale;
+
+                // Draw top eyelid as a simple arc
+                ctx.beginPath();
+                ctx.moveTo(-3, -8);
+                ctx.quadraticCurveTo(2, -9, 2, -4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Draw bottom eyelid
+                ctx.beginPath();
+                ctx.moveTo(-3, 8);
+                ctx.quadraticCurveTo(2, 9, 2, 4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
         }
-      }
-      dragonSpores.current = dragonSpores.current.filter(s => s.alpha > 0);
-      dragonSpores.current.forEach(spore => {
-          spore.x += spore.vx; spore.y += spore.vy; spore.alpha -= spore.decay;
-          ctx.globalAlpha = spore.alpha;
-          ctx.fillStyle = `hsl(85, 100%, ${70 + spore.alpha * 30}%)`;
-          ctx.beginPath(); ctx.arc(spore.x, spore.y, spore.size, 0, Math.PI * 2); ctx.fill();
-      });
-      if (activeSkin === 'ghost' && segmentsRef.current.length > 0) {
-          const head = segmentsRef.current[0];
-          if (timestamp % 100 < 16.6) {
-              ghostWisps.current.push({
-                  x: head.x, y: head.y,
-                  vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
-                  alpha: 0.8, size: 1 + Math.random() * 2.5,
-                  decay: 0.02 + Math.random() * 0.02,
-                  color: `hsl(270, 100%, ${85 + Math.random() * 15}%)`
-              });
-          }
-      }
-      ghostWisps.current = ghostWisps.current.filter(w => w.alpha > 0);
-      ghostWisps.current.forEach(wisp => {
-          wisp.x += wisp.vx; wisp.y += wisp.vy; wisp.alpha -= wisp.decay;
-          ctx.globalAlpha = wisp.alpha;
-          ctx.fillStyle = wisp.color;
-          ctx.beginPath(); ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2); ctx.fill();
-      });
-      if (activeSkin === 'nagini' && segmentsRef.current.length > 0 && !isWandering) {
-        const head = segmentsRef.current[0];
-        const timeInCycle = timestamp % 2500;
-        if (timeInCycle > 100 && timeInCycle < 250) {
-          if (Math.random() > 0.4) {
-            const angle = Math.atan2(mousePosition.current.y - head.y, mousePosition.current.x - head.x);
-            const tongueTipLength = head.size * 2.8;
-            const sparkX = head.x + Math.cos(angle) * tongueTipLength;
-            const sparkY = head.y + Math.sin(angle) * tongueTipLength;
-            naginiSparks.current.push({
-              x: sparkX, y: sparkY,
-              vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3,
-              alpha: 1, size: 1 + Math.random() * 2,
-              decay: 0.04 + Math.random() * 0.02,
-              color: `hsl(175, 100%, ${70 + Math.random() * 30}%)`
-            });
-          }
+
+        // --- Nose and Whiskers ---
+        // Nose
+        ctx.beginPath();
+        ctx.moveTo(19, -4);
+        ctx.quadraticCurveTo(13, -3.5, 17, -1);
+        ctx.moveTo(19, 4);
+        ctx.quadraticCurveTo(13, 3.5, 17, 1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(20, -1);
+        ctx.lineTo(18, -3);
+        ctx.moveTo(20, 1);
+        ctx.lineTo(18, 3);
+        ctx.stroke();
+        ctx.moveTo(8, -3);
+        ctx.quadraticCurveTo(6, 0, 8, 3);
+        ctx.moveTo(10, -2.5);
+        ctx.quadraticCurveTo(8, 0, 10, 2.5);
+        ctx.moveTo(15.3, -3);
+        ctx.quadraticCurveTo(10, -2, 5, -6);
+        ctx.moveTo(15.3, 3);
+        ctx.quadraticCurveTo(10, 2, 5, 6);
+        ctx.stroke();
+
+        // Whiskers with motion
+        ctx.strokeStyle = `hsl(${baseHue}, 40%, 30%)`;
+        ctx.lineWidth = 1.5 / headScale;
+        const whiskerWiggleX = Math.sin(timestamp / 480) * 1.5;
+        const whiskerWiggleY = Math.cos(timestamp / 550) * 2;
+        const whiskerRoll = Math.sin(timestamp / 550) * 2;
+
+        // Top whisker
+        ctx.beginPath();
+        ctx.moveTo(16.5, -4);
+        ctx.bezierCurveTo(22 + whiskerWiggleX, -10 + whiskerWiggleY, 27 + whiskerWiggleX, -1 + whiskerWiggleY, 29 + whiskerWiggleX, -7 + whiskerWiggleY);
+        ctx.bezierCurveTo(28 + whiskerWiggleX, -10 + whiskerWiggleY - whiskerRoll, 25 + whiskerWiggleX, -7 + whiskerWiggleY, 27 + whiskerWiggleX, -6 + whiskerWiggleY);
+        ctx.stroke();
+
+        // Bottom whisker
+        ctx.beginPath();
+        ctx.moveTo(16.5, 4);
+        ctx.bezierCurveTo(22 + whiskerWiggleX, 10 - whiskerWiggleY, 27 + whiskerWiggleX, 1 - whiskerWiggleY, 29 + whiskerWiggleX, 7 - whiskerWiggleY);
+        ctx.bezierCurveTo(28 + whiskerWiggleX, 10 - whiskerWiggleY, 25 + whiskerWiggleX, 7 - whiskerWiggleY, 27 + whiskerWiggleX, 6 - whiskerWiggleY);
+        ctx.stroke();
+
+        // --- Eye Animation Logic ---
+        if (!isWandering) {
+            // "Lock-on" glow effect when not wandering
+            const lockOnPulse = 2 + Math.sin(timestamp / 200) * 2;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter'; // Additive blending for a nice glow
+            const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20 + lockOnPulse);
+            glowGradient.addColorStop(0, `hsla(0, 100.00%, 50.20%, 0.69)`);
+            glowGradient.addColorStop(0.7, `hsla(${baseHue}, 100%, 80%, 0.3)`);
+            glowGradient.addColorStop(1, `hsla(${baseHue}, 100%, 50%, 0)`);
+
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, 20 + lockOnPulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
         }
-      }
-      naginiSparks.current = naginiSparks.current.filter(s => s.alpha > 0);
-      naginiSparks.current.forEach(spark => {
-          spark.x += spark.vx; spark.y += spark.vy; spark.alpha -= spark.decay;
-          ctx.globalAlpha = spark.alpha;
-          ctx.strokeStyle = spark.color;
-          ctx.lineWidth = spark.size;
-          ctx.beginPath();
-          ctx.moveTo(spark.x, spark.y);
-          ctx.lineTo(spark.x - spark.vx * 2, spark.y - spark.vy * 2);
-          ctx.stroke();
-      });
+        ctx.restore();
+    },
+    'fire-wyrm': (ctx, segments, targetPos, timestamp, isWandering) => {
+        const head = segments[0];
+        if (!head) return;
 
+        ctx.shadowBlur = 0;
 
-      // --- 6. Draw Click Visual Effects ---
-      clickEffects.current = clickEffects.current.filter(effect => {
-          const age = Date.now() - effect.createdAt;
-          return age < effect.duration;
-      });
-      
-      clickEffects.current.forEach(effect => {
-          ctx.save();
-          const age = Date.now() - effect.createdAt;
-          const progress = age / effect.duration;
+        for (let i = segments.length - 1; i > 0; i--) {
+            const segment = segments[i];
+            const prevSegment = segments[i - 1];
 
-          switch (effect.skin) {
-              case 'dragon': { 
-                  ctx.translate(effect.x, effect.y);
-                  const alpha = Math.sin(progress * Math.PI);
-                  ctx.globalAlpha = alpha;
-                  for(let i=1; i<=3; i++){
-                    const radius = (progress * 100 + i*30) % 120;
-                    ctx.strokeStyle = `hsla(130, 80%, 70%, ${alpha * (1 - radius/120)})`;
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                    ctx.stroke();
-                  }
-                  const sweepAngle = progress * Math.PI * 4;
-                  ctx.rotate(sweepAngle);
-                  const grad = ctx.createLinearGradient(0, 0, 120, 0);
-                  grad.addColorStop(0, `hsla(130, 80%, 70%, ${alpha * 0.5})`);
-                  grad.addColorStop(1, `hsla(130, 80%, 70%, 0)`);
-                  ctx.strokeStyle = grad;
-                  ctx.beginPath();
-                  ctx.moveTo(0,0);
-                  ctx.lineTo(120, 0);
-                  ctx.stroke();
-                  break;
-              }
-              case 'fire-wyrm': {
-                  effect.x += effect.vx;
-                  effect.y += effect.vy;
-                  effect.trail.push({ x: effect.x, y: effect.y, alpha: 1 });
-                  if (effect.trail.length > 25) {
-                      effect.trail.shift();
-                  }
-                  
-                  // Draw trail
-                  ctx.lineCap = 'round';
-                  for (let i = effect.trail.length - 1; i > 0; i--) {
-                      const p1 = effect.trail[i];
-                      const p2 = effect.trail[i-1];
-                      p1.alpha -= 0.04;
-                      if (p1.alpha <= 0) continue;
-                      const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-                      grad.addColorStop(0, `hsla(50, 100%, 60%, ${p1.alpha * 0.7})`);
-                      grad.addColorStop(1, `hsla(20, 100%, 50%, 0)`);
-                      ctx.strokeStyle = grad;
-                      ctx.lineWidth = (effect.size * (i / effect.trail.length)) * 1.5;
-                      ctx.beginPath();
-                      ctx.moveTo(p1.x, p1.y);
-                      ctx.lineTo(p2.x, p2.y);
-                      ctx.stroke();
-                  }
-                  
-                  // Draw fireball head
-                  const alpha = 1 - progress;
-                  ctx.globalAlpha = alpha;
-                  const headGrad = ctx.createRadialGradient(effect.x, effect.y, 0, effect.x, effect.y, effect.size);
-                  headGrad.addColorStop(0, 'hsl(60, 100%, 90%)');
-                  headGrad.addColorStop(0.5, 'hsl(50, 100%, 70%)');
-                  headGrad.addColorStop(1, 'hsl(30, 100%, 50%)');
-                  ctx.fillStyle = headGrad;
-                  ctx.shadowColor = 'red';
-                  ctx.shadowBlur = 30;
-                  ctx.beginPath();
-                  ctx.arc(effect.x, effect.y, effect.size, 0, Math.PI * 2);
-                  ctx.fill();
-                  break;
-              }
-              case 'nagini': {
-                  const head = segmentsRef.current[0];
-                  if (!head) break;
+            let sizeScale = 1.0;
+            const midPoint = segments.length * 0.75;
+            if (i > midPoint) {
+                const t = (i - midPoint) / (segments.length - midPoint);
+                const minScale = 0.1;
+                sizeScale = 1 - t * (1 - minScale);
+            }
+            const displaySize = segment.size * sizeScale;
 
-                  if (effect.state === 'charging') {
-                      const chargeProgress = age / effect.chargeDuration;
-                      const chargeAlpha = Math.sin(chargeProgress * Math.PI);
-                      ctx.globalAlpha = chargeAlpha;
-                      ctx.shadowBlur = 25;
-                      ctx.shadowColor = 'hsl(120, 100%, 50%)';
-                      
-                      // Draw swirling, pulsing charge particles
-                      effect.chargeParticles.forEach(p => {
-                          const pulse = Math.sin(chargeProgress * Math.PI * 2 + p.angle) * 5;
-                          const currentAngle = p.angle + timestamp / 300; // Swirl
-                          const currentDist = p.dist * (1 - chargeProgress) + pulse; // Move inward and pulse
-                          const x = head.x + Math.cos(currentAngle) * currentDist;
-                          const y = head.y + Math.sin(currentAngle) * currentDist;
-                          ctx.fillStyle = `hsl(120, 100%, ${75 + Math.random() * 25}%)`;
-                          ctx.beginPath();
-                          ctx.arc(x, y, p.size * chargeProgress, 0, 2 * Math.PI);
-                          ctx.fill();
-                      });
+            const flicker = Math.abs(Math.sin(timestamp / 250 + i * 0.2));
+            const percent = (segments.length - i) / segments.length;
+            const colorHue = 50 - percent * 50;
+            const colorLightness = 45 + flicker * 15;
 
-                      if (age >= effect.chargeDuration) {
-                          effect.state = 'traveling';
-                      }
-                  } else if (effect.state === 'traveling') {
-                      // Add a wobble to the path
-                      const wobble = Math.sin(age / 50) * 4;
-                      const perpAngle = Math.atan2(effect.vy, effect.vx) + Math.PI / 2;
-                      effect.x += effect.vx + Math.cos(perpAngle) * wobble;
-                      effect.y += effect.vy + Math.sin(perpAngle) * wobble;
+            ctx.fillStyle = `hsla(${45 + flicker * 10}, 100%, 60%, 0.25)`;
+            ctx.beginPath();
+            ctx.arc(segment.x, segment.y, displaySize + 3 + flicker * 3, 0, Math.PI * 2);
+            ctx.fill();
 
-                      effect.trail.push({ x: effect.x, y: effect.y, alpha: 1 });
-                      if (effect.trail.length > 20) {
-                          effect.trail.shift();
-                      }
+            const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x, segment.y);
+            gradient.addColorStop(0, `hsl(${colorHue + 10}, 100%, 60%)`);
+            gradient.addColorStop(0.5, `hsl(${colorHue}, 100%, ${colorLightness}%)`);
+            gradient.addColorStop(1, `hsl(${colorHue - 10}, 100%, 40%)`);
 
-                      // Draw trail
-                      ctx.lineCap = 'round';
-                      for (let i = effect.trail.length - 1; i > 0; i--) {
-                          const p1 = effect.trail[i];
-                          const p2 = effect.trail[i-1];
-                          p1.alpha -= 0.06;
-                          if (p1.alpha <= 0) continue;
-                          ctx.strokeStyle = `hsla(120, 100%, 70%, ${p1.alpha * 0.4})`;
-                          ctx.lineWidth = effect.size * (i / effect.trail.length) * 0.8; // Thinner trail
-                          ctx.beginPath();
-                          ctx.moveTo(p1.x, p1.y);
-                          ctx.lineTo(p2.x, p2.y);
-                          ctx.stroke();
-                      }
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = displaySize * 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(prevSegment.x, prevSegment.y);
+            ctx.lineTo(segment.x, segment.y);
+            ctx.stroke();
+        }
+        const angle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const headScale = head.size / 8;
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        ctx.rotate(angle);
+        ctx.scale(headScale, headScale);
+        ctx.lineWidth = 2 / headScale;
 
-                      // Draw spell head
-                      const spellAlpha = 1 - (age - effect.chargeDuration) / (effect.duration - effect.chargeDuration);
-                      ctx.globalAlpha = spellAlpha;
-                      ctx.fillStyle = 'white';
-                      ctx.shadowColor = 'hsl(120, 100%, 50%)';
-                      ctx.shadowBlur = 30;
-                      
-                      // Main spell core
-                      ctx.beginPath();
-                      ctx.arc(effect.x, effect.y, effect.size, 0, Math.PI * 2);
-                      ctx.fill();
-                      
-                      // Add distinctive sparks
-                      ctx.shadowBlur = 10;
-                      for(let i=0; i<3; i++) {
-                         ctx.fillStyle = `hsla(120, 100%, 80%, ${Math.random() * 0.7})`;
-                         ctx.beginPath();
-                         const sparkX = effect.x + (Math.random() - 0.5) * 15;
-                         const sparkY = effect.y + (Math.random() - 0.5) * 15;
-                         ctx.arc(sparkX, sparkY, 1 + Math.random() * 2, 0, Math.PI * 2);
-                         ctx.fill();
-                      }
-                  }
-                  break;
-              }
-              case 'ghost': {
-                  ctx.translate(effect.x, effect.y);
-                  effect.particles.forEach(p => {
-                      p.alpha -= 0.05;
-                      if(p.alpha < 0) p.alpha = 0;
-                      ctx.strokeStyle = `hsla(180, 100%, 85%, ${p.alpha * (0.5 + Math.random() * 0.5)})`;
-                      ctx.lineWidth = 1 + Math.random() * 2;
-                      ctx.shadowColor = 'cyan';
-                      ctx.shadowBlur = 15;
-                      ctx.beginPath();
-                      ctx.moveTo(p.points[0].x, p.points[0].y);
-                      for(let i=1; i < p.points.length; i++) {
-                          ctx.lineTo(p.points[i].x, p.points[i].y);
-                      }
-                      ctx.stroke();
-                  });
-                  break;
-              }
-              case 'snake': {
-                  ctx.translate(effect.x, effect.y);
-                  const alpha = Math.sin(progress * Math.PI);
-                  const radius = progress * 50;
-                  ctx.globalAlpha = alpha;
-                  ctx.strokeStyle = `hsla(182, 65%, 60%, ${alpha})`;
-                  ctx.lineWidth = 3 * (1 - progress);
-                  ctx.beginPath();
-                  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                  ctx.stroke();
-                  break;
-              }
-          }
-          ctx.restore();
-      });
+        ctx.strokeStyle = `hsl(0, 0%, 20%)`;
+        ctx.fillStyle = `hsl(30, 100%, 85%)`;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-5, -17, -30, -15);
+        ctx.quadraticCurveTo(-9, -10, -7, 0);
+        ctx.quadraticCurveTo(-9, 10, -30, 15);
+        ctx.quadraticCurveTo(-5, 17, 0, 0);
+        ctx.fill();
+        ctx.stroke();
 
-      ctx.globalAlpha = 1; // Reset global alpha
-      animationFrameId.current = requestAnimationFrame(gameLoop);
-    };
+        ctx.strokeStyle = `hsl(0, 80%, 30%)`;
+        ctx.fillStyle = `hsl(25, 100%, 50%)`;
+        var cheekX = 7;
+        var cheekY = -7;
+        ctx.beginPath();
+        ctx.moveTo(22, 0);
+        ctx.lineTo(19, -4);
+        ctx.bezierCurveTo(cheekX - 2, cheekY + 3, cheekX + 2, cheekY - 4, 3, -10);
+        ctx.quadraticCurveTo(1, -14, -2, -16);
+        ctx.lineTo(0, -10);
+        ctx.quadraticCurveTo(-1, -12, -7, -13);
+        ctx.lineTo(-4, -9);
+        ctx.quadraticCurveTo(-15, -13, -9, -3);
+        ctx.lineTo(-7, -2);
+        ctx.quadraticCurveTo(-10, -4, -22, 0);
+        ctx.quadraticCurveTo(-10, 4, -7, 2);
+        ctx.lineTo(-9, 3);
+        ctx.quadraticCurveTo(-15, 13, -4, 9);
+        ctx.lineTo(-7, 13);
+        ctx.quadraticCurveTo(-1, 12, 0, 10);
+        ctx.lineTo(-2, 16);
+        ctx.quadraticCurveTo(1, 14, 3, 10);
+        ctx.bezierCurveTo(cheekX + 2, -cheekY + 4, cheekX - 2, -cheekY - 3, 19, 4);
+        ctx.lineTo(22, 0);
+        ctx.fill();
+        ctx.stroke();
 
-    animationFrameId.current = requestAnimationFrame(gameLoop);
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.moveTo(-7, -13);
+        ctx.quadraticCurveTo(-3, -5, 5, -3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-7, -13);
+        ctx.moveTo(-3, -8);
+        ctx.quadraticCurveTo(2, -9, 2, -4);
+        ctx.fill();
 
-    // Cleanup function
-    return () => {
-      window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('resize', resizeCanvas);
-      clearTimeout(idleTimerId.current);
-      clearTimeout(wanderChangeTimerId.current);
-      cancelAnimationFrame(animationFrameId.current);
-    };
-  }, [activeSkin, initGame, isWandering, startWandering, stopWandering]);
+        ctx.beginPath();
+        ctx.moveTo(-7, 13);
+        ctx.quadraticCurveTo(-3, 5, 5, 3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-7, 13);
+        ctx.moveTo(-3, 8);
+        ctx.quadraticCurveTo(2, 9, 2, 4);
+        ctx.fill();
 
-  // Return state and setters for the component to use
-  return { canvasRef, score, activeSkin, setActiveSkin, victoryAchieved, showVictoryModal, setShowVictoryModal, announcedMilestones: announcedMilestones.current };
+        ctx.beginPath();
+        ctx.fillStyle = `hsl(0, 80%, 30%)`;
+        ctx.moveTo(2, -4);
+        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
+        ctx.moveTo(4.5, -3);
+        ctx.quadraticCurveTo(-1, -2, -6.5, -6);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(2, 4);
+        ctx.quadraticCurveTo(-1, 2, -6.5, 6);
+        ctx.moveTo(4.5, 3);
+        ctx.quadraticCurveTo(-1, 2, -6.5, 6);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(19, -4);
+        ctx.quadraticCurveTo(13, -3.5, 17, -1);
+        ctx.moveTo(19, 4);
+        ctx.quadraticCurveTo(13, 3.5, 17, 1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(20, -1);
+        ctx.lineTo(18, -3);
+        ctx.moveTo(20, 1);
+        ctx.lineTo(18, 3);
+        ctx.stroke();
+
+        ctx.strokeStyle = `hsl(45, 100%, 50%)`;
+        ctx.lineWidth = 1.5 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(18, -2);
+        ctx.bezierCurveTo(25, -5, 25, -15, 15, -20);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(18, 2);
+        ctx.bezierCurveTo(25, 5, 25, 15, 15, 20);
+        ctx.stroke();
+
+        ctx.restore();
+    },
+    // =================================================================
+    // ELEGANT NAGINI SKIN
+    // =================================================================
+    nagini: (ctx, segments, targetPos, timestamp, isWandering) => {
+        const head = segments[0];
+        if (!head) return;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // --- Elegant Body: Rendered with overlapping, lit scales ---
+        for (let i = segments.length - 1; i > 0; i--) {
+            const segment = segments[i];
+            const prevSegment = segments[i - 1];
+            const angle = Math.atan2(prevSegment.y - segment.y, prevSegment.x - segment.x);
+            const scaleSize = segment.size * 1.2;
+
+            ctx.save();
+            ctx.translate(segment.x, segment.y);
+            ctx.rotate(angle);
+
+            // Create a gradient for each scale for a 3D effect
+            const scaleGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, scaleSize);
+            scaleGradient.addColorStop(0, '#6a956a'); // Lighter center
+            scaleGradient.addColorStop(0.7, '#4a754a'); // Mid-tone
+            scaleGradient.addColorStop(1, '#2a4d2a'); // Dark edge
+
+            ctx.fillStyle = scaleGradient;
+
+            // Draw the scale as a slightly flattened ellipse
+            ctx.beginPath();
+            ctx.ellipse(0, 0, scaleSize, scaleSize * 0.8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Add a subtle, shimmering highlight to the top edge of the scale
+            ctx.strokeStyle = 'rgba(200, 255, 200, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, -scaleSize * 0.2, scaleSize * 0.6, Math.PI * 0.2, Math.PI * 0.8);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // --- Head Drawing (using your excellent head design) ---
+        const headAngle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const headScale = head.size / 10;
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        ctx.rotate(headAngle);
+        ctx.scale(headScale, headScale);
+        ctx.lineWidth = 1.3 / headScale;
+
+        // Head shape
+        ctx.strokeStyle = '#112211'; // Very dark green outline
+        const headGradient = ctx.createRadialGradient(0, 0, 1, 10, 0, 25);
+        headGradient.addColorStop(0, '#4a754a');
+        headGradient.addColorStop(1, '#1a2d1a');
+        ctx.fillStyle = headGradient;
+
+        ctx.beginPath();
+        ctx.moveTo(25, 0);
+        ctx.quadraticCurveTo(26, -3, 22, -6);
+        ctx.quadraticCurveTo(12, -7, 9, -12);
+        ctx.bezierCurveTo(-3, -19, -13, -15, -15, 0);
+        ctx.moveTo(25, 0);
+        ctx.quadraticCurveTo(26, 3, 22, 6);
+        ctx.quadraticCurveTo(12, 7, 9, 12);
+        ctx.bezierCurveTo(-3, 19, -13, 15, -15, 0);
+        ctx.fill();
+        ctx.stroke();
+
+        // Eyes
+        ctx.lineWidth = 1.3 / headScale;
+        ctx.shadowColor = `hsl(55, 100%, 50%)`;
+        ctx.shadowBlur = 20 / headScale;
+        ctx.fillStyle = `hsl(55, 100%, 60%)`; // Bright yellow
+        ctx.beginPath();
+        ctx.moveTo(7.5, -8);
+        ctx.quadraticCurveTo(8, -12, 2, -11.5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(7.5, 8);
+        ctx.quadraticCurveTo(8, 12, 2, 11.5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 0.5 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(4, -10.2);
+        ctx.lineTo(6.5, -10);
+        ctx.moveTo(4, 10.2);
+        ctx.lineTo(6.5, 10);
+        ctx.stroke();
+
+        // Head Details (your original details)
+        ctx.strokeStyle = '#112211';
+        ctx.lineWidth = 1/ headScale;
+        ctx.beginPath();
+        ctx.moveTo(-4, -13);
+        ctx.quadraticCurveTo(-2, -14, 9, -7);
+        ctx.moveTo(-4, 13);
+        ctx.quadraticCurveTo(-2, 14, 9, 7);
+        ctx.moveTo(19, -5);
+        ctx.quadraticCurveTo(19, -3, 22, -3)
+        ctx.moveTo(19, 5);
+        ctx.quadraticCurveTo(19, 3, 22, 3)
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        
+        ctx.lineWidth = 0.3 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(-5, -15); ctx.quadraticCurveTo(-15, -10, -12, -1); ctx.moveTo(9, -7); ctx.bezierCurveTo(14, -4, 8, -2, 6, -4); ctx.bezierCurveTo(6, -5, 6, -8.5, 8.5, -7); ctx.moveTo(6, -4); ctx.bezierCurveTo(2, -5, 0, -12, 6, -9); ctx.moveTo(3.5, -5.5); ctx.bezierCurveTo(-4, -9, -2, -13, 2, -11); ctx.moveTo(-1, -8.5); ctx.bezierCurveTo(-7, -11, -10, -13, -5, -13); ctx.moveTo(-1, -8.5); ctx.quadraticCurveTo(2, -6, -3, -5); ctx.quadraticCurveTo(-3, 0, -2, 0); ctx.moveTo(-3, -5); ctx.quadraticCurveTo(-9, -6.5, -9, -5); ctx.quadraticCurveTo(-10, -0.5, -9, -0.5); ctx.moveTo(-9, -6); ctx.quadraticCurveTo(-10, -6.5, -8, -11); ctx.moveTo(6, -4); ctx.lineTo(6, -0.5);
+        ctx.moveTo(-5, 15); ctx.quadraticCurveTo(-15, 10, -12, 1); ctx.moveTo(9, 7); ctx.bezierCurveTo(14, 4, 8, 2, 6, 4); ctx.bezierCurveTo(6, 5, 6, 8.5, 8.5, 7); ctx.moveTo(6, 4); ctx.bezierCurveTo(2, 5, 0, 12, 6, 9); ctx.moveTo(3.5, 5.5); ctx.bezierCurveTo(-4, 9, -2, 13, 2, 11); ctx.moveTo(-1, 8.5); ctx.bezierCurveTo(-7, 11, -10, 13, -5, 13); ctx.moveTo(-1, 8.5); ctx.quadraticCurveTo(2, 6, -3, 5); ctx.quadraticCurveTo(-3, 0, -2, 0); ctx.moveTo(-3, 5); ctx.quadraticCurveTo(-9, 6.5, -9, 5); ctx.quadraticCurveTo(-10, 0.5, -9, 0.5); ctx.moveTo(-9, 6); ctx.quadraticCurveTo(-10, 6.5, -8, 11); ctx.moveTo(6, 4); ctx.lineTo(6, 0.5);
+        ctx.moveTo(4.5,0 ); ctx.lineTo(-2, 0); ctx.moveTo(-5, 0); ctx.lineTo(-7, 0);
+        ctx.stroke();
+
+        // --- Elegant Forked Tongue Animation ---
+        if (!isWandering) {
+            const cycle = timestamp % 4000; // A longer, more graceful 4-second cycle
+            let tongueProgress = 0;
+
+            // Phase 1: Extend (0ms to 600ms)
+            if (cycle < 600) {
+                tongueProgress = Math.sin((cycle / 600) * Math.PI * 0.5); // Ease-out
+            }
+            // Phase 2: Hold (600ms to 1000ms)
+            else if (cycle < 1000) {
+                tongueProgress = 1;
+            }
+            // Phase 3: Retract (1000ms to 1500ms)
+            else if (cycle < 1500) {
+                tongueProgress = 1 - Math.sin(((cycle - 1000) / 500) * Math.PI * 0.5); // Ease-in
+            }
+
+            if (tongueProgress > 0) {
+                const tongueLength = 30 * tongueProgress;
+                
+                ctx.strokeStyle = `#c33149`; // Dark, fleshy red
+                ctx.lineWidth = 1.8 / headScale;
+                ctx.shadowColor = '#c33149';
+                ctx.shadowBlur = 15 / headScale;
+
+                ctx.beginPath();
+                ctx.moveTo(25, 0); // Start from nose
+                // Use a Bezier curve for a graceful S-shape
+                ctx.bezierCurveTo(
+                    25 + tongueLength * 0.4, 
+                    tongueLength * 0.2, // First control point creates outward curve
+                    25 + tongueLength * 0.6, 
+                    -tongueLength * 0.2, // Second control point creates inward curve
+                    25 + tongueLength, 
+                    0 // End point
+                );
+                ctx.stroke();
+
+                // Draw the forked tips at the end of the curve
+                const tipAngle = -0.4; // Angle of the forks
+                const tipLength = 8 * tongueProgress;
+                ctx.beginPath();
+                ctx.moveTo(25 + tongueLength, 0);
+                ctx.lineTo(25 + tongueLength - Math.cos(tipAngle) * tipLength, 0 - Math.sin(tipAngle) * tipLength);
+                ctx.moveTo(25 + tongueLength, 0);
+                ctx.lineTo(25 + tongueLength - Math.cos(-tipAngle) * tipLength, 0 - Math.sin(-tipAngle) * tipLength);
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+    },
+    snake: (ctx, segments, targetPos, timestamp, isWandering) => {
+        if (segments.length < 2) return;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (let i = 1; i < segments.length; i++) {
+            const segment = segments[i];
+            const prevSegment = segments[i - 1];
+            const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x, segment.y);
+            gradient.addColorStop(0, '#38a3a5');
+            gradient.addColorStop(1, '#80ed99');
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = segment.size * 2;
+            ctx.beginPath();
+            ctx.moveTo(prevSegment.x, prevSegment.y);
+            ctx.lineTo(segment.x, segment.y);
+            ctx.stroke();
+        }
+        const head = segments[0];
+        const next_seg = segments[1];
+
+        // --- Head Drawing ---
+        ctx.fillStyle = '#38a3a5';
+        ctx.beginPath();
+
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+        const angle = Math.atan2(next_seg.y - head.y, next_seg.x - head.x);
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        ctx.rotate(angle + Math.PI);
+        const eyeOffsetX = head.size * 0.5;
+        const eyeOffsetY = head.size * 0.5;
+        const eyeRadius = head.size * 0.2;
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(eyeOffsetX, -eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.arc(eyeOffsetX + eyeRadius * 0.2, -eyeOffsetY, eyeRadius * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(eyeOffsetX + eyeRadius * 0.2, eyeOffsetY, eyeRadius * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    },
+    ghost: (ctx, segments, targetPos, timestamp, isWandering) => {
+        if (segments.length < 2) return;
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        for (let i = segments.length - 1; i > 0; i--) {
+            const segment = segments[i];
+            const prevSegment = segments[i - 1];
+
+            const wispOpacity = Math.max(0, 0.3 + Math.sin(timestamp / 300 + i * 0.5) * 0.3);
+            ctx.strokeStyle = `rgba(100, 80, 150, ${wispOpacity})`;
+            ctx.lineWidth = Math.random() * segment.size * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(prevSegment.x + (Math.random() - 0.5) * 20, prevSegment.y + (Math.random() - 0.5) * 20);
+            ctx.quadraticCurveTo(
+                (segment.x + prevSegment.x) / 2 + (Math.random() - 0.5) * 30,
+                (segment.y + prevSegment.y) / 2 + (Math.random() - 0.5) * 30,
+                segment.x + (Math.random() - 0.5) * 20,
+                segment.y + (Math.random() - 0.5) * 20
+            );
+            ctx.stroke();
+
+            const angle = Math.atan2(prevSegment.y - segment.y, prevSegment.x - segment.x);
+
+            ctx.save();
+            ctx.translate(segment.x, segment.y);
+            ctx.rotate(angle);
+
+            const boneLength = segment.size * 1.8;
+            const boneWidth = segment.size * 0.9;
+
+            const gradient = ctx.createLinearGradient(-boneLength / 2, 0, boneLength / 2, 0);
+            gradient.addColorStop(0, 'rgba(210, 200, 255, 0)');
+            gradient.addColorStop(0.3, 'rgba(230, 230, 255, 0.6)');
+            gradient.addColorStop(0.7, 'rgba(230, 230, 255, 0.6)');
+            gradient.addColorStop(1, 'rgba(210, 200, 255, 0)');
+            ctx.fillStyle = gradient;
+
+            ctx.beginPath();
+            ctx.arc(-boneLength / 2, 0, boneWidth / 2, Math.PI * 0.5, Math.PI * 1.5);
+            ctx.arc(boneLength / 2, 0, boneWidth / 2, Math.PI * 1.5, Math.PI * 0.5);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = `rgba(230, 230, 255, 0.4)`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-boneLength / 2, 0);
+            ctx.lineTo(boneLength / 2, 0);
+            ctx.stroke();
+
+            const veinCount = Math.floor(segment.size / 4);
+            ctx.strokeStyle = `rgba(180, 160, 255, 0.5)`;
+            ctx.lineWidth = 1 + Math.random();
+            ctx.lineCap = 'butt';
+            for (let j = 0; j < veinCount; j++) {
+                ctx.beginPath();
+                const startX = -boneLength / 2;
+                const endX = boneLength / 2;
+                const yOffset = (Math.random() - 0.5) * (boneWidth * 0.7);
+                ctx.moveTo(startX, yOffset);
+                ctx.quadraticCurveTo(0, yOffset + (Math.random() - 0.5) * boneWidth, endX, yOffset);
+                ctx.stroke();
+            }
+            ctx.lineCap = 'round';
+
+            ctx.restore();
+        }
+
+        const head = segments[0];
+        const headAngle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const headScale = head.size / 8;
+
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        ctx.rotate(headAngle);
+        ctx.scale(headScale, headScale);
+
+        const spikeOpacity = 0.4 + Math.abs(Math.sin(timestamp / 150)) * 0.6;
+        ctx.strokeStyle = `rgba(230, 230, 255, ${spikeOpacity})`;
+        ctx.lineWidth = 1.5 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(-10, -12);
+        ctx.lineTo(-5, -22);
+        ctx.lineTo(0, -15);
+        ctx.lineTo(5, -25);
+        ctx.lineTo(10, -14);
+        ctx.lineTo(15, -20);
+        ctx.lineTo(20, -12);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(240, 240, 255, 0.8)';
+        ctx.strokeStyle = 'rgba(180, 160, 255, 0.7)';
+        ctx.lineWidth = 2 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(20, 0);
+        ctx.quadraticCurveTo(10, -18, -15, -15);
+        ctx.quadraticCurveTo(-25, -5, -25, 0);
+        ctx.quadraticCurveTo(-25, 5, -15, 15);
+        ctx.quadraticCurveTo(10, 18, 20, 0);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 20 / headScale;
+        ctx.fillStyle = '#00ffff';
+        ctx.beginPath();
+        ctx.arc(5, -6, 4, 0, Math.PI * 2);
+        ctx.arc(5, 6, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        const frillPulse = Math.sin(timestamp / 400) * 5;
+        ctx.fillStyle = `rgba(180, 160, 255, 0.2)`;
+        ctx.beginPath();
+        ctx.moveTo(-15, -15);
+        ctx.quadraticCurveTo(-30, -30 - frillPulse, -45, -10);
+        ctx.quadraticCurveTo(-25, 0, -45, 10);
+        ctx.quadraticCurveTo(-30, 30 + frillPulse, -15, 15);
+        ctx.closePath();
+        ctx.fill();
+
+        const starPulse = 1 + Math.sin(timestamp / 200) * 0.8;
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(-28, -15, starPulse, 0, Math.PI * 2);
+        ctx.arc(-35, 0, starPulse * 0.8, 0, Math.PI * 2);
+        ctx.arc(-29, 12, starPulse * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    },
 };

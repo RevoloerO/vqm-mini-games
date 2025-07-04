@@ -14,7 +14,7 @@ export const GAME_CONFIG = {
 };
 
 export const SKINS = {
-    
+
     dragon: (ctx, segments, targetPos, timestamp, isWandering) => {
         const head = segments[0];
         if (!head) return;
@@ -143,7 +143,7 @@ export const SKINS = {
         ctx.stroke();
         ctx.restore();
 
-        
+
 
         // --- Static Eye Details ---
         // Eye ridges
@@ -179,7 +179,7 @@ export const SKINS = {
         ctx.moveTo(4.5, 3);
         ctx.quadraticCurveTo(-1, 2, -6.5, 6);
         ctx.stroke();
-        
+
         // --- Blinking Animation ---
         if (isWandering) {
             const timeInCycle = timestamp % 3500; // Blink cycle of 3.5 seconds
@@ -263,14 +263,14 @@ export const SKINS = {
             ctx.globalCompositeOperation = 'lighter'; // Additive blending for a nice glow
             const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20 + lockOnPulse);
             glowGradient.addColorStop(0, `hsla(0, 100.00%, 50.20%, 0.69)`);
-            glowGradient.addColorStop(0.7,`hsla(${baseHue}, 100%, 80%, 0.3)` );
+            glowGradient.addColorStop(0.7, `hsla(${baseHue}, 100%, 80%, 0.3)`);
             glowGradient.addColorStop(1, `hsla(${baseHue}, 100%, 50%, 0)`);
 
             ctx.fillStyle = glowGradient;
             ctx.beginPath();
             ctx.arc(0, 0, 20 + lockOnPulse, 0, Math.PI * 2);
             ctx.fill();
-            
+
             ctx.restore();
         }
         ctx.restore();
@@ -425,129 +425,199 @@ export const SKINS = {
 
         ctx.restore();
     },
+    // =================================================================
+    // ELEGANT NAGINI SKIN
+    // =================================================================
     nagini: (ctx, segments, targetPos, timestamp, isWandering) => {
         const head = segments[0];
         if (!head) return;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // --- Body Segments ---
+        // --- 1. Elegant Body: Rendered with overlapping, lit scales ---
         for (let i = segments.length - 1; i > 0; i--) {
             const segment = segments[i];
             const prevSegment = segments[i - 1];
             const angle = Math.atan2(prevSegment.y - segment.y, prevSegment.x - segment.x);
-            const dist = Math.hypot(prevSegment.x - segment.x, prevSegment.y - segment.y);
+            const scaleSize = segment.size * 1.2;
 
-            // --- 1. Glossy Obsidian Scales (Main Body) ---
-            const bodyGradient = ctx.createLinearGradient(0, -segment.size, 0, segment.size);
-            bodyGradient.addColorStop(0, '#4a4a4f'); // Highlight
-            bodyGradient.addColorStop(0.5, '#1b1b1e'); // Main color
-            bodyGradient.addColorStop(1, '#000000'); // Shadow
-            ctx.strokeStyle = bodyGradient;
-            ctx.lineWidth = segment.size * 1.2; // Slender but with presence
+            ctx.save();
+            ctx.translate(segment.x, segment.y);
+            ctx.rotate(angle);
+
+            // Create a gradient for each scale for a 3D effect
+            const scaleGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, scaleSize);
+            scaleGradient.addColorStop(0, '#6a956a'); // Lighter center
+            scaleGradient.addColorStop(0.7, '#4a754a'); // Mid-tone
+            scaleGradient.addColorStop(1, '#2a4d2a'); // Dark edge
+
+            ctx.fillStyle = scaleGradient;
+
+            // Draw the scale as a slightly flattened ellipse
             ctx.beginPath();
-            ctx.moveTo(prevSegment.x, prevSegment.y);
-            ctx.lineTo(segment.x, segment.y);
+            ctx.ellipse(0, 0, scaleSize, scaleSize * 0.8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Add a subtle, shimmering highlight to the top edge of the scale
+            ctx.strokeStyle = 'rgba(200, 255, 200, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, -scaleSize * 0.2, scaleSize * 0.6, Math.PI * 0.2, Math.PI * 0.8);
             ctx.stroke();
 
-            // --- 2. Silver Filigree & Faint Runes ---
-            if (dist > 1) { // Only draw details if segment is stretched
-                ctx.save();
-                ctx.translate(segment.x, segment.y);
-                ctx.rotate(angle);
-                
-                // Silver Filigree - a shimmering, winding pattern
-                const filigreeWave = Math.sin(i * 0.5 + timestamp / 200) * (segment.size * 0.4);
-                ctx.strokeStyle = `rgba(200, 220, 255, 0.6)`;
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.moveTo(-dist, -filigreeWave);
-                ctx.lineTo(0, filigreeWave);
-                ctx.stroke();
+            ctx.restore();
+        }
 
-                // Faint Rune Patterns - pulsing along the spine
-                const runePulse = 0.4 + Math.sin(timestamp / 500 + i * 0.8) * 0.3;
-                ctx.fillStyle = `hsla(175, 100%, 80%, ${runePulse})`;
-                ctx.shadowColor = `hsl(175, 100%, 50%)`;
-                ctx.shadowBlur = 5;
-                // Draw a simple rune shape (e.g., a small diamond)
-                ctx.beginPath();
-                ctx.moveTo(-dist / 2, 0);
-                ctx.lineTo(-dist / 2 + 2, -2);
-                ctx.lineTo(-dist / 2 + 4, 0);
-                ctx.lineTo(-dist / 2 + 2, 2);
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.restore();
-                ctx.shadowBlur = 0;
-            }
+        // --- 2. CORRECTED: Pulsing Venom/Blood Flow Line ---
+        // This is drawn on top of the scales to connect the segments visually.
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(segments[0].x, segments[0].y);
+        // Use lineTo for a direct, robust path along the segments.
+        for (let i = 1; i < segments.length; i++) {
+            ctx.lineTo(segments[i].x, segments[i].y);
         }
         
-        // --- Head Drawing ---
+        const flowPulse = 0.5 + Math.sin(timestamp / 400) * 0.5; // Pulse between 0 and 1
+        const flowWidth = 2 + Math.sin(timestamp / 200) * 1.5; // Pulsing width
+
+        // Base venom green glow
+        ctx.strokeStyle = `hsla(120, 100%, 70%, ${flowPulse * 0.8})`; 
+        ctx.lineWidth = flowWidth;
+        ctx.shadowColor = `hsl(120, 100%, 50%)`;
+        ctx.shadowBlur = 20; // Increased blur for a stronger glow
+        ctx.stroke();
+
+        // Inner blood-red core
+        ctx.strokeStyle = `hsla(350, 100%, 70%, ${flowPulse * 0.6})`;
+        ctx.lineWidth = flowWidth * 0.5;
+        ctx.shadowColor = `hsl(350, 100%, 50%)`;
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        ctx.restore();
+
+
+        // --- 3. Head Drawing ---
         const headAngle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
         const headScale = head.size / 10;
         ctx.save();
         ctx.translate(head.x, head.y);
         ctx.rotate(headAngle);
         ctx.scale(headScale, headScale);
-        ctx.lineWidth = 2 / headScale;
-        
+        ctx.lineWidth = 1.3 / headScale;
+
         // Head shape
-        ctx.strokeStyle = '#aab';
+        ctx.strokeStyle = '#112211'; // Very dark green outline
         const headGradient = ctx.createRadialGradient(0, 0, 1, 10, 0, 25);
-        headGradient.addColorStop(0, '#555');
-        headGradient.addColorStop(1, '#111');
+        headGradient.addColorStop(0, '#4a754a');
+        headGradient.addColorStop(1, '#1a2d1a');
         ctx.fillStyle = headGradient;
 
         ctx.beginPath();
-        ctx.moveTo(25, 0); // Nose tip
-        ctx.quadraticCurveTo(5, -12, -15, -8); // Top of head
-        ctx.quadraticCurveTo(-20, 0, -15, 8); // Back of head
-        ctx.quadraticCurveTo(5, 12, 25, 0);   // Bottom of head
+        ctx.moveTo(25, 0);
+        ctx.quadraticCurveTo(26, -3, 22, -6);
+        ctx.quadraticCurveTo(12, -7, 9, -12);
+        ctx.bezierCurveTo(-3, -19, -13, -15, -15, 0);
+        ctx.moveTo(25, 0);
+        ctx.quadraticCurveTo(26, 3, 22, 6);
+        ctx.quadraticCurveTo(12, 7, 9, 12);
+        ctx.bezierCurveTo(-3, 19, -13, 15, -15, 0);
         ctx.fill();
         ctx.stroke();
 
         // Eyes
-        ctx.shadowColor = `hsl(175, 100%, 60%)`;
+        ctx.lineWidth = 1.3 / headScale;
+        ctx.shadowColor = `hsl(55, 100%, 50%)`;
         ctx.shadowBlur = 20 / headScale;
-        ctx.fillStyle = `hsl(175, 100%, 80%)`; // Bright teal
+        ctx.fillStyle = `hsl(55, 100%, 60%)`; // Bright yellow
         ctx.beginPath();
-        ctx.arc(5, -4.5, 3, 0, Math.PI * 2); // Left eye
+        ctx.moveTo(7.5, -8);
+        ctx.quadraticCurveTo(8, -12, 2, -11.5);
         ctx.fill();
+        ctx.stroke();
         ctx.beginPath();
-        ctx.arc(5, 4.5, 3, 0, Math.PI * 2); // Right eye
+        ctx.moveTo(7.5, 8);
+        ctx.quadraticCurveTo(8, 12, 2, 11.5);
         ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 0.5 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(4, -10.2);
+        ctx.lineTo(6.5, -10);
+        ctx.moveTo(4, 10.2);
+        ctx.lineTo(6.5, 10);
+        ctx.stroke();
+
+        // Head Details (your original details)
+        ctx.strokeStyle = '#112211';
+        ctx.lineWidth = 1/ headScale;
+        ctx.beginPath();
+        ctx.moveTo(-4, -13);
+        ctx.quadraticCurveTo(-2, -14, 9, -7);
+        ctx.moveTo(-4, 13);
+        ctx.quadraticCurveTo(-2, 14, 9, 7);
+        ctx.moveTo(19, -5);
+        ctx.quadraticCurveTo(19, -3, 22, -3)
+        ctx.moveTo(19, 5);
+        ctx.quadraticCurveTo(19, 3, 22, 3)
+        ctx.stroke();
         ctx.shadowBlur = 0;
-
-        // Pupils
-        ctx.fillStyle = '#111';
+        
+        ctx.lineWidth = 0.3 / headScale;
         ctx.beginPath();
-        ctx.ellipse(5, -4.5, 0.8, 1.5, 0, 0, Math.PI * 2); // Left pupil
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(5, 4.5, 0.8, 1.5, 0, 0, Math.PI * 2); // Right pupil
-        ctx.fill();
+        ctx.moveTo(-5, -15); ctx.quadraticCurveTo(-15, -10, -12, -1); ctx.moveTo(9, -7); ctx.bezierCurveTo(14, -4, 8, -2, 6, -4); ctx.bezierCurveTo(6, -5, 6, -8.5, 8.5, -7); ctx.moveTo(6, -4); ctx.bezierCurveTo(2, -5, 0, -12, 6, -9); ctx.moveTo(3.5, -5.5); ctx.bezierCurveTo(-4, -9, -2, -13, 2, -11); ctx.moveTo(-1, -8.5); ctx.bezierCurveTo(-7, -11, -10, -13, -5, -13); ctx.moveTo(-1, -8.5); ctx.quadraticCurveTo(2, -6, -3, -5); ctx.quadraticCurveTo(-3, 0, -2, 0); ctx.moveTo(-3, -5); ctx.quadraticCurveTo(-9, -6.5, -9, -5); ctx.quadraticCurveTo(-10, -0.5, -9, -0.5); ctx.moveTo(-9, -6); ctx.quadraticCurveTo(-10, -6.5, -8, -11); ctx.moveTo(6, -4); ctx.lineTo(6, -0.5);
+        ctx.moveTo(-5, 15); ctx.quadraticCurveTo(-15, 10, -12, 1); ctx.moveTo(9, 7); ctx.bezierCurveTo(14, 4, 8, 2, 6, 4); ctx.bezierCurveTo(6, 5, 6, 8.5, 8.5, 7); ctx.moveTo(6, 4); ctx.bezierCurveTo(2, 5, 0, 12, 6, 9); ctx.moveTo(3.5, 5.5); ctx.bezierCurveTo(-4, 9, -2, 13, 2, 11); ctx.moveTo(-1, 8.5); ctx.bezierCurveTo(-7, 11, -10, 13, -5, 13); ctx.moveTo(-1, 8.5); ctx.quadraticCurveTo(2, 6, -3, 5); ctx.quadraticCurveTo(-3, 0, -2, 0); ctx.moveTo(-3, 5); ctx.quadraticCurveTo(-9, 6.5, -9, 5); ctx.quadraticCurveTo(-10, 0.5, -9, 0.5); ctx.moveTo(-9, 6); ctx.quadraticCurveTo(-10, 6.5, -8, 11); ctx.moveTo(6, 4); ctx.lineTo(6, 0.5);
+        ctx.moveTo(4.5,0 ); ctx.lineTo(-2, 0); ctx.moveTo(-5, 0); ctx.lineTo(-7, 0);
+        ctx.stroke();
 
-        // --- Forked Tongue Animation ---
+        // --- Elegant Forked Tongue Animation ---
         if (!isWandering) {
-            const cycle = timestamp % 2500;
-            if (cycle < 250) { // Flick tongue out and in
-                const t = cycle / 250;
-                // Use a sine wave to create a smooth flicking motion (out and back in)
-                const flickProgress = Math.sin(t * Math.PI);
-                const tongueLength = 25 * flickProgress;
+            const cycle = timestamp % 4000; // A longer, more graceful 4-second cycle
+            let tongueProgress = 0;
 
-                ctx.strokeStyle = `hsl(175, 80%, 60%)`;
-                ctx.lineWidth = 1.5 / headScale;
+            // Phase 1: Extend (0ms to 600ms)
+            if (cycle < 600) {
+                tongueProgress = Math.sin((cycle / 600) * Math.PI * 0.5); // Ease-out
+            }
+            // Phase 2: Hold (600ms to 1000ms)
+            else if (cycle < 1000) {
+                tongueProgress = 1;
+            }
+            // Phase 3: Retract (1000ms to 1500ms)
+            else if (cycle < 1500) {
+                tongueProgress = 1 - Math.sin(((cycle - 1000) / 500) * Math.PI * 0.5); // Ease-in
+            }
+
+            if (tongueProgress > 0) {
+                const tongueLength = 30 * tongueProgress;
+                
+                ctx.strokeStyle = `#c33149`; // Dark, fleshy red
+                ctx.lineWidth = 1.8 / headScale;
+                ctx.shadowColor = '#c33149';
+                ctx.shadowBlur = 15 / headScale;
+
                 ctx.beginPath();
                 ctx.moveTo(25, 0); // Start from nose
-                ctx.lineTo(25 + tongueLength, 0); // Main part of tongue
-                // Forked tips
+                // Use a Bezier curve for a graceful S-shape
+                ctx.bezierCurveTo(
+                    25 + tongueLength * 0.4, 
+                    tongueLength * 0.2, // First control point creates outward curve
+                    25 + tongueLength * 0.6, 
+                    -tongueLength * 0.2, // Second control point creates inward curve
+                    25 + tongueLength, 
+                    0 // End point
+                );
+                ctx.stroke();
+
+                // Draw the forked tips at the end of the curve
+                const tipAngle = -0.4; // Angle of the forks
+                const tipLength = 8 * tongueProgress;
+                ctx.beginPath();
                 ctx.moveTo(25 + tongueLength, 0);
-                ctx.lineTo(22 + tongueLength, -3);
+                ctx.lineTo(25 + tongueLength - Math.cos(tipAngle) * tipLength, 0 - Math.sin(tipAngle) * tipLength);
                 ctx.moveTo(25 + tongueLength, 0);
-                ctx.lineTo(22 + tongueLength, 3);
+                ctx.lineTo(25 + tongueLength - Math.cos(-tipAngle) * tipLength, 0 - Math.sin(-tipAngle) * tipLength);
                 ctx.stroke();
             }
         }
@@ -572,9 +642,12 @@ export const SKINS = {
         }
         const head = segments[0];
         const next_seg = segments[1];
+
+        // --- Head Drawing ---
         ctx.fillStyle = '#38a3a5';
         ctx.beginPath();
-        ctx.arc(head.x, head.y, head.size, 0, Math.PI * 2);
+
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
         ctx.fill();
         const angle = Math.atan2(next_seg.y - head.y, next_seg.x - head.x);
         ctx.save();
