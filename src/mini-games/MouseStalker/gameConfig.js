@@ -482,17 +482,17 @@ export const SKINS = {
         const flowWidth = 2 + Math.sin(timestamp / 200) * 1.5; // Pulsing width
 
         // Base venom green glow
-        ctx.strokeStyle = `hsla(120, 100%, 70%, ${flowPulse * 0.8})`; 
-        ctx.lineWidth = flowWidth;
+        ctx.strokeStyle = `hsla(120, 100%, 70%, ${flowPulse * 0.5})`; 
+        ctx.lineWidth = flowWidth*2;
         ctx.shadowColor = `hsl(120, 100%, 50%)`;
-        ctx.shadowBlur = 20; // Increased blur for a stronger glow
+        ctx.shadowBlur = 15; // Increased blur for a stronger glow
         ctx.stroke();
 
         // Inner blood-red core
-        ctx.strokeStyle = `hsla(350, 100%, 70%, ${flowPulse * 0.6})`;
-        ctx.lineWidth = flowWidth * 0.5;
+        ctx.strokeStyle = `hsla(350, 100%, 50%, ${flowPulse * 0.5})`;
+        ctx.lineWidth = flowWidth * 2.5;
         ctx.shadowColor = `hsl(350, 100%, 50%)`;
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 25;
         ctx.stroke();
         ctx.restore();
 
@@ -569,6 +569,12 @@ export const SKINS = {
         ctx.moveTo(-5, -15); ctx.quadraticCurveTo(-15, -10, -12, -1); ctx.moveTo(9, -7); ctx.bezierCurveTo(14, -4, 8, -2, 6, -4); ctx.bezierCurveTo(6, -5, 6, -8.5, 8.5, -7); ctx.moveTo(6, -4); ctx.bezierCurveTo(2, -5, 0, -12, 6, -9); ctx.moveTo(3.5, -5.5); ctx.bezierCurveTo(-4, -9, -2, -13, 2, -11); ctx.moveTo(-1, -8.5); ctx.bezierCurveTo(-7, -11, -10, -13, -5, -13); ctx.moveTo(-1, -8.5); ctx.quadraticCurveTo(2, -6, -3, -5); ctx.quadraticCurveTo(-3, 0, -2, 0); ctx.moveTo(-3, -5); ctx.quadraticCurveTo(-9, -6.5, -9, -5); ctx.quadraticCurveTo(-10, -0.5, -9, -0.5); ctx.moveTo(-9, -6); ctx.quadraticCurveTo(-10, -6.5, -8, -11); ctx.moveTo(6, -4); ctx.lineTo(6, -0.5);
         ctx.moveTo(-5, 15); ctx.quadraticCurveTo(-15, 10, -12, 1); ctx.moveTo(9, 7); ctx.bezierCurveTo(14, 4, 8, 2, 6, 4); ctx.bezierCurveTo(6, 5, 6, 8.5, 8.5, 7); ctx.moveTo(6, 4); ctx.bezierCurveTo(2, 5, 0, 12, 6, 9); ctx.moveTo(3.5, 5.5); ctx.bezierCurveTo(-4, 9, -2, 13, 2, 11); ctx.moveTo(-1, 8.5); ctx.bezierCurveTo(-7, 11, -10, 13, -5, 13); ctx.moveTo(-1, 8.5); ctx.quadraticCurveTo(2, 6, -3, 5); ctx.quadraticCurveTo(-3, 0, -2, 0); ctx.moveTo(-3, 5); ctx.quadraticCurveTo(-9, 6.5, -9, 5); ctx.quadraticCurveTo(-10, 0.5, -9, 0.5); ctx.moveTo(-9, 6); ctx.quadraticCurveTo(-10, 6.5, -8, 11); ctx.moveTo(6, 4); ctx.lineTo(6, 0.5);
         ctx.moveTo(4.5,0 ); ctx.lineTo(-2, 0); ctx.moveTo(-5, 0); ctx.lineTo(-7, 0);
+        ctx.stroke();
+
+        ctx.lineWidth = 1 / headScale;
+        ctx.beginPath();
+        ctx.moveTo(-3, -20);
+        ctx.quadraticCurveTo(-4, -20, -4, -18);
         ctx.stroke();
 
         // --- Elegant Forked Tongue Animation ---
