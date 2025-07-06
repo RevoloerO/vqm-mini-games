@@ -1,6 +1,6 @@
 // useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
 // Manages game state efficiently using useRef for animations and useState for UI updates.
-// UPDATED: Fixed performance lag by stopping segment addition after score reaches 500.
+// UPDATED: Optimized performance at high scores by reducing particle counts and throttling effects.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
@@ -115,8 +115,19 @@ export const useDragonGame = () => {
         default:
              particleConfig = { speedRange: 4, sizeRange: 2, decayRange: 0.01, friction: 0.98 };
     }
+    
+    // --- OPTIMIZATION: Reduce particle count at high scores ---
+    const currentScore = scoreRef.current;
+    if (currentScore > 400) {
+        numParticles *= 0.4;
+    } else if (currentScore > 200) {
+        numParticles *= 0.6;
+    }
 
-    for (let i = 0; i < numParticles; i++) {
+    for (let i = 0; i < Math.floor(numParticles); i++) {
+        // --- OPTIMIZATION: Cap total particles to prevent lag spikes ---
+        if (particles.current.length > 500) break;
+
         const angle = Math.random() * Math.PI * 2;
         const speed = 1 + Math.random() * particleConfig.speedRange;
         let particleColor = color;
@@ -395,6 +406,8 @@ export const useDragonGame = () => {
       });
 
       // --- 5. Update and Draw Particle Systems ---
+      const highPerfMode = scoreRef.current > 250;
+
       particles.current = particles.current.filter(p => p.alpha > 0);
       particles.current.forEach(p => {
           p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
@@ -402,8 +415,10 @@ export const useDragonGame = () => {
           ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
           ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
       });
+
       if (activeSkin === 'dragon' && segmentsRef.current.length > 0) {
-        if (timestamp % 150 < 16.6) {
+        const spawnInterval = highPerfMode ? 300 : 150;
+        if (timestamp % spawnInterval < 16.6 && dragonSpores.current.length < 150) {
             const tail = segmentsRef.current[segmentsRef.current.length - 1];
             dragonSpores.current.push({
                 x: tail.x, y: tail.y,
@@ -419,9 +434,11 @@ export const useDragonGame = () => {
           ctx.fillStyle = `hsl(85, 100%, ${70 + spore.alpha * 30}%)`;
           ctx.beginPath(); ctx.arc(spore.x, spore.y, spore.size, 0, Math.PI * 2); ctx.fill();
       });
+
       if (activeSkin === 'ghost' && segmentsRef.current.length > 0) {
           const head = segmentsRef.current[0];
-          if (timestamp % 100 < 16.6) {
+          const spawnInterval = highPerfMode ? 200 : 100;
+          if (timestamp % spawnInterval < 16.6 && ghostWisps.current.length < 200) {
               ghostWisps.current.push({
                   x: head.x, y: head.y,
                   vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
@@ -439,47 +456,43 @@ export const useDragonGame = () => {
           ctx.beginPath(); ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2); ctx.fill();
       });
       
-      // --- REWORKED: Nagini venom drip effect ---
       if (activeSkin === 'nagini' && segmentsRef.current.length > 0 && !isWandering) {
-        const head = segmentsRef.current[0];
-        const timeInCycle = timestamp % 3000; // Match the new tongue cycle in gameConfig
-        // Drip venom when tongue is extended
-        if (timeInCycle > 150 && timeInCycle < 400) {
-          if (Math.random() > 0.6) { // Reduce spawn rate a bit for a less cluttered effect
-            const angle = Math.atan2(mousePosition.current.y - head.y, mousePosition.current.x - head.x);
-            
-            // Calculate tongue tip position more accurately based on the new animation
-            const t = (timeInCycle - 150) / 250; // Progress of the tongue flick (0 to 1)
-            const flickProgress = Math.sin(t * Math.PI * 0.5);
-            const tongueLength = (head.size / 10) * 28 * flickProgress; // Scaled tongue length from head
-            
-            const sparkX = head.x + Math.cos(angle) * tongueLength;
-            const sparkY = head.y + Math.sin(angle) * tongueLength;
+        if (naginiSparks.current.length < 100) {
+            const head = segmentsRef.current[0];
+            const timeInCycle = timestamp % 3000;
+            if (timeInCycle > 150 && timeInCycle < 400) {
+              const spawnChance = highPerfMode ? 0.25 : 0.4;
+              if (Math.random() < spawnChance) {
+                const angle = Math.atan2(mousePosition.current.y - head.y, mousePosition.current.x - head.x);
+                const t = (timeInCycle - 150) / 250;
+                const flickProgress = Math.sin(t * Math.PI * 0.5);
+                const tongueLength = (head.size / 10) * 28 * flickProgress;
+                const sparkX = head.x + Math.cos(angle) * tongueLength;
+                const sparkY = head.y + Math.sin(angle) * tongueLength;
 
-            naginiSparks.current.push({
-              x: sparkX, y: sparkY,
-              vx: (Math.random() - 0.5) * 1.5, // Less horizontal movement
-              vy: Math.random() * 1.5,          // Start with a slight downward velocity
-              alpha: 1,
-              size: 2 + Math.random() * 2.5,
-              decay: 0.02 + Math.random() * 0.01, // Slower decay for a longer life
-              gravity: 0.08, // Custom gravity for the drip effect
-              color: `hsl(${120 + Math.random() * 20}, 100%, 50%)` // Venomous green
-            });
-          }
+                naginiSparks.current.push({
+                  x: sparkX, y: sparkY,
+                  vx: (Math.random() - 0.5) * 1.5,
+                  vy: Math.random() * 1.5,
+                  alpha: 1,
+                  size: 2 + Math.random() * 2.5,
+                  decay: 0.02 + Math.random() * 0.01,
+                  gravity: 0.08,
+                  color: `hsl(${120 + Math.random() * 20}, 100%, 50%)`
+                });
+              }
+            }
         }
       }
       
-      // --- REWORKED: Update and Draw Nagini Sparks (Venom Drips) ---
       naginiSparks.current = naginiSparks.current.filter(s => s.alpha > 0);
       naginiSparks.current.forEach(spark => {
-          spark.vy += spark.gravity; // Apply gravity to make it drip
+          spark.vy += spark.gravity;
           spark.x += spark.vx;
           spark.y += spark.vy;
           spark.alpha -= spark.decay;
 
           ctx.globalAlpha = spark.alpha;
-          // Use a radial gradient for a glowing, liquid look
           const grad = ctx.createRadialGradient(spark.x, spark.y, 0, spark.x, spark.y, spark.size);
           grad.addColorStop(0, 'white');
           grad.addColorStop(0.4, spark.color);
@@ -487,7 +500,6 @@ export const useDragonGame = () => {
 
           ctx.fillStyle = grad;
           ctx.beginPath();
-          // Draw a slightly elongated ellipse to simulate a falling drip
           ctx.ellipse(spark.x, spark.y, spark.size * 0.7, spark.size, Math.atan2(spark.vy, spark.vx) + Math.PI / 2, 0, Math.PI * 2);
           ctx.fill();
       });
@@ -537,7 +549,6 @@ export const useDragonGame = () => {
                       effect.trail.shift();
                   }
                   
-                  // Draw trail
                   ctx.lineCap = 'round';
                   for (let i = effect.trail.length - 1; i > 0; i--) {
                       const p1 = effect.trail[i];
@@ -555,7 +566,6 @@ export const useDragonGame = () => {
                       ctx.stroke();
                   }
                   
-                  // Draw fireball head
                   const alpha = 1 - progress;
                   ctx.globalAlpha = alpha;
                   const headGrad = ctx.createRadialGradient(effect.x, effect.y, 0, effect.x, effect.y, effect.size);
@@ -581,11 +591,10 @@ export const useDragonGame = () => {
                       ctx.shadowBlur = 25;
                       ctx.shadowColor = 'hsl(110, 80%, 40%)';
                       
-                      // Draw swirling, pulsing charge particles
                       effect.chargeParticles.forEach(p => {
                           const pulse = Math.sin(chargeProgress * Math.PI * 2 + p.angle) * 5;
-                          const currentAngle = p.angle + timestamp / 300; // Swirl
-                          const currentDist = p.dist * (1 - chargeProgress) + pulse; // Move inward and pulse
+                          const currentAngle = p.angle + timestamp / 300;
+                          const currentDist = p.dist * (1 - chargeProgress) + pulse;
                           const x = head.x + Math.cos(currentAngle) * currentDist;
                           const y = head.y + Math.sin(currentAngle) * currentDist;
                           ctx.fillStyle = `hsl(110, 100%, ${65 + Math.random() * 25}%)`;
@@ -598,7 +607,6 @@ export const useDragonGame = () => {
                           effect.state = 'traveling';
                       }
                   } else if (effect.state === 'traveling') {
-                      // Add a wobble to the path
                       const wobble = Math.sin(age / 50) * 4;
                       const perpAngle = Math.atan2(effect.vy, effect.vx) + Math.PI / 2;
                       effect.x += effect.vx + Math.cos(perpAngle) * wobble;
@@ -609,7 +617,6 @@ export const useDragonGame = () => {
                           effect.trail.shift();
                       }
 
-                      // Draw trail
                       ctx.lineCap = 'round';
                       for (let i = effect.trail.length - 1; i > 0; i--) {
                           const p1 = effect.trail[i];
@@ -617,26 +624,23 @@ export const useDragonGame = () => {
                           p1.alpha -= 0.06;
                           if (p1.alpha <= 0) continue;
                           ctx.strokeStyle = `hsla(110, 80%, 60%, ${p1.alpha * 0.4})`;
-                          ctx.lineWidth = effect.size * (i / effect.trail.length) * 0.8; // Thinner trail
+                          ctx.lineWidth = effect.size * (i / effect.trail.length) * 0.8;
                           ctx.beginPath();
                           ctx.moveTo(p1.x, p1.y);
                           ctx.lineTo(p2.x, p2.y);
                           ctx.stroke();
                       }
 
-                      // Draw spell head
                       const spellAlpha = 1 - (age - effect.chargeDuration) / (effect.duration - effect.chargeDuration);
                       ctx.globalAlpha = spellAlpha;
                       ctx.fillStyle = 'white';
                       ctx.shadowColor = 'hsl(110, 80%, 40%)';
                       ctx.shadowBlur = 30;
                       
-                      // Main spell core
                       ctx.beginPath();
                       ctx.arc(effect.x, effect.y, effect.size, 0, Math.PI * 2);
                       ctx.fill();
                       
-                      // Add distinctive sparks
                       ctx.shadowBlur = 10;
                       for(let i=0; i<3; i++) {
                          ctx.fillStyle = `hsla(110, 80%, 70%, ${Math.random() * 0.7})`;
