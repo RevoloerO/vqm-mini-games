@@ -434,10 +434,12 @@ export const SKINS = {
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // --- 1. Elegant Body: Rendered with overlapping, lit scales ---
+        // Loop from tail to head to establish the correct Z-order
         for (let i = segments.length - 1; i > 0; i--) {
             const segment = segments[i];
             const prevSegment = segments[i - 1];
+
+            // --- 1. Draw the scales for the CURRENT segment first ---
             const angle = Math.atan2(prevSegment.y - segment.y, prevSegment.x - segment.x);
             const scaleSize = segment.size * 1.2;
 
@@ -445,57 +447,49 @@ export const SKINS = {
             ctx.translate(segment.x, segment.y);
             ctx.rotate(angle);
 
-            // Create a gradient for each scale for a 3D effect
             const scaleGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, scaleSize);
-            scaleGradient.addColorStop(0, '#6a956a'); // Lighter center
-            scaleGradient.addColorStop(0.7, '#4a754a'); // Mid-tone
-            scaleGradient.addColorStop(1, '#2a4d2a'); // Dark edge
-
+            scaleGradient.addColorStop(0, '#6a956a');
+            scaleGradient.addColorStop(0.7, '#4a754a');
+            scaleGradient.addColorStop(1, '#2a4d2a');
             ctx.fillStyle = scaleGradient;
 
-            // Draw the scale as a slightly flattened ellipse
             ctx.beginPath();
             ctx.ellipse(0, 0, scaleSize, scaleSize * 0.8, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Add a subtle, shimmering highlight to the top edge of the scale
             ctx.strokeStyle = 'rgba(200, 255, 200, 0.2)';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(0, -scaleSize * 0.2, scaleSize * 0.6, Math.PI * 0.2, Math.PI * 0.8);
             ctx.stroke();
+            ctx.restore();
 
+            // --- 2. Draw the blood/venom line on TOP of the current segment's scales ---
+            // This line connects to the *next* segment in the loop (the one closer to the head).
+            // Because the next segment's scales will be drawn in the next iteration, it will cover this line, creating the overlap effect.
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(prevSegment.x, prevSegment.y);
+            ctx.lineTo(segment.x, segment.y);
+
+            const flowPulse = 0.5 + Math.sin(timestamp / 400 + i * 0.1) * 0.5;
+            const flowWidth = 2 + Math.sin(timestamp / 200 + i * 0.1) * 1.5;
+
+            // Base venom green glow
+            ctx.strokeStyle = `hsla(120, 100%, 70%, ${flowPulse * 0.6})`;
+            ctx.lineWidth = flowWidth * 2;
+            ctx.shadowColor = `hsl(120, 100%, 50%)`;
+            ctx.shadowBlur = 15;
+            ctx.stroke();
+
+            // Inner blood-red core
+            ctx.strokeStyle = `hsla(350, 100%, 50%, ${flowPulse * 0.8})`;
+            ctx.lineWidth = flowWidth;
+            ctx.shadowColor = `hsl(350, 100%, 50%)`;
+            ctx.shadowBlur = 20;
+            ctx.stroke();
             ctx.restore();
         }
-
-        // --- 2. CORRECTED: Pulsing Venom/Blood Flow Line ---
-        // This is drawn on top of the scales to connect the segments visually.
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(segments[0].x, segments[0].y);
-        // Use lineTo for a direct, robust path along the segments.
-        for (let i = 1; i < segments.length; i++) {
-            ctx.lineTo(segments[i].x, segments[i].y);
-        }
-        
-        const flowPulse = 0.5 + Math.sin(timestamp / 400) * 0.5; // Pulse between 0 and 1
-        const flowWidth = 2 + Math.sin(timestamp / 200) * 1.5; // Pulsing width
-
-        // Base venom green glow
-        ctx.strokeStyle = `hsla(120, 100%, 70%, ${flowPulse * 0.5})`; 
-        ctx.lineWidth = flowWidth*2;
-        ctx.shadowColor = `hsl(120, 100%, 50%)`;
-        ctx.shadowBlur = 15; // Increased blur for a stronger glow
-        ctx.stroke();
-
-        // Inner blood-red core
-        ctx.strokeStyle = `hsla(350, 100%, 50%, ${flowPulse * 0.5})`;
-        ctx.lineWidth = flowWidth * 2.5;
-        ctx.shadowColor = `hsl(350, 100%, 50%)`;
-        ctx.shadowBlur = 25;
-        ctx.stroke();
-        ctx.restore();
-
 
         // --- 3. Head Drawing ---
         const headAngle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);

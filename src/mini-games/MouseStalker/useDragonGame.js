@@ -1,6 +1,6 @@
 // useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
 // Manages game state efficiently using useRef for animations and useState for UI updates.
-// UPDATED: Reworked Nagini skin body, tongue animation, and particle effects.
+// UPDATED: Fixed performance lag by stopping segment addition after score reaches 500.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
@@ -359,21 +359,27 @@ export const useDragonGame = () => {
           createParticleBurst(fruit.x, fruit.y, fruit.color, fruit.type);
           fruits.current.splice(fruitIndex, 1);
           const bonus = Math.floor(Math.random() * (fruit.maxBonus - fruit.minBonus + 1)) + fruit.minBonus;
-          for (let i = 0; i < bonus; i++) {
-            currentSegments.push({ ...currentSegments[currentSegments.length - 1] });
-          }
           const oldScore = scoreRef.current;
-          scoreRef.current = currentSegments.length;
-          setScore(scoreRef.current);
-          const currentScore = scoreRef.current;
+
+          // Only add new segments and increase segment size if the score is less than 500
           if (oldScore < 500) {
-            let growthFactor = (currentScore < 100) ? 0.1 : (currentScore < 250) ? 0.05 : 0.02;
+            for (let i = 0; i < bonus; i++) {
+              if (currentSegments.length < 500) {
+                currentSegments.push({ ...currentSegments[currentSegments.length - 1] });
+              }
+            }
+            
+            let growthFactor = (oldScore < 100) ? 0.1 : (oldScore < 250) ? 0.05 : 0.02;
             currentSegments.forEach(seg => {
               if (seg.size < GAME_CONFIG.maxSize) {
                   seg.size = Math.min(GAME_CONFIG.maxSize, seg.size + bonus * growthFactor);
               }
             });
           }
+
+          scoreRef.current = currentSegments.length;
+          setScore(scoreRef.current);
+          const currentScore = scoreRef.current;
           const milestones = { 100: 'MILESTONE_1', 250: 'MILESTONE_2', 500: 'VICTORY' };
           for (const [milestoneScore, key] of Object.entries(milestones)) {
               if (currentScore >= milestoneScore && !announcedMilestones.current.has(key)) {
