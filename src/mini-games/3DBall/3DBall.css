@@ -1,0 +1,265 @@
+/* 3DBall.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+/* --- Main Container --- */
+.three-ball-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    overflow: hidden;
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    /* Add perspective for the 3D effect */
+    perspective: 800px;
+}
+
+/* --- Base Ball Styles --- */
+.ball {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.4s ease-in-out;
+}
+
+/* --- Sphere Skin --- */
+.ball.sphere {
+  background: #005fbd;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 -10px 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.ball.sphere::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 35% 35%, rgba(144, 213, 255, 0.8), rgba(0, 123, 255, 0) 50%);
+  animation: rotate-light 10s infinite linear;
+}
+
+.ball.sphere::after {
+  content: '';
+  position: absolute;
+  top: 5%;
+  left: 10%;
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 50%);
+  transform: rotate(45deg);
+}
+
+/* --- Fireball Jutsu Skin --- */
+.ball.fireball {
+  background: transparent;
+  width: 200px;
+  height: 200px;
+  box-shadow: none;
+  filter: contrast(1.5) brightness(1.5);
+}
+
+.flame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  border-radius: 50% 40% 30% 40%;
+  background: #ffc93c;
+  filter: blur(25px);
+  animation: flame-movement 4s infinite linear;
+  mix-blend-mode: screen;
+}
+
+.flame:nth-child(2) {
+  width: 150px;
+  height: 150px;
+  background: #ff8a00;
+  animation-duration: 3s;
+  animation-delay: -1s;
+}
+
+.flame:nth-child(3) {
+  width: 100px;
+  height: 100px;
+  background: #a40606;
+  animation-duration: 2.5s;
+  animation-delay: -2s;
+}
+
+.flame:nth-child(4) {
+  width: 250px;
+  height: 250px;
+  background: #ff5733;
+  animation-duration: 5s;
+  animation-delay: -3s;
+}
+
+.flame:nth-child(5) {
+  width: 180px;
+  height: 180px;
+  background: #ffc300;
+  animation-duration: 3.5s;
+  animation-delay: -0.5s;
+}
+
+/* --- Pokéball Skin --- */
+.ball.pokeball {
+    background: linear-gradient(to bottom, #ee1515 0%, #ee1515 48%, #222 48%, #222 52%, #f0f0f0 52%, #f0f0f0 100%);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 0 25px rgba(0,0,0,0.2);
+    overflow: hidden;
+    /* This creates the 3D context for child elements */
+    transform-style: preserve-3d;
+}
+
+.pokeball-button {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    background: #fff;
+    border: 10px solid #222;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    /* Lift the button off the surface and add a shadow for depth */
+    transform: translate(-50%, -50%) translateZ(25px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+.pokeball-button::before {
+    content: '';
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background: transparent;
+    border: 5px solid #ccc;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.2s ease;
+}
+
+.pokeball-button:hover::before {
+    border-color: #888;
+    background: #f0f0f0;
+}
+
+.pokeball-shine {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 15%;
+    width: 70%;
+    height: 40%;
+    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+    opacity: 0.8;
+    /* The transform is now fully controlled by React for a dynamic effect */
+}
+
+
+/* --- Animations --- */
+@keyframes rotate-light {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes flame-movement {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(1.2, 1); border-radius: 50% 40% 30% 40%; }
+  25% { transform: translate(-50%, -50%) rotate(90deg) scale(1, 1.3); border-radius: 40% 50% 40% 30%; }
+  50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.3, 1.1); border-radius: 30% 40% 50% 40%; }
+  75% { transform: translate(-50%, -50%) rotate(270deg) scale(1.1, 1.2); border-radius: 40% 30% 40% 50%; }
+  100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.2, 1); border-radius: 50% 40% 30% 40%; }
+}
+
+/* --- Sidebar Styles --- */
+.skin-sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 280px;
+    height: 100%;
+    background: rgba(20, 20, 25, 0.7);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 10;
+    padding: 60px 20px 20px;
+    color: #e0e0e0;
+}
+
+.skin-sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 20;
+    background: rgba(30, 30, 35, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    background: #007bff;
+    border-color: #007bff;
+}
+
+.skin-sidebar h3 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 30px;
+    letter-spacing: 1px;
+}
+
+.skin-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.skin-button {
+    width: 100%;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+    border-radius: 12px;
+    text-align: left;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.skin-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.skin-button.active {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+}

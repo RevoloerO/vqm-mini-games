@@ -4,7 +4,7 @@ import {
     Gamepad2,
     MousePointer,
     Flower2,
-    GitBranch,
+    Globe, // Changed from GitBranch
     Menu,
     X
 } from 'lucide-react';
@@ -95,11 +95,11 @@ const HomePage = () => {
             path: '/vqm-mini-games/blooming-garden',
         },
         {
-            title: 'Grid Snake',
-            description: 'Eat, grow, and follow the path. How long can you last?',
-            status: 'Coming Soon',
-            icon: <GitBranch size={40} />,
-            path: '/vqm-mini-games/snake',
+            title: '3D Ball',
+            description: 'A simple interactive 3D ball. Drag to rotate and zoom.',
+            status: 'Ready',
+            icon: <Globe size={40} />,
+            path: '/vqm-mini-games/3d-ball',
         },
     ];
 
