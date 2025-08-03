@@ -12,8 +12,44 @@
     overflow: hidden;
     position: relative;
     font-family: 'Poppins', sans-serif;
-    /* Add perspective for the 3D effect */
     perspective: 800px;
+    transition: background-color 0.5s ease;
+}
+
+/* Frost overlay effect */
+.three-ball-container.frost-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 40%, rgba(219, 234, 254, 0.1) 70%, rgba(191, 219, 254, 0.4) 95%);
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    animation: frost-fade-in 1s 0.5s forwards;
+}
+
+/* Dragon Radar background effect */
+.three-ball-container.dragon-radar-bg {
+    background-color: #0a2a0a;
+    background-image: 
+        repeating-radial-gradient(circle at center, rgba(127, 255, 127, 0.2) 0, rgba(127, 255, 127, 0.2) 1px, transparent 1px, transparent 100px),
+        repeating-linear-gradient(to right, rgba(127, 255, 127, 0.1) 0, rgba(127, 255, 127, 0.1) 1px, transparent 1px, transparent 50px),
+        repeating-linear-gradient(to bottom, rgba(127, 255, 127, 0.1) 0, rgba(127, 255, 127, 0.1) 1px, transparent 1px, transparent 50px);
+}
+
+.three-ball-container.dragon-radar-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to bottom, rgba(127, 255, 127, 0.5), transparent);
+    animation: radar-scan 4s infinite linear;
+    z-index: 5;
 }
 
 /* --- Base Ball Styles --- */
@@ -77,44 +113,16 @@
   mix-blend-mode: screen;
 }
 
-.flame:nth-child(2) {
-  width: 150px;
-  height: 150px;
-  background: #ff8a00;
-  animation-duration: 3s;
-  animation-delay: -1s;
-}
-
-.flame:nth-child(3) {
-  width: 100px;
-  height: 100px;
-  background: #a40606;
-  animation-duration: 2.5s;
-  animation-delay: -2s;
-}
-
-.flame:nth-child(4) {
-  width: 250px;
-  height: 250px;
-  background: #ff5733;
-  animation-duration: 5s;
-  animation-delay: -3s;
-}
-
-.flame:nth-child(5) {
-  width: 180px;
-  height: 180px;
-  background: #ffc300;
-  animation-duration: 3.5s;
-  animation-delay: -0.5s;
-}
+.flame:nth-child(2) { width: 150px; height: 150px; background: #ff8a00; animation-duration: 3s; animation-delay: -1s; }
+.flame:nth-child(3) { width: 100px; height: 100px; background: #a40606; animation-duration: 2.5s; animation-delay: -2s; }
+.flame:nth-child(4) { width: 250px; height: 250px; background: #ff5733; animation-duration: 5s; animation-delay: -3s; }
+.flame:nth-child(5) { width: 180px; height: 180px; background: #ffc300; animation-duration: 3.5s; animation-delay: -0.5s; }
 
 /* --- Pokéball Skin --- */
 .ball.pokeball {
     background: linear-gradient(to bottom, #ee1515 0%, #ee1515 48%, #222 48%, #222 52%, #f0f0f0 52%, #f0f0f0 100%);
     box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 0 25px rgba(0,0,0,0.2);
     overflow: hidden;
-    /* This creates the 3D context for child elements */
     transform-style: preserve-3d;
 }
 
@@ -127,139 +135,214 @@
     border-radius: 50%;
     top: 50%;
     left: 50%;
-    /* Lift the button off the surface and add a shadow for depth */
     transform: translate(-50%, -50%) translateZ(25px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     z-index: 10;
 }
 
-.pokeball-button::before {
+.pokeball-button::before { content: ''; position: absolute; width: 35px; height: 35px; background: transparent; border: 5px solid #ccc; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: all 0.2s ease; }
+.pokeball-button:hover::before { border-color: #888; background: #f0f0f0; }
+.pokeball-shine { content: ''; position: absolute; top: 5px; left: 15%; width: 70%; height: 40%; background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; opacity: 0.8; }
+
+/* --- Energy Core Skin --- */
+.ball.energy-core {
+    background: radial-gradient(circle, #240046 20%, #10002b 80%);
+    box-shadow: 0 0 50px -10px #7b2cbf, inset 0 0 30px #e0aaff;
+    animation: core-pulse 3s infinite ease-in-out;
+    overflow: hidden;
+    filter: contrast(1.2) brightness(1.1);
+}
+
+.plasma-tendril { position: absolute; top: 50%; left: 50%; background: radial-gradient(circle, #ffffff 2%, #e0aaff 15%, #c77dff 50%, transparent); border-radius: 50% 45% 55% 40%; mix-blend-mode: screen; filter: blur(20px); animation: plasma-flow 8s infinite linear; }
+.plasma-tendril:nth-child(1) { width: 150px; height: 150px; opacity: 0.8; animation-duration: 6s; }
+.plasma-tendril:nth-child(2) { width: 120px; height: 120px; opacity: 0.6; animation-duration: 5s; animation-delay: -2s; }
+.plasma-tendril:nth-child(3) { width: 180px; height: 180px; opacity: 0.9; animation-duration: 7s; animation-delay: -4s; }
+
+.lightning-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scale(1.1); filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 15px #e0aaff); }
+.lightning-path { fill: none; stroke: white; stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; animation: lightning-strike var(--duration, 1s) var(--delay, 0s) infinite ease-in-out; }
+
+/* --- Ice Orb Skin --- */
+.ball.ice-orb {
+    background: radial-gradient(circle, #ffffff 10%, #dbeafe 40%, #93c5fd 80%);
+    box-shadow: inset 0 0 30px #fff, inset 0 0 60px #bfdbfe, 0 0 50px -10px #3b82f6;
+    animation: ice-pulse 5s infinite ease-in-out;
+    overflow: hidden;
+}
+
+.ice-shard-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 15px #60a5fa);
+    mix-blend-mode: screen;
+    animation: slow-rotate var(--duration, 20s) var(--delay, 0s) infinite linear;
+}
+
+.ice-shard-path {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.7);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: shimmer 4s infinite ease-in-out alternate;
+}
+
+/* --- Dragon Ball Skin --- */
+.ball.dragon-ball {
+    background: radial-gradient(circle at 35% 35%, #ffc947, #ff9800);
+    box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4), inset 0 0 25px #ffc947;
+    overflow: hidden;
+    animation: dragon-ball-glow 3s infinite alternate;
+}
+
+.crystal-reflection {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 40% 40%, white, transparent 40%), radial-gradient(circle at 65% 65%, rgba(255, 255, 255, 0.5), transparent 30%);
+    opacity: 0.2;
+    mix-blend-mode: overlay;
+    animation: slow-rotate 25s infinite linear reverse;
+}
+
+.star-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.1s linear;
+    filter: drop-shadow(0 0 8px #ffeb3b);
+    animation: star-pulse 3s infinite ease-in-out;
+}
+
+.dragon-ball-star {
+    position: absolute;
+    width: 12%;
+    height: 12%;
+    transform: translate(-50%, -50%);
+    animation: star-appear 0.4s ease-out forwards;
+}
+
+.dragon-ball-star svg {
+    width: 100%;
+    height: 100%;
+    fill: #d80000;
+    filter: drop-shadow(0 0 2px #7f0000);
+}
+
+/* --- Arc Reactor Skin (Reworked) --- */
+.ball.arc-reactor {
+    background: #111;
+    box-shadow: 0 0 30px #000;
+    border: 4px solid #333;
+}
+
+.arc-reactor-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(0, 255, 255, 0.4), transparent 60%);
+    animation: arc-core-pulse 2s infinite ease-in-out;
+}
+
+.arc-coil-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    animation: slow-rotate 30s infinite linear;
+}
+
+.arc-coil-holder {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 20%;
+    height: 50%;
+    transform-origin: bottom center;
+}
+
+.arc-coil {
+    width: 100%;
+    height: 100%;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.arc-coil::before {
     content: '';
     position: absolute;
-    width: 35px;
-    height: 35px;
-    background: transparent;
-    border: 5px solid #ccc;
-    border-radius: 50%;
+    top: 10%;
+    left: 10%;
+    right: 10%;
+    bottom: 10%;
+    background: repeating-linear-gradient(to right, #b87333, #8a5a2a 2px, #b87333 4px);
+}
+
+.arc-inner-ring {
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    transition: all 0.2s ease;
-}
-
-.pokeball-button:hover::before {
-    border-color: #888;
-    background: #f0f0f0;
-}
-
-.pokeball-shine {
-    content: '';
-    position: absolute;
-    top: 5px;
-    left: 15%;
-    width: 70%;
-    height: 40%;
-    background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+    width: 65%;
+    height: 65%;
     border-radius: 50%;
-    opacity: 0.8;
-    /* The transform is now fully controlled by React for a dynamic effect */
+    background: #1a1a1a;
+    border: 2px solid #333;
 }
 
+.arc-inner-svg {
+    width: 100%;
+    height: 100%;
+    animation: slow-rotate 25s infinite linear reverse;
+}
+
+.arc-center-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30%;
+    height: 30%;
+    background: radial-gradient(circle, #fff, #00ffff 60%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px 5px #00ffff, 0 0 30px 10px #00ffff, 0 0 50px 15px rgba(0, 255, 255, 0.5);
+    animation: arc-core-pulse 2s infinite ease-in-out;
+}
 
 /* --- Animations --- */
-@keyframes rotate-light {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes flame-movement {
-  0% { transform: translate(-50%, -50%) rotate(0deg) scale(1.2, 1); border-radius: 50% 40% 30% 40%; }
-  25% { transform: translate(-50%, -50%) rotate(90deg) scale(1, 1.3); border-radius: 40% 50% 40% 30%; }
-  50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.3, 1.1); border-radius: 30% 40% 50% 40%; }
-  75% { transform: translate(-50%, -50%) rotate(270deg) scale(1.1, 1.2); border-radius: 40% 30% 40% 50%; }
-  100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.2, 1); border-radius: 50% 40% 30% 40%; }
-}
+@keyframes rotate-light { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes flame-movement { 0% { transform: translate(-50%, -50%) rotate(0deg) scale(1.2, 1); border-radius: 50% 40% 30% 40%; } 25% { transform: translate(-50%, -50%) rotate(90deg) scale(1, 1.3); border-radius: 40% 50% 40% 30%; } 50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.3, 1.1); border-radius: 30% 40% 50% 40%; } 75% { transform: translate(-50%, -50%) rotate(270deg) scale(1.1, 1.2); border-radius: 40% 30% 40% 50%; } 100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.2, 1); border-radius: 50% 40% 30% 40%; } }
+@keyframes core-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 50px -10px #7b2cbf, inset 0 0 30px #e0aaff; } 50% { transform: scale(1.05); box-shadow: 0 0 60px 0px #9d4edd, inset 0 0 35px #c77dff; } }
+@keyframes plasma-flow { 0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); border-radius: 50% 45% 55% 40%; } 50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.2); border-radius: 45% 50% 40% 55%; } 100% { transform: translate(-50%, -50%) rotate(360deg) scale(1); border-radius: 50% 45% 55% 40%; } }
+@keyframes lightning-strike { 0% { stroke-dashoffset: var(--dash-length); opacity: 0; } 10% { opacity: 1; } 20% { stroke-dashoffset: 0; } 70% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: calc(-1 * var(--dash-length)); opacity: 0; } }
+@keyframes ice-pulse { 0%, 100% { box-shadow: inset 0 0 30px #fff, inset 0 0 60px #bfdbfe, 0 0 50px -10px #3b82f6; } 50% { box-shadow: inset 0 0 35px #fff, inset 0 0 70px #93c5fd, 0 0 60px 0px #60a5fa; } }
+@keyframes frost-fade-in { to { opacity: 1; } }
+@keyframes slow-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes shimmer { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+@keyframes dragon-ball-glow { 0%, 100% { box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.3), 0 0 20px #ffeb3b; } 50% { box-shadow: 0 10px 35px rgba(255, 152, 0, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.5), 0 0 30px #ffc107; } }
+@keyframes star-pulse { 0%, 100% { filter: drop-shadow(0 0 8px #ffeb3b); } 50% { filter: drop-shadow(0 0 16px #ffc107); } }
+@keyframes star-appear { from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+@keyframes radar-scan { from { top: -4px; } to { top: 100%; } }
+@keyframes arc-core-pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 15px 5px #00ffff, 0 0 30px 10px #00ffff, 0 0 50px 15px rgba(0, 255, 255, 0.5); } 50% { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 25px 8px #00ffff, 0 0 45px 15px #00ffff, 0 0 70px 20px rgba(0, 255, 255, 0.5); } }
 
 /* --- Sidebar Styles --- */
-.skin-sidebar {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 280px;
-    height: 100%;
-    background: rgba(20, 20, 25, 0.7);
-    backdrop-filter: blur(15px) saturate(180%);
-    -webkit-backdrop-filter: blur(15px) saturate(180%);
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    transform: translateX(100%);
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 10;
-    padding: 60px 20px 20px;
-    color: #e0e0e0;
-}
-
-.skin-sidebar.open {
-    transform: translateX(0);
-}
-
-.sidebar-toggle {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 20;
-    background: rgba(30, 30, 35, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.sidebar-toggle:hover {
-    background: #007bff;
-    border-color: #007bff;
-}
-
-.skin-sidebar h3 {
-    text-align: center;
-    font-weight: 600;
-    margin-bottom: 30px;
-    letter-spacing: 1px;
-}
-
-.skin-options {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.skin-button {
-    width: 100%;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #e0e0e0;
-    border-radius: 12px;
-    text-align: left;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
-
-.skin-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.skin-button.active {
-    background: #007bff;
-    color: #fff;
-    border-color: #007bff;
-    box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
-}
+.skin-sidebar { position: absolute; top: 0; right: 0; width: 280px; height: 100%; background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(15px) saturate(180%); -webkit-backdrop-filter: blur(15px) saturate(180%); border-left: 1px solid rgba(255, 255, 255, 0.1); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 10; padding: 60px 20px 20px; color: #e0e0e0; }
+.skin-sidebar.open { transform: translateX(0); }
+.sidebar-toggle { position: absolute; top: 20px; right: 20px; z-index: 20; background: rgba(30, 30, 35, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; }
+.sidebar-toggle:hover { background: #007bff; border-color: #007bff; }
+.skin-sidebar h3 { text-align: center; font-weight: 600; margin-bottom: 30px; letter-spacing: 1px; }
+.skin-options { display: flex; flex-direction: column; gap: 15px; }
+.skin-button { width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #e0e0e0; border-radius: 12px; text-align: left; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; font-weight: 500; }
+.skin-button:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+.skin-button.active { background: #007bff; color: #fff; border-color: #007bff; box-shadow: 0 0 15px rgba(0, 123, 255, 0.5); }
