@@ -14,7 +14,7 @@ import './scifi_skins.css';
 const SkinSidebar = ({ isOpen, onSelectSkin, activeSkin }) => {
     const categorizedSkins = {
         'Normal Objects': [ { id: 'sphere', name: 'Sphere' }, { id: 'pokeball', name: 'Pokéball' } ],
-        'Magical': [ { id: 'fireball', name: 'Fireball Jutsu' }, { id: 'ice-orb', name: 'Ice Orb' }, { id: 'dragon-ball', name: 'Dragon Ball' } ],
+        'Magical': [ { id: 'fireball', name: 'Fireball Jutsu' }, { id: 'ice-orb', name: 'Ice Orb' }, { id: 'dragon-ball', name: 'Dragon Ball' }, { id: 'palantir', name: 'Palantír Stone' } ],
         'Sci-Fi': [ { id: 'energy-core', name: 'Energy Core' }, { id: 'arc-reactor', name: 'Arc Reactor' } ]
     };
     return (
@@ -165,13 +165,14 @@ const useFireParticleSystem = (isActive, ballRef, mousePosRef) => {
  */
 const ThreeDBall = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
-    const [activeSkin, setActiveSkin] = useState('fireball');
+    const [activeSkin, setActiveSkin] = useState('palantir');
     const [styles, setStyles] = useState({});
     const containerRef = useRef(null);
     const ballRef = useRef(null);
     const mousePosRef = useRef({ x: 0, y: 0 });
     const [lightningTick, setLightningTick] = useState(0);
     const [starCount, setStarCount] = useState(4);
+    const [isPalantirActive, setIsPalantirActive] = useState(false);
     
     // Use the custom hook to manage the particle system
     const fireParticles = useFireParticleSystem(activeSkin === 'fireball', ballRef, mousePosRef);
@@ -179,16 +180,16 @@ const ThreeDBall = () => {
     // General mouse move handler for all skins
     useEffect(() => {
         const currentContainer = containerRef.current;
-        if (!currentContainer) return;
+        const currentBall = ballRef.current;
+        if (!currentContainer || !currentBall) return;
 
         const handleMouseMove = (e) => {
-            const { left, top } = currentContainer.getBoundingClientRect();
+            const { left, top, width, height } = currentContainer.getBoundingClientRect();
             const x = e.clientX - left;
             const y = e.clientY - top;
             mousePosRef.current = { x, y }; // Update mouse position ref for particle system
 
             if (activeSkin === 'pokeball' || activeSkin === 'arc-reactor') {
-                const { width, height } = currentContainer.getBoundingClientRect();
                 const rotateY = (x - width / 2) / (width / 2) * 15;
                 const rotateX = -(y - height / 2) / (height / 2) * 15;
                 setStyles({
@@ -196,27 +197,65 @@ const ThreeDBall = () => {
                     shine: { transform: `translateX(${-rotateY * 1.2}px) translateY(${-rotateX * 1.2}px) rotate(30deg)`, transition: 'transform 0.05s linear' }
                 });
             } else if (activeSkin === 'dragon-ball') {
-                const { width, height } = currentContainer.getBoundingClientRect();
                 const angle = Math.atan2(y - (height / 2), x - (width / 2));
                 let degrees = angle * (180 / Math.PI);
                 degrees = (degrees + 360) % 360;
                 const segmentSize = 360 / 7;
                 setStarCount(Math.floor(degrees / segmentSize) + 1);
+            } else if (activeSkin === 'palantir') {
+                const ballRect = currentBall.getBoundingClientRect();
+                const mouseX = e.clientX - ballRect.left;
+                const mouseY = e.clientY - ballRect.top;
+                
+                // Update CSS variables for the glow effect
+                currentBall.style.setProperty('--mouse-x', `${(mouseX / ballRect.width) * 100}%`);
+                currentBall.style.setProperty('--mouse-y', `${(mouseY / ballRect.height) * 100}%`);
+
+                // Calculate and set transform for the pupil
+                const centerX = ballRect.width / 2;
+                const centerY = ballRect.height / 2;
+                const deltaX = mouseX - centerX;
+                const deltaY = mouseY - centerY;
+                
+                // Calculate angle for rotation. No offset needed for horizontal pupil.
+                const angleRad = Math.atan2(deltaY, deltaX);
+                const angleDeg = angleRad * (180 / Math.PI);
+
+                const maxMove = 25; // Max pixels the pupil can move from the center
+                const moveX = (deltaX / centerX) * maxMove;
+                const moveY = (deltaY / centerY) * maxMove;
+
+                setStyles(prevStyles => ({ ...prevStyles, pupil: { transform: `translate(-50%, -50%) translate(${moveX}px, ${moveY}px) rotate(${angleDeg}deg)` } }));
             }
         };
+        
+        const handleMouseEnter = () => {
+            if (activeSkin === 'palantir') {
+                currentBall.style.setProperty('--glow-opacity', '1');
+                setIsPalantirActive(true);
+            }
+        }
 
         const handleMouseLeave = () => {
             if (activeSkin === 'pokeball' || activeSkin === 'arc-reactor') {
                 setStyles({ ball: { transform: 'rotateX(0deg) rotateY(0deg)', transition: 'transform 0.5s ease-out' }, shine: { transform: 'translateX(0px) translateY(0px) rotate(30deg)', transition: 'transform 0.5s ease-out' } });
             }
             if (activeSkin === 'dragon-ball') { setStarCount(4); }
+            if (activeSkin === 'palantir') {
+                currentBall.style.setProperty('--glow-opacity', '0');
+                setIsPalantirActive(false);
+                // Reset pupil position and rotation when mouse leaves
+                setStyles(prevStyles => ({ ...prevStyles, pupil: { transform: 'translate(-50%, -50%) translate(0px, 0px) rotate(0deg)' } }));
+            }
         };
         
         currentContainer.addEventListener('mousemove', handleMouseMove);
+        currentContainer.addEventListener('mouseenter', handleMouseEnter);
         currentContainer.addEventListener('mouseleave', handleMouseLeave);
 
         return () => {
             currentContainer.removeEventListener('mousemove', handleMouseMove);
+            currentContainer.removeEventListener('mouseenter', handleMouseEnter);
             currentContainer.removeEventListener('mouseleave', handleMouseLeave);
         };
     }, [activeSkin]);
@@ -247,6 +286,9 @@ const ThreeDBall = () => {
               {activeSkin === 'ice-orb' && ( <> {iceShards.map(shard => ( <svg key={shard.id} className="ice-shard-svg" viewBox="0 0 250 250" style={{ '--duration': `${shard.duration}s`, '--delay': `${shard.delay}s`, }}> <path className="ice-shard-path" d={shard.path} /> </svg> ))} </> )}
               {activeSkin === 'dragon-ball' && ( <> <div className="crystal-reflection"></div> <div className="star-container" key={starCount}> {(STAR_POSITIONS[starCount] || []).map((pos, i) => ( <div key={i} className="dragon-ball-star" style={{ top: pos.top, left: pos.left }}> <DragonBallStar /> </div> ))} </div> </> )}
               {activeSkin === 'arc-reactor' && ( <> <div className="arc-light-ring"></div> <div className="arc-cross-lines-container"> {Array.from({ length: 9 }).map((_, i) => ( <div key={i} className="arc-cross-line-holder" style={{ transform: `rotate(${i * 20}deg)`}}> <div className={`arc-cross-line-bg ${i % 2 === 0 ? 'odd' : 'even'}`}></div> <div className={`arc-cross-line ${i % 2 === 0 ? 'odd' : 'even'}`}></div> </div> ))} </div> <div className="arc-center-core"> <div className="arc-core-mesh"> <div className="arc-line" style={{ transform: 'rotate(0deg)' }}></div> <div className="arc-line" style={{ transform: 'rotate(120deg)' }}></div> <div className="arc-line" style={{ transform: 'rotate(240deg)' }}></div> </div> <div className="plasma-core-container"> <div className="plasma-core"></div> <svg className="plasma-sparks-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"> {plasmaSparks.map(spark => ( <path key={`${spark.id}-${lightningTick}`} className="plasma-spark-path" d={spark.path} style={{ '--dash-length': spark.dashLength, '--delay': spark.delay, '--duration': spark.duration, '--stroke-width': spark.strokeWidth }} strokeDasharray={spark.dashLength} /> ))} </svg> </div> </div> </> )}
+              {activeSkin === 'palantir' && (
+                <div className={`palantir-pupil`} style={styles.pupil}></div>
+              )}
             </div>
             
             {/* Particle container is now outside the ball, relative to the main container */}

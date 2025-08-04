@@ -158,3 +158,76 @@
     fill: #d80000;
     filter: drop-shadow(0 0 2px #7f0000);
 }
+
+/* --- Palantír (Seeing Stone) Skin --- */
+.ball.palantir {
+  background: radial-gradient(circle at 65% 35%, #4a4a5a, #111116);
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.8), 0 10px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+  position: relative;
+  /* Custom properties for mouse tracking */
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --glow-opacity: 0;
+}
+
+/* The swirling visions inside the stone */
+.ball.palantir::before {
+  content: '';
+  position: absolute;
+  top: -25%;
+  left: -25%;
+  width: 150%;
+  height: 150%;
+  background: 
+    radial-gradient(circle at 20% 30%, #aabbee44, transparent 40%),
+    radial-gradient(circle at 80% 70%, #eeccff33, transparent 40%),
+    radial-gradient(circle at 50% 50%, #ffffff22, transparent 35%);
+  mix-blend-mode: screen;
+  filter: blur(20px);
+  animation: slow-rotate 25s infinite linear, slow-rotate-reverse 35s infinite linear;
+}
+
+/* The interactive glow that follows the mouse */
+.ball.palantir::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.25),
+    transparent 25%
+  );
+  transition: opacity 0.3s ease;
+  opacity: var(--glow-opacity);
+}
+
+/* The dragon pupil element */
+.palantir-pupil {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px; /* Vertical by default */
+  height: 60px;
+  background: radial-gradient(ellipse at center, #ff8a00, #d80000 60%, #4d0000 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, inset 0 0 3px #000;
+  transform: translate(-50%, -50%) rotate(0deg);
+  transition: transform 0.1s linear, width 0.2s ease-in-out, height 0.2s ease-in-out;
+  z-index: 1;
+}
+
+/* Class added on hover to make the pupil horizontal */
+.palantir-pupil.horizontal {
+
+}
+
+
+@keyframes slow-rotate-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
