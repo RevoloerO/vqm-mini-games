@@ -1,0 +1,294 @@
+/* scifi_skins.css */
+
+/* --- Energy Core Skin --- */
+.ball.energy-core {
+    background: radial-gradient(circle, #240046 20%, #10002b 80%);
+    box-shadow: 0 0 50px -10px #7b2cbf, inset 0 0 30px #e0aaff;
+    animation: core-pulse 3s infinite ease-in-out;
+    overflow: hidden;
+    filter: contrast(1.2) brightness(1.1);
+}
+
+.plasma-tendril { position: absolute; top: 50%; left: 50%; background: radial-gradient(circle, #ffffff 2%, #e0aaff 15%, #c77dff 50%, transparent); border-radius: 50% 45% 55% 40%; mix-blend-mode: screen; filter: blur(20px); animation: plasma-flow 8s infinite linear; }
+.plasma-tendril:nth-child(1) { width: 150px; height: 150px; opacity: 0.8; animation-duration: 6s; }
+.plasma-tendril:nth-child(2) { width: 120px; height: 120px; opacity: 0.6; animation-duration: 5s; animation-delay: -2s; }
+.plasma-tendril:nth-child(3) { width: 180px; height: 180px; opacity: 0.9; animation-duration: 7s; animation-delay: -4s; }
+
+.lightning-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scale(1.1); filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 15px #e0aaff); }
+.lightning-path { fill: none; stroke: white; stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; animation: lightning-strike var(--duration, 1s) var(--delay, 0s) infinite ease-in-out; }
+
+/* --- Arc Reactor Skin (Step-by-Step) --- */
+
+/* Big Circle: The main container with a black border and a living background effect. */
+.ball.arc-reactor {
+    background: radial-gradient(circle at center, #2a2a2e 0%, #08080a 80%);
+    border: 2px solid #111;
+    box-shadow: 0 0 30px #000, inset 0 0 10px #000;
+    overflow: hidden;
+}
+
+/* Shiny Metal Background Ring */
+.arc-light-ring {
+    position: absolute;
+    top: 2.5%; 
+    left: 2.5%;
+    width: 95%; 
+    height: 95%;
+    border-radius: 50%;
+    background: conic-gradient(from 180deg at 50% 50%, #d1d1d1, #fafafa, #b8b8b8, #fafafa, #d1d1d1);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.6), 0 0 5px rgba(0,0,0,0.5), 0 2px 2px rgba(0,0,0,0.4);
+}
+
+.arc-cross-lines-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateZ(10px);
+}
+
+.arc-cross-line-holder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.arc-cross-line-bg {
+    position: absolute;
+    top: 50%;
+    width: 60%;
+    height: 28px; /* Larger than the red line */
+    background: linear-gradient(to right, #3a3a3a, #666, #444, #666, #3a3a3a);
+    margin-top: -14px; /* Centered */
+    box-shadow: 0 3px 5px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.2);
+    border-top: 1px solid #777;
+    border-bottom: 1px solid #222;
+    box-sizing: border-box;
+}
+
+.arc-cross-line-bg.odd {
+    left: 50%;
+}
+
+.arc-cross-line-bg.even {
+    right: 50%;
+}
+
+.arc-cross-line {
+    position: absolute;
+    top: 50%;
+    width: 60%;
+    height: 20px;
+    background: linear-gradient(to right, #440000, #a00, #ff4444, #a00, #440000);
+    margin-top: -10px;
+    box-sizing: border-box;
+    border-radius: 2px;
+}
+
+.arc-cross-line.odd {
+    left: 50%;
+}
+
+.arc-cross-line.even {
+    right: 50%;
+}
+
+
+/* Small Circle: Positioned over the big circle with a dotted blue border. */
+.arc-center-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 55%;
+    height: 55%;
+    transform: translate(-50%, -50%) translateZ(20px);
+    border-radius: 50%;
+    border: 2px solid #0af;
+    background: #111;
+    box-shadow: 0 0 25px 5px #0af, inset 0 0 20px rgba(0,0,0,1), 0 2px 4px rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* New inner ring, closer to the dots */
+.arc-center-core::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    border: 2px solid #0af;
+    opacity: 0.7;
+    box-shadow: inset 0 0 5px rgba(0, 170, 255, 0.5);
+}
+
+
+/* Ring outside the dotted one, closer to the dots */
+.arc-center-core::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 20px);
+    height: calc(100% - 20px);
+    border-radius: 50%;
+    border: 8px dotted #0af;
+    opacity: 1;
+    z-index: 1; /* Set z-index to 1 */
+}
+
+/* Container for the three lines, which handles the rotation */
+.arc-core-mesh {
+    width: 90%;
+    height: 90%;
+    position: relative;
+    animation: slow-rotate 8s infinite linear reverse;
+    z-index: 2; /* Set z-index to 2 to bring it above the dotted line */
+}
+
+/* New circle at the end of the lines */
+.arc-core-mesh::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 55%; /* Diameter is 2 * line length */
+    height: 55%;
+    border-radius: 50%;
+    border: 5px solid #0af;
+    opacity: 0.8;
+}
+
+/* This is an invisible strut that defines the full radius for the line */
+.arc-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50%; /* Full radius of the rotating area */
+    height: 6px; /* Made the line thicker */
+    background: transparent; /* The strut is invisible */
+    transform-origin: left center;
+    margin-top: -3px; /* Adjusted for new height */
+}
+
+/* This is the visible part of the line, the outer quarter */
+.arc-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 40%; /* Start further from the center */
+    width: 60%; /* Made the line shorter */
+    height: 100%;
+    background: linear-gradient(to right, #aaa, #fff, #aaa);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    clip-path: polygon(0% 50%, 20% 0%, 100% 0%, 100% 100%, 20% 100%); /* Reversed pencil head shape */
+}
+
+
+/* --- Plasma Core Styles --- */
+.plasma-core-container {
+    position: absolute;
+    width: 40%;
+    height: 40%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3; /* Position on top of other core elements */
+    border-radius: 50%; /* Clip the contents to a circle */
+    overflow: hidden; /* Hide sparks that go outside the container */
+    filter: brightness(1.2) contrast(1.1); /* Make the effect pop */
+}
+
+.plasma-core {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff, #a7d8ff 50%, #007bff 100%);
+    box-shadow: 0 0 10px #fff, 0 0 20px #0af, 0 0 35px #0af, inset 0 0 15px #a7d8ff;
+    animation: plasma-pulse 1.5s infinite ease-in-out;
+}
+
+/* Additional layer of chaos inside the core */
+.plasma-core::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff, transparent 40%),
+                radial-gradient(circle, #a7d8ff, transparent 50%);
+    mix-blend-mode: overlay;
+    animation: plasma-swirl 1.2s infinite linear reverse;
+    opacity: 0.9;
+}
+
+.plasma-core::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff, transparent 30%),
+                radial-gradient(circle, #a7d8ff, transparent 40%);
+    mix-blend-mode: screen;
+    animation: plasma-swirl 0.8s infinite linear;
+    opacity: 0.8;
+}
+
+.plasma-sparks-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 5px #0af) blur(0.5px);
+}
+
+.plasma-spark-path {
+    fill: none;
+    stroke: #fff;
+    stroke-width: var(--stroke-width, 1.5px);
+    stroke-linecap: round;
+    animation: lightning-strike var(--duration, 0.4s) var(--delay, 0s) infinite ease-in;
+}
+
+@keyframes plasma-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px #fff, 0 0 20px #0af, 0 0 35px #0af, inset 0 0 15px #a7d8ff;
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 15px #fff, 0 0 30px #0af, 0 0 50px #0af, inset 0 0 20px #fff;
+    }
+}
+
+/* New animation for the inner plasma swirl */
+@keyframes plasma-swirl {
+    from { transform: rotate(0deg) scale(1.2); }
+    to { transform: rotate(360deg) scale(1.2); }
+}
+
+
+/* Hide unused elements from the previous design */
+.arc-clamp-container,
+.arc-inner-ring-container,
+.arc-inner-ring-one,
+.arc-inner-ring-two,
+.arc-inner-ring-three {
+    display: none;
+}

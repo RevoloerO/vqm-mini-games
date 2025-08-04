@@ -1,0 +1,160 @@
+/* magical_skins.css */
+
+/* --- Fireball Jutsu Skin --- */
+.ball.fireball {
+  background: transparent;
+  width: 200px;
+  height: 200px;
+  box-shadow: none;
+  filter: contrast(1.5) brightness(1.5);
+  /* This skin is now just a visual anchor for the particle system */
+}
+
+.flame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  border-radius: 50% 40% 30% 40%;
+  background: #ffc93c;
+  filter: blur(25px);
+  animation: flame-movement 4s infinite linear;
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%); /* Centering fix */
+}
+
+.flame:nth-child(2) { width: 150px; height: 150px; background: #ff8a00; animation-duration: 3s; animation-delay: -1s; }
+.flame:nth-child(3) { width: 100px; height: 100px; background: #a40606; animation-duration: 2.5s; animation-delay: -2s; }
+.flame:nth-child(4) { width: 250px; height: 250px; background: #ff5733; animation-duration: 5s; animation-delay: -3s; }
+.flame:nth-child(5) { width: 180px; height: 180px; background: #ffc300; animation-duration: 3.5s; animation-delay: -0.5s; }
+
+
+/* --- REWORKED: Fire Particle Effect --- */
+.fire-particle-container {
+  position: absolute;
+  /* This container needs to be relative to the main container, not the ball */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden; /* Prevent particles from showing outside the main view */
+}
+
+.fire-particle {
+  position: absolute;
+  will-change: transform, opacity;
+  pointer-events: none;
+  filter: contrast(1.5) brightness(1.5);
+}
+
+.fire-particle-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, #ffeaa7 30%, #ffc93c 60%, #ff8a00 100%);
+  background-position: center;
+  filter: blur(4px);
+  mix-blend-mode: screen;
+  /* The waving animation is now a flicker that does NOT use transform */
+  animation: fire-flicker 0.5s infinite ease-in-out;
+}
+
+/* Add variation to the flicker animation */
+.fire-particle-inner.wave-2 {
+  animation-duration: 0.4s;
+  animation-direction: alternate-reverse;
+}
+.fire-particle-inner.wave-3 {
+  animation-duration: 0.6s;
+}
+
+/* This animation no longer uses the 'transform' property, fixing the conflict. */
+@keyframes fire-flicker {
+  0% {
+    opacity: 1;
+    background-size: 100% 100%;
+  }
+  50% {
+    opacity: 0.8;
+    background-size: 130% 130%;
+  }
+  100% {
+    opacity: 1;
+    background-size: 100% 100%;
+  }
+}
+
+
+/* --- Ice Orb Skin --- */
+.ball.ice-orb {
+    background: radial-gradient(circle, #ffffff 10%, #dbeafe 40%, #93c5fd 80%);
+    box-shadow: inset 0 0 30px #fff, inset 0 0 60px #bfdbfe, 0 0 50px -10px #3b82f6;
+    animation: ice-pulse 5s infinite ease-in-out;
+    overflow: hidden;
+}
+
+.ice-shard-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 15px #60a5fa);
+    mix-blend-mode: screen;
+    animation: slow-rotate var(--duration, 20s) var(--delay, 0s) infinite linear;
+}
+
+.ice-shard-path {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.7);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: shimmer 4s infinite ease-in-out alternate;
+}
+
+/* --- Dragon Ball Skin --- */
+.ball.dragon-ball {
+    background: radial-gradient(circle at 35% 35%, #ffc947, #ff9800);
+    box-shadow: 0 10px 30px rgba(255, 152, 0, 0.4), inset 0 0 25px #ffc947;
+    overflow: hidden;
+    animation: dragon-ball-glow 3s infinite alternate;
+}
+
+.crystal-reflection {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 40% 40%, white, transparent 40%), radial-gradient(circle at 65% 65%, rgba(255, 255, 255, 0.5), transparent 30%);
+    opacity: 0.2;
+    mix-blend-mode: overlay;
+    animation: slow-rotate 25s infinite linear reverse;
+}
+
+.star-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.1s linear;
+    filter: drop-shadow(0 0 8px #ffeb3b);
+    animation: star-pulse 3s infinite ease-in-out;
+}
+
+.dragon-ball-star {
+    position: absolute;
+    width: 12%;
+    height: 12%;
+    transform: translate(-50%, -50%);
+    animation: star-appear 0.4s ease-out forwards;
+}
+
+.dragon-ball-star svg {
+    width: 100%;
+    height: 100%;
+    fill: #d80000;
+    filter: drop-shadow(0 0 2px #7f0000);
+}
