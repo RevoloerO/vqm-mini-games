@@ -206,26 +206,28 @@ const ThreeDBall = () => {
                 const mouseX = e.clientX - ballRect.left;
                 const mouseY = e.clientY - ballRect.top;
                 
-                // Update CSS variables for the glow effect
+                // Update CSS variables for the glow and shield effects
                 currentBall.style.setProperty('--mouse-x', `${(mouseX / ballRect.width) * 100}%`);
                 currentBall.style.setProperty('--mouse-y', `${(mouseY / ballRect.height) * 100}%`);
 
-                // Calculate and set transform for the pupil
                 const centerX = ballRect.width / 2;
                 const centerY = ballRect.height / 2;
+                
+                // Calculate and set transform for the pupil
                 const deltaX = mouseX - centerX;
                 const deltaY = mouseY - centerY;
-                
                 const angleRad = Math.atan2(deltaY, deltaX);
                 const angleDeg = angleRad * (180 / Math.PI);
-
                 const maxMove = 25; 
                 const moveX = (deltaX / centerX) * maxMove;
                 const moveY = (deltaY / centerY) * maxMove;
-
                 setStyles(prevStyles => ({ ...prevStyles, pupil: { transform: `translate(-50%, -50%) translate(${moveX}px, ${moveY}px) rotate(${angleDeg}deg)` } }));
                 
-                // Logic for warning/angry states based on distance from the container's center
+                // NEW: Calculate shield rotation to face away from the center
+                const angleToCenterDeg = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
+                currentBall.style.setProperty('--shield-rotation', `${angleToCenterDeg}deg`);
+
+                // Logic for warning/angry states on both the ball and the container
                 const containerCenterX = width / 2;
                 const containerCenterY = height / 2;
                 const deltaXFromCenter = x - containerCenterX;
@@ -233,23 +235,32 @@ const ThreeDBall = () => {
                 const distance = Math.sqrt(Math.pow(deltaXFromCenter, 2) + Math.pow(deltaYFromCenter, 2));
 
                 const angryRadius = ballRect.width / 2;
-                const warningRadius = angryRadius * 2.0; // Warning zone is now twice the ball's radius
+                const warningRadius = angryRadius * 2.0;
 
                 if (distance <= angryRadius) {
                     // Mouse is on the ball -> ANGRY
                     currentBall.classList.add('is-angry');
                     currentBall.classList.remove('is-warning');
+                    currentContainer.classList.add('is-angry');
+                    currentContainer.classList.remove('is-warning');
                 } else if (distance <= warningRadius) {
                     // Mouse is in the warning zone -> WARNING
                     currentBall.classList.add('is-warning');
                     currentBall.classList.remove('is-angry');
+                    currentContainer.classList.add('is-warning');
+                    currentContainer.classList.remove('is-angry');
+                    
                     // Calculate intensity: 0 at outer edge, 1 at inner edge
                     const intensity = 1 - ((distance - angryRadius) / (warningRadius - angryRadius));
-                    currentBall.style.setProperty('--warning-intensity', intensity.toFixed(2));
+                    const intensityStr = intensity.toFixed(2);
+                    currentBall.style.setProperty('--warning-intensity', intensityStr);
+                    currentContainer.style.setProperty('--warning-intensity', intensityStr);
                 } else {
                     // Mouse is outside both zones
                     currentBall.classList.remove('is-angry');
                     currentBall.classList.remove('is-warning');
+                    currentContainer.classList.remove('is-angry');
+                    currentContainer.classList.remove('is-warning');
                 }
             }
         };
@@ -270,6 +281,8 @@ const ThreeDBall = () => {
                 // Ensure all state classes are removed on leave
                 currentBall.classList.remove('is-warning');
                 currentBall.classList.remove('is-angry');
+                currentContainer.classList.remove('is-warning');
+                currentContainer.classList.remove('is-angry');
                 // Reset pupil position and rotation when mouse leaves
                 setStyles(prevStyles => ({ ...prevStyles, pupil: { transform: 'translate(-50%, -50%) translate(0px, 0px) rotate(0deg)' } }));
             }
@@ -314,6 +327,7 @@ const ThreeDBall = () => {
               {activeSkin === 'arc-reactor' && ( <> <div className="arc-light-ring"></div> <div className="arc-cross-lines-container"> {Array.from({ length: 9 }).map((_, i) => ( <div key={i} className="arc-cross-line-holder" style={{ transform: `rotate(${i * 20}deg)`}}> <div className={`arc-cross-line-bg ${i % 2 === 0 ? 'odd' : 'even'}`}></div> <div className={`arc-cross-line ${i % 2 === 0 ? 'odd' : 'even'}`}></div> </div> ))} </div> <div className="arc-center-core"> <div className="arc-core-mesh"> <div className="arc-line" style={{ transform: 'rotate(0deg)' }}></div> <div className="arc-line" style={{ transform: 'rotate(120deg)' }}></div> <div className="arc-line" style={{ transform: 'rotate(240deg)' }}></div> </div> <div className="plasma-core-container"> <div className="plasma-core"></div> <svg className="plasma-sparks-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"> {plasmaSparks.map(spark => ( <path key={`${spark.id}-${lightningTick}`} className="plasma-spark-path" d={spark.path} style={{ '--dash-length': spark.dashLength, '--delay': spark.delay, '--duration': spark.duration, '--stroke-width': spark.strokeWidth }} strokeDasharray={spark.dashLength} /> ))} </svg> </div> </div> </> )}
               {activeSkin === 'palantir' && (
                 <>
+                  <div className="palantir-shield"></div>
                   <div className="palantir-visions"></div>
                   <div className={`palantir-pupil`} style={styles.pupil}></div>
                 </>

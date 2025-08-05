@@ -170,7 +170,48 @@
   --mouse-y: 50%;
   --glow-opacity: 0;
   --warning-intensity: 0; /* 0 = outer edge of warning, 1 = inner edge */
+  --shield-rotation: 0deg;
 }
+
+/* REWORKED: The energy shield effect */
+.palantir-shield {
+  position: absolute;
+  left: var(--mouse-x);
+  top: var(--mouse-y);
+  /* Smaller radius */
+  width: 110px;
+  height: 110px;
+  transform: translate(-50%, -50%);
+  opacity: var(--glow-opacity);
+  transition: opacity 0.3s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Base style for the smoke ring pseudo-elements */
+.palantir-shield::before,
+.palantir-shield::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* Smoky gradient */
+  background: radial-gradient(circle, rgba(0, 212, 255, 0.4) 0%, transparent 70%);
+  /* Set initial state for animation */
+  transform: scale(1);
+  opacity: 1;
+  /* Apply the animation */
+  animation: smoke-wave-reverse 3s infinite ease-out;
+}
+
+/* Stagger the second wave so they overlap */
+.palantir-shield::after {
+  animation-delay: 1.5s;
+}
+
 
 /* The swirling visions inside the stone */
 .ball.palantir::before {
@@ -309,5 +350,60 @@
   }
   100% {
     box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, inset 0 0 3px #000;
+  }
+}
+
+/* --- NEW: Environmental Corruption Effect --- */
+
+/* Add a pseudo-element for the corruption overlay */
+.three-ball-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 20%, #000000 5%, transparent 40%),
+        radial-gradient(circle at 80% 70%, #110511 10%, transparent 50%),
+        radial-gradient(circle at 50% 90%, #0a0a14 5%, transparent 40%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 2s ease-in-out;
+    z-index: 0; /* Position it over the background but behind the ball */
+    transform: scale(1.5); /* Make it larger to avoid hard edges */
+    filter: blur(10px);
+    animation: slow-rotate 60s infinite linear;
+}
+
+/* When the Palantir is in its warning state, darken the background */
+.three-ball-container.is-warning {
+    /* Interpolate from the base color (#1a1a1a) towards black */
+    --lerp: var(--warning-intensity, 0); /* 0 to 1 */
+    --r: calc(26 - (26 * var(--lerp)));
+    --g: calc(26 - (26 * var(--lerp)));
+    --b: calc(26 - (26 * var(--lerp)));
+    background-color: rgb(var(--r), var(--g), var(--b));
+}
+
+/* When the Palantir is in its angry state, make it pitch black */
+.three-ball-container.is-angry {
+    background-color: #000;
+}
+
+/* Fade in the corruption overlay when angry */
+.three-ball-container.is-angry::after {
+    opacity: 0.6;
+}
+
+/* --- NEW: Shield Animation --- */
+@keyframes smoke-wave-reverse {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0);
+    opacity: 0;
   }
 }
