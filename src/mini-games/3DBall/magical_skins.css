@@ -165,10 +165,11 @@
   box-shadow: inset 0 0 50px rgba(0,0,0,0.8), 0 10px 40px rgba(0,0,0,0.5);
   overflow: hidden;
   position: relative;
-  /* Custom properties for mouse tracking */
+  /* Custom properties for JS to hook into */
   --mouse-x: 50%;
   --mouse-y: 50%;
   --glow-opacity: 0;
+  --warning-intensity: 0; /* 0 = outer edge of warning, 1 = inner edge */
 }
 
 /* The swirling visions inside the stone */
@@ -186,7 +187,30 @@
   mix-blend-mode: screen;
   filter: blur(20px);
   animation: slow-rotate 25s infinite linear, slow-rotate-reverse 35s infinite linear;
+  transition: background 0.5s ease-out, filter 0.5s ease-out;
 }
+
+/* Warning state (mouse is near but not on the ball) */
+.ball.palantir.is-warning::before {
+  /* Interpolate background color from yellow to orange based on proximity */
+  --hue1: calc(50 - (20 * var(--warning-intensity))); /* 50 (yellow) -> 30 (orange) */
+  --hue2: calc(45 - (25 * var(--warning-intensity))); /* 45 (yellow-orange) -> 20 (red-orange) */
+  background:
+    radial-gradient(circle at 20% 30%, hsla(var(--hue1), 100%, 60%, 0.6), transparent 50%),
+    radial-gradient(circle at 80% 70%, hsla(var(--hue2), 100%, 55%, 0.55), transparent 50%),
+    radial-gradient(circle at 50% 50%, hsla(var(--hue2), 100%, 50%, 0.5), transparent 45%);
+  filter: blur(25px);
+}
+
+/* Angry state (mouse is directly on the ball) */
+.ball.palantir.is-angry::before {
+  background: 
+    radial-gradient(circle at 20% 30%, #ff450099, transparent 50%),
+    radial-gradient(circle at 80% 70%, #a1000088, transparent 50%),
+    radial-gradient(circle at 50% 50%, #d8000077, transparent 45%);
+  filter: blur(30px); /* More blurry, more smokey */
+}
+
 
 /* The interactive glow that follows the mouse */
 .ball.palantir::after {
@@ -206,28 +230,84 @@
   opacity: var(--glow-opacity);
 }
 
+/* The container for the fleeting visions effect */
+.palantir-visions {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: slow-rotate 40s infinite linear;
+  z-index: 0;
+}
+
+.palantir-visions::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 20% 80%, #ffffff33, transparent 50%),
+    radial-gradient(ellipse at 80% 30%, #eeccff22, transparent 50%);
+  mix-blend-mode: soft-light;
+  filter: blur(10px);
+  opacity: 0;
+  animation: show-vision 15s infinite ease-in-out;
+  animation-delay: -5s;
+}
+
 /* The dragon pupil element */
 .palantir-pupil {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 12px; /* Vertical by default */
+  width: 12px;
   height: 60px;
   background: radial-gradient(ellipse at center, #ff8a00, #d80000 60%, #4d0000 100%);
   border-radius: 50%;
   box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, inset 0 0 3px #000;
   transform: translate(-50%, -50%) rotate(0deg);
-  transition: transform 0.1s linear, width 0.2s ease-in-out, height 0.2s ease-in-out;
+  /* Slower transitions for a smoother effect */
+  transition: transform 0.1s linear, width 0.5s ease-in-out, height 0.5s ease-in-out, background 0.5s ease, box-shadow 0.5s ease;
   z-index: 1;
 }
 
-/* Class added on hover to make the pupil horizontal */
-.palantir-pupil.horizontal {
-
+/* Pupil in warning state */
+.ball.palantir.is-warning .palantir-pupil {
+  --pupil-hue: calc(50 - (20 * var(--warning-intensity))); /* 50 (yellow) -> 30 (orange) */
+  background: radial-gradient(ellipse at center, hsla(var(--pupil-hue), 100%, 88%, 1), hsla(var(--pupil-hue), 100%, 50%, 1) 60%, hsla(var(--pupil-hue), 95%, 20%, 1) 100%);
+  box-shadow: 0 0 8px hsla(var(--pupil-hue), 100%, 50%, 1), 0 0 15px hsla(var(--pupil-hue), 100%, 50%, 1), inset 0 0 4px #000;
 }
 
+/* Pupil in angry state */
+.ball.palantir.is-angry .palantir-pupil {
+  width: 8px; /* Narrower, angrier slit */
+  height: 70px; /* Taller */
+  background: radial-gradient(ellipse at center, #ffdd00, #ff4500 60%, #a10000 100%); /* Brighter, more intense colors */
+  animation: angry-glow 1.5s infinite ease-in-out;
+}
+
+@keyframes show-vision {
+  0%, 100% { opacity: 0; transform: scale(0.9); }
+  20% { opacity: 0.7; transform: scale(1); }
+  80% { opacity: 0.7; transform: scale(1); }
+}
 
 @keyframes slow-rotate-reverse {
   from { transform: rotate(360deg); }
   to { transform: rotate(0deg); }
+}
+
+@keyframes angry-glow {
+  0% {
+    box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, inset 0 0 3px #000;
+  }
+  50% {
+    box-shadow: 0 0 12px #ff4500, 0 0 28px #d80000, inset 0 0 5px #000;
+  }
+  100% {
+    box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, inset 0 0 3px #000;
+  }
 }
