@@ -307,7 +307,11 @@ const ThreeDBall = () => {
 
 
     return (
-        <div className={`three-ball-container ${activeSkin === 'ice-orb' ? 'frost-overlay' : ''} ${activeSkin === 'dragon-ball' ? 'dragon-radar-bg' : ''}`} ref={containerRef}>
+        <div className={`three-ball-container ${activeSkin === 'ice-orb' ? 'frost-overlay' : ''} ${activeSkin === 'dragon-ball' ? 'dragon-radar-bg' : ''} ${activeSkin === 'palantir' ? 'palantir-vortex-bg' : ''}`} ref={containerRef}>
+            
+            {/* The new container for the vortex effect, rendered only for the palantir skin */}
+            {activeSkin === 'palantir' && <div className="palantir-vortex-effect"></div>}
+
             <button className="sidebar-toggle" onClick={() => setSidebarOpen(!isSidebarOpen)} aria-label="Toggle skin customizer">
                 {isSidebarOpen ? <X size={24} /> : <Paintbrush size={24} />}
             </button>
