@@ -7,12 +7,14 @@ import './3DBall.css';
 import './normal_skins.css';
 import './magical_skins.css';
 import './scifi_skins.css';
+import './genesis_sphere.css'; // Import the new CSS file
 
 /**
  * Sidebar component for selecting different ball skins.
  */
 const SkinSidebar = ({ isOpen, onSelectSkin, activeSkin }) => {
     const categorizedSkins = {
+        'Conceptual': [ { id: 'genesis-sphere', name: 'Genesis Sphere' } ],
         'Normal Objects': [ { id: 'sphere', name: 'Sphere' }, { id: 'pokeball', name: 'Pokéball' } ],
         'Magical': [ { id: 'fireball', name: 'Fireball Jutsu' }, { id: 'ice-orb', name: 'Ice Orb' }, { id: 'dragon-ball', name: 'Dragon Ball' }, { id: 'palantir', name: 'Palantír Stone' } ],
         'Sci-Fi': [ { id: 'energy-core', name: 'Energy Core' }, { id: 'arc-reactor', name: 'Arc Reactor' } ]
@@ -165,7 +167,7 @@ const useFireParticleSystem = (isActive, ballRef, mousePosRef) => {
  */
 const ThreeDBall = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
-    const [activeSkin, setActiveSkin] = useState('palantir');
+    const [activeSkin, setActiveSkin] = useState('genesis-sphere');
     const [styles, setStyles] = useState({});
     const containerRef = useRef(null);
     const ballRef = useRef(null);
@@ -173,8 +175,47 @@ const ThreeDBall = () => {
     const [lightningTick, setLightningTick] = useState(0);
     const [starCount, setStarCount] = useState(4);
     
+    // State for the Genesis Sphere cycle
+    const [genesisCycle, setGenesisCycle] = useState('seeding');
+    
     // Use the custom hook to manage the particle system
     const fireParticles = useFireParticleSystem(activeSkin === 'fireball', ballRef, mousePosRef);
+
+    // Effect for managing the Genesis Sphere cycle
+    useEffect(() => {
+        if (activeSkin !== 'genesis-sphere') {
+            return;
+        }
+
+        const cycleOrder = ['seeding', 'growth', 'destruction', 'restoration'];
+        const cycleDurations = {
+            seeding: 10000, // 10 seconds
+            growth: 20000,  // 20 seconds
+            destruction: 10000, // 10 seconds
+            restoration: 20000, // 20 seconds
+        };
+
+        let currentIndex = 0;
+        
+        const advanceCycle = () => {
+            currentIndex = (currentIndex + 1) % cycleOrder.length;
+            const nextPhase = cycleOrder[currentIndex];
+            setGenesisCycle(nextPhase);
+            
+            // Set the timeout for the next phase change
+            setTimeout(advanceCycle, cycleDurations[nextPhase]);
+        };
+
+        // Start the first phase
+        setGenesisCycle(cycleOrder[0]);
+        const timeoutId = setTimeout(advanceCycle, cycleDurations[cycleOrder[0]]);
+
+        // Cleanup function to clear the timeout when the component unmounts
+        // or the skin changes.
+        return () => clearTimeout(timeoutId);
+
+    }, [activeSkin]);
+
 
     // General mouse move handler for all skins
     useEffect(() => {
@@ -306,8 +347,18 @@ const ThreeDBall = () => {
     useEffect(() => { if (activeSkin === 'energy-core' || activeSkin === 'arc-reactor') { const interval = setInterval(() => { setLightningTick(tick => tick + 1); }, 200); return () => clearInterval(interval); } }, [activeSkin]);
 
 
+    // Determine container classes based on active skin and cycle
+    const containerClasses = [
+        'three-ball-container',
+        activeSkin === 'ice-orb' ? 'frost-overlay' : '',
+        activeSkin === 'dragon-ball' ? 'dragon-radar-bg' : '',
+        activeSkin === 'palantir' ? 'palantir-vortex-bg' : '',
+        activeSkin === 'genesis-sphere' ? `genesis-${genesisCycle}` : ''
+    ].filter(Boolean).join(' ');
+
+
     return (
-        <div className={`three-ball-container ${activeSkin === 'ice-orb' ? 'frost-overlay' : ''} ${activeSkin === 'dragon-ball' ? 'dragon-radar-bg' : ''} ${activeSkin === 'palantir' ? 'palantir-vortex-bg' : ''}`} ref={containerRef}>
+        <div className={containerClasses} ref={containerRef}>
             
             {/* The new container for the vortex effect, rendered only for the palantir skin */}
             {activeSkin === 'palantir' && <div className="palantir-vortex-effect"></div>}
@@ -318,7 +369,7 @@ const ThreeDBall = () => {
 
             <SkinSidebar isOpen={isSidebarOpen} onSelectSkin={setActiveSkin} activeSkin={activeSkin} />
 
-            <div className={`ball ${activeSkin}`} style={styles.ball} ref={ballRef}>
+            <div className={`ball ${activeSkin} ${activeSkin === 'genesis-sphere' ? `genesis-${genesisCycle}-ball` : ''}`} style={styles.ball} ref={ballRef}>
               {activeSkin === 'fireball' && (
                 <>
                   <div className="flame"></div> <div className="flame"></div> <div className="flame"></div> <div className="flame"></div> <div className="flame"></div>

@@ -1,0 +1,88 @@
+/* genesis_sphere.css */
+
+/* --- Core Styles --- */
+/* Add a transition to the container and ball for smooth phase changes */
+.three-ball-container.genesis-seeding,
+.three-ball-container.genesis-growth,
+.three-ball-container.genesis-destruction,
+.three-ball-container.genesis-restoration {
+    transition: background-color 2s ease-in-out;
+}
+
+.ball.genesis-sphere {
+    transition: background 2s ease-in-out, box-shadow 2s ease-in-out;
+}
+
+/* --- Phase 1: Seeding --- */
+.three-ball-container.genesis-seeding {
+    background-color: #000; /* Start with a black, empty background */
+    position: relative;
+    overflow: hidden;
+}
+
+/* This pseudo-element creates the "soil splash" effect */
+.three-ball-container.genesis-seeding::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    animation: soil-splash 10s forwards ease-out;
+    z-index: 0;
+}
+
+@keyframes soil-splash {
+    0% {
+        background: radial-gradient(circle, #3e2723 0%, transparent 5%);
+        opacity: 0;
+        transform: scale(0);
+    }
+    20% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        background: radial-gradient(circle, #3e2723 100%, #3e2723 100%);
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+.ball.genesis-seeding-ball {
+    background: radial-gradient(circle, #6d4c41 0%, #4e342e 100%);
+    box-shadow: inset 0 0 40px #3e2723, 0 0 20px rgba(0,0,0,0.5);
+    z-index: 2; /* Ensure ball is on top of the splash */
+}
+
+
+/* --- Phase 2: Growth --- */
+.three-ball-container.genesis-growth {
+    background-color: #a5d6a7; /* Lush meadow color */
+}
+.ball.genesis-growth-ball {
+    background: radial-gradient(circle, #81c784 0%, #4caf50 100%);
+    box-shadow: inset 0 0 40px #66bb6a, 0 0 50px rgba(76, 175, 80, 0.7);
+}
+
+
+/* --- Phase 3: Destruction --- */
+.three-ball-container.genesis-destruction {
+    background-color: #424242; /* Scorched earth color */
+}
+.ball.genesis-destruction-ball {
+    background: radial-gradient(circle, #ff7043 0%, #d84315 100%);
+    box-shadow: inset 0 0 50px #bf360c, 0 0 60px rgba(255, 87, 34, 0.8);
+}
+
+
+/* --- Phase 4: Restoration --- */
+.three-ball-container.genesis-restoration {
+    background-color: #546e7a; /* Wet, dark soil color */
+}
+.ball.genesis-restoration-ball {
+    background: radial-gradient(circle, #90caf9 0%, #42a5f5 100%);
+    box-shadow: inset 0 0 40px #64b5f6, 0 0 50px rgba(66, 165, 245, 0.7);
+}
