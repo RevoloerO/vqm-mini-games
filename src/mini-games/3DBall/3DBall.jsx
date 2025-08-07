@@ -235,7 +235,7 @@ const ThreeDBall = () => {
                 const distance = Math.sqrt(Math.pow(deltaXFromCenter, 2) + Math.pow(deltaYFromCenter, 2));
 
                 const angryRadius = ballRect.width / 2;
-                const warningRadius = angryRadius * 2.0;
+                const warningRadius = angryRadius * 3.0;
 
                 if (distance <= angryRadius) {
                     // Mouse is on the ball -> ANGRY
