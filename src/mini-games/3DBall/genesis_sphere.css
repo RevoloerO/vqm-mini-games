@@ -1,7 +1,6 @@
 /* genesis_sphere.css */
 
 /* --- Core Styles --- */
-/* Add a transition to the container and ball for smooth phase changes */
 .three-ball-container.genesis-seeding,
 .three-ball-container.genesis-growth,
 .three-ball-container.genesis-destruction,
@@ -10,33 +9,38 @@
 }
 
 .ball.genesis-sphere {
-    transition: background 2s ease-in-out, box-shadow 2s ease-in-out, animation 2s ease-in-out;
+    transition: background 2s ease-in-out, box-shadow 2s ease-in-out, transform 0.1s linear;
 }
 
-/* --- Keyframes for new animations --- */
-@keyframes soil-splash {
-    0% {
-        background: radial-gradient(circle, #3e2723 0%, transparent 5%);
-        opacity: 0;
-        transform: scale(0);
-    }
-    20% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    100% {
-        background: radial-gradient(circle, #3e2723 100%, #3e2723 100%);
-        opacity: 1;
-        transform: scale(1);
-    }
+.genesis-effects-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
 }
 
+/* --- Keyframes --- */
 @keyframes soil-grind-rotate {
     from {
         transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
     }
     to {
-        transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg);
+        transform: rotateX(360deg) rotateY(540deg) rotateZ(720deg);
+    }
+}
+
+@keyframes patch-fade-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
     }
 }
 
@@ -44,28 +48,35 @@
 /* --- Phase 1: Seeding --- */
 .three-ball-container.genesis-seeding {
     background-color: #000; /* Start with a black, empty background */
-    position: relative;
-    overflow: hidden;
-}
-
-/* This pseudo-element creates the "soil splash" effect */
-.three-ball-container.genesis-seeding::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    animation: soil-splash 10s forwards ease-out;
-    z-index: 0;
 }
 
 .ball.genesis-seeding-ball {
     background: radial-gradient(circle, #6d4c41 0%, #4e342e 100%);
     box-shadow: inset 0 0 40px #3e2723, 0 0 20px rgba(0,0,0,0.5);
-    z-index: 2; /* Ensure ball is on top of the splash */
+    z-index: 2;
     animation: soil-grind-rotate 10s linear infinite;
+}
+
+.fertilizer-projectile {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #a1887f, #5d4037);
+    border-radius: 50%;
+    box-shadow: 0 0 10px #8d6e63;
+    will-change: transform, opacity;
+}
+
+.fertilizer-patch {
+    position: absolute;
+    background: #3e2723;
+    border-radius: 50%;
+    opacity: 0;
+    filter: blur(15px);
+    animation: patch-fade-in 0.5s forwards;
+    transform: translate(-50%, -50%);
 }
 
 

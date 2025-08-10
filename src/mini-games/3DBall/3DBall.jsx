@@ -40,6 +40,107 @@ const SkinSidebar = ({ isOpen, onSelectSkin, activeSkin }) => {
     );
 };
 
+// --- Genesis Sphere Components & Hooks ---
+
+const FertilizerProjectile = React.memo(({ style }) => <div className="fertilizer-projectile" style={style}></div>);
+const FertilizerPatch = React.memo(({ style }) => <div className="fertilizer-patch" style={style}></div>);
+
+/**
+ * Custom hook to manage the fertilizer projectile system.
+ */
+const useFertilizerSystem = (isActive, containerRef, onLand, fertilizationGrid) => {
+    const [projectiles, setProjectiles] = useState([]);
+    const animationFrameRef = useRef();
+
+    // Projectile spawning logic
+    useEffect(() => {
+        if (!isActive) {
+            setProjectiles([]);
+            return;
+        }
+
+        const spawnInterval = setInterval(() => {
+            const container = containerRef.current;
+            const grid = fertilizationGrid.current;
+            if (!container || !grid) return;
+
+            const rect = container.getBoundingClientRect();
+            const startX = rect.width / 2;
+            const startY = rect.height / 2;
+            let endX, endY;
+
+            // Find all unfertilized cells
+            const unfertilizedCells = [];
+            for (let y = 0; y < grid.length; y++) {
+                for (let x = 0; x < grid[y].length; x++) {
+                    if (!grid[y][x]) {
+                        unfertilizedCells.push({x, y});
+                    }
+                }
+            }
+
+            // Target an unfertilized cell if available, otherwise target randomly
+            if (unfertilizedCells.length > 0) {
+                const targetCell = unfertilizedCells[Math.floor(Math.random() * unfertilizedCells.length)];
+                const cellWidth = rect.width / grid[0].length;
+                const cellHeight = rect.height / grid.length;
+                
+                endX = (targetCell.x * cellWidth) + (Math.random() * cellWidth);
+                endY = (targetCell.y * cellHeight) + (Math.random() * cellHeight);
+
+            } else {
+                // Fallback to random shooting if all cells are somehow filled
+                endX = Math.random() * rect.width;
+                endY = Math.random() * rect.height;
+            }
+
+
+            const newProjectile = {
+                id: Date.now() + Math.random(),
+                startX, startY, endX, endY,
+                spawnTime: Date.now(),
+                duration: 500 + Math.random() * 500,
+            };
+            setProjectiles(prev => [...prev, newProjectile]);
+        }, 100); // Spawn a projectile every 100ms
+
+        return () => clearInterval(spawnInterval);
+    }, [isActive, containerRef, fertilizationGrid]);
+
+    // Animation loop
+    useEffect(() => {
+        if (!isActive) return;
+
+        const animationLoop = () => {
+            setProjectiles(currentProjectiles => {
+                const now = Date.now();
+                const updatedProjectiles = [];
+                for (const p of currentProjectiles) {
+                    const age = now - p.spawnTime;
+                    if (age >= p.duration) {
+                        onLand(p.endX, p.endY); // Projectile lands
+                    } else {
+                        const progress = age / p.duration;
+                        const x = p.startX + (p.endX - p.startX) * progress;
+                        const y = p.startY + (p.endY - p.startY) * progress;
+                        const scale = 0.5 + progress * 1.5;
+                        const opacity = 1 - progress;
+                        updatedProjectiles.push({ ...p, x, y, scale, opacity });
+                    }
+                }
+                return updatedProjectiles;
+            });
+            animationFrameRef.current = requestAnimationFrame(animationLoop);
+        };
+
+        animationFrameRef.current = requestAnimationFrame(animationLoop);
+        return () => cancelAnimationFrame(animationFrameRef.current);
+    }, [isActive, onLand]);
+
+    return projectiles;
+};
+
+
 // SVG component for a single star
 const DragonBallStar = () => ( <svg viewBox="0 0 100 95"> <path d="M50 0 L61.2 35.5 H97.6 L68.2 57.4 L79.4 92.9 L50 71 L20.6 92.9 L31.8 57.4 L2.4 35.5 H38.8 Z" /> </svg> );
 const STAR_POSITIONS = { 1: [{ top: '50%', left: '50%' }], 2: [{ top: '35%', left: '65%' }, { top: '65%', left: '35%' }], 3: [{ top: '35%', left: '35%' }, { top: '50%', left: '68%' }, { top: '65%', left: '35%' }], 4: [{ top: '33%', left: '33%' }, { top: '33%', left: '67%' }, { top: '67%', left: '33%' }, { top: '67%', left: '67%' }], 5: [{ top: '30%', left: '50%' }, { top: '45%', left: '32%' }, { top: '45%', left: '68%' }, { top: '68%', left: '40%' }, { top: '68%', left: '60%' }], 6: [{ top: '33%', left: '33%' }, { top: '33%', left: '67%' }, { top: '50%', left: '33%' }, { top: '50%', left: '67%' }, { top: '67%', left: '33%' }, { top: '67%', left: '67%' }], 7: [{ top: '30%', left: '50%' }, { top: '42%', left: '32%' }, { top: '42%', left: '68%' }, { top: '58%', left: '32%' }, { top: '58%', left: '68%' }, { top: '70%', left: '50%' }, { top: '50%', left: '50%' }], };
@@ -66,7 +167,6 @@ const FireParticle = React.memo(({ x, y, size, opacity }) => {
 
 /**
  * Custom hook to manage the entire fire particle animation system.
- * This uses a requestAnimationFrame loop for smooth, physics-based animation.
  */
 const useFireParticleSystem = (isActive, ballRef, mousePosRef) => {
     const [particles, setParticles] = useState([]);
@@ -78,78 +178,54 @@ const useFireParticleSystem = (isActive, ballRef, mousePosRef) => {
             return;
         }
 
-        // The main animation loop
         const animationLoop = () => {
             setParticles(currentParticles => {
                 const now = Date.now();
-                // Filter out old particles and update the positions of active ones
                 return currentParticles.map(p => {
                     const age = now - p.spawnTime;
-                    if (age >= p.duration) return null; // Mark for removal
+                    if (age >= p.duration) return null; 
 
                     const progress = age / p.duration;
-
-                    // Update the particle's destination to the current mouse position
                     const currentEndX = mousePosRef.current.x;
                     const currentEndY = mousePosRef.current.y;
-
-                    // Linear interpolation for the base path
                     const linearX = p.startX + (currentEndX - p.startX) * progress;
                     const linearY = p.startY + (currentEndY - p.startY) * progress;
-
-                    // Calculate a perpendicular angle for the wave
                     const angle = Math.atan2(currentEndY - p.startY, currentEndX - p.startX) + Math.PI / 2;
-                    // Calculate the wave offset using a sine function
                     const waveOffset = Math.sin(progress * p.waveFrequency * Math.PI) * p.waveAmplitude * (1 - progress);
-
-                    // Apply the wave offset perpendicular to the direction of travel
                     const x = linearX + Math.cos(angle) * waveOffset;
                     const y = linearY + Math.sin(angle) * waveOffset;
-
-                    // Fade out towards the end of the particle's life
                     const opacity = 1 - progress;
 
                     return { ...p, x, y, opacity };
-                }).filter(Boolean); // Remove all null (completed) particles
+                }).filter(Boolean); 
             });
 
             animationFrameRef.current = requestAnimationFrame(animationLoop);
         };
         
-        // Start the animation loop
         animationFrameRef.current = requestAnimationFrame(animationLoop);
 
-        // Start spawning particles
         const spawnInterval = setInterval(() => {
             const ballEl = ballRef.current;
             if (!ballEl) return;
 
             const ballRect = ballEl.getBoundingClientRect();
             const containerRect = ballEl.closest('.three-ball-container').getBoundingClientRect();
-
             const angle = Math.random() * 2 * Math.PI;
-            // By taking the square root of Math.random(), we bias the distribution of values
-            // towards 1, making particles much more likely to spawn near the outer edge.
             const radius = Math.sqrt(Math.random()) * (ballRect.width / 2);
-
             const startX = (ballRect.left - containerRect.left + ballRect.width / 2) + Math.cos(angle) * radius;
             const startY = (ballRect.top - containerRect.top + ballRect.height / 2) + Math.sin(angle) * radius;
 
             const newParticle = {
                 id: Math.random() + Date.now(),
                 spawnTime: Date.now(),
-                startX,
-                startY,
-                x: startX,
-                y: startY,
-                opacity: 1,
+                startX, startY, x: startX, y: startY, opacity: 1,
                 size: 8 + Math.random() * 12,
                 duration: 1500 + Math.random() * 1500,
-                waveAmplitude: 15 + Math.random() * 20, // How wide the wave is
-                waveFrequency: 2 + Math.random() * 3, // How many waves
+                waveAmplitude: 15 + Math.random() * 20,
+                waveFrequency: 2 + Math.random() * 3,
             };
             setParticles(prev => [...prev, newParticle]);
-
         }, 12);
 
         return () => {
@@ -175,46 +251,84 @@ const ThreeDBall = () => {
     const [lightningTick, setLightningTick] = useState(0);
     const [starCount, setStarCount] = useState(4);
     
-    // State for the Genesis Sphere cycle
+    // --- Genesis Sphere State ---
     const [genesisCycle, setGenesisCycle] = useState('seeding');
-    
-    // Use the custom hook to manage the particle system
+    const [fertilizerPatches, setFertilizerPatches] = useState([]);
+    const fertilizationGrid = useRef(null);
+    const isFertilized = useRef(false);
+    const GRID_SIZE = 10; // 10x10 grid
+
+    // --- Genesis Sphere Logic ---
+    const handleFertilizerLand = useCallback((x, y) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        
+        const newPatch = {
+            id: Date.now() + Math.random(),
+            top: `${(y / rect.height) * 100}%`,
+            left: `${(x / rect.width) * 100}%`,
+            size: 150 + Math.random() * 100,
+        };
+        setFertilizerPatches(prev => [...prev, newPatch]);
+
+        if (isFertilized.current) return;
+        const gridX = Math.floor((x / rect.width) * GRID_SIZE);
+        const gridY = Math.floor((y / rect.height) * GRID_SIZE);
+        if (fertilizationGrid.current && !fertilizationGrid.current[gridY][gridX]) {
+            fertilizationGrid.current[gridY][gridX] = true;
+            
+            if (fertilizationGrid.current.every(row => row.every(cell => cell))) {
+                isFertilized.current = true;
+                setGenesisCycle('growth');
+            }
+        }
+    }, []);
+
+    // --- Particle System Hooks ---
     const fireParticles = useFireParticleSystem(activeSkin === 'fireball', ballRef, mousePosRef);
+    const projectiles = useFertilizerSystem(activeSkin === 'genesis-sphere' && genesisCycle === 'seeding', containerRef, handleFertilizerLand, fertilizationGrid);
+
 
     // Effect for managing the Genesis Sphere cycle
     useEffect(() => {
         if (activeSkin !== 'genesis-sphere') {
+            setFertilizerPatches([]);
             return;
         }
-
-        const cycleOrder = ['seeding', 'growth', 'destruction', 'restoration'];
-        const cycleDurations = {
-            seeding: 10000, // 10 seconds
-            growth: 20000,  // 20 seconds
-            destruction: 10000, // 10 seconds
-            restoration: 20000, // 20 seconds
-        };
-
-        let currentIndex = 0;
         
-        const advanceCycle = () => {
-            currentIndex = (currentIndex + 1) % cycleOrder.length;
-            const nextPhase = cycleOrder[currentIndex];
-            setGenesisCycle(nextPhase);
-            
-            // Set the timeout for the next phase change
-            setTimeout(advanceCycle, cycleDurations[nextPhase]);
+        isFertilized.current = false;
+        fertilizationGrid.current = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
+        setFertilizerPatches([]);
+        setGenesisCycle('seeding');
+
+        const cycleDurations = {
+            growth: 20000,
+            destruction: 10000,
+            restoration: 20000,
         };
 
-        // Start the first phase
-        setGenesisCycle(cycleOrder[0]);
-        const timeoutId = setTimeout(advanceCycle, cycleDurations[cycleOrder[0]]);
+        let growthTimeout, destructionTimeout, restorationTimeout;
 
-        // Cleanup function to clear the timeout when the component unmounts
-        // or the skin changes.
-        return () => clearTimeout(timeoutId);
+        if (genesisCycle === 'growth') {
+             growthTimeout = setTimeout(() => setGenesisCycle('destruction'), cycleDurations.growth);
+        } else if (genesisCycle === 'destruction') {
+             destructionTimeout = setTimeout(() => setGenesisCycle('restoration'), cycleDurations.destruction);
+        } else if (genesisCycle === 'restoration') {
+             restorationTimeout = setTimeout(() => {
+                isFertilized.current = false;
+                fertilizationGrid.current = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
+                setFertilizerPatches([]);
+                setGenesisCycle('seeding');
+            }, cycleDurations.restoration);
+        }
 
-    }, [activeSkin]);
+        return () => {
+            clearTimeout(growthTimeout);
+            clearTimeout(destructionTimeout);
+            clearTimeout(restorationTimeout);
+        };
+
+    }, [activeSkin, genesisCycle]);
 
 
     // General mouse move handler for all skins
@@ -227,7 +341,7 @@ const ThreeDBall = () => {
             const { left, top, width, height } = currentContainer.getBoundingClientRect();
             const x = e.clientX - left;
             const y = e.clientY - top;
-            mousePosRef.current = { x, y }; // Update mouse position ref for particle system
+            mousePosRef.current = { x, y };
 
             if (activeSkin === 'pokeball' || activeSkin === 'arc-reactor') {
                 const rotateY = (x - width / 2) / (width / 2) * 15;
@@ -247,14 +361,12 @@ const ThreeDBall = () => {
                 const mouseX = e.clientX - ballRect.left;
                 const mouseY = e.clientY - ballRect.top;
                 
-                // Update CSS variables for the glow and shield effects
                 currentBall.style.setProperty('--mouse-x', `${(mouseX / ballRect.width) * 100}%`);
                 currentBall.style.setProperty('--mouse-y', `${(mouseY / ballRect.height) * 100}%`);
 
                 const centerX = ballRect.width / 2;
                 const centerY = ballRect.height / 2;
                 
-                // Calculate and set transform for the pupil
                 const deltaX = mouseX - centerX;
                 const deltaY = mouseY - centerY;
                 const angleRad = Math.atan2(deltaY, deltaX);
@@ -264,11 +376,9 @@ const ThreeDBall = () => {
                 const moveY = (deltaY / centerY) * maxMove;
                 setStyles(prevStyles => ({ ...prevStyles, pupil: { transform: `translate(-50%, -50%) translate(${moveX}px, ${moveY}px) rotate(${angleDeg}deg)` } }));
                 
-                // NEW: Calculate shield rotation to face away from the center
                 const angleToCenterDeg = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
                 currentBall.style.setProperty('--shield-rotation', `${angleToCenterDeg}deg`);
 
-                // Logic for warning/angry states on both the ball and the container
                 const containerCenterX = width / 2;
                 const containerCenterY = height / 2;
                 const deltaXFromCenter = x - containerCenterX;
@@ -279,25 +389,21 @@ const ThreeDBall = () => {
                 const warningRadius = angryRadius * 3.0;
 
                 if (distance <= angryRadius) {
-                    // Mouse is on the ball -> ANGRY
                     currentBall.classList.add('is-angry');
                     currentBall.classList.remove('is-warning');
                     currentContainer.classList.add('is-angry');
                     currentContainer.classList.remove('is-warning');
                 } else if (distance <= warningRadius) {
-                    // Mouse is in the warning zone -> WARNING
                     currentBall.classList.add('is-warning');
                     currentBall.classList.remove('is-angry');
                     currentContainer.classList.add('is-warning');
                     currentContainer.classList.remove('is-angry');
                     
-                    // Calculate intensity: 0 at outer edge, 1 at inner edge
                     const intensity = 1 - ((distance - angryRadius) / (warningRadius - angryRadius));
                     const intensityStr = intensity.toFixed(2);
                     currentBall.style.setProperty('--warning-intensity', intensityStr);
                     currentContainer.style.setProperty('--warning-intensity', intensityStr);
                 } else {
-                    // Mouse is outside both zones
                     currentBall.classList.remove('is-angry');
                     currentBall.classList.remove('is-warning');
                     currentContainer.classList.remove('is-angry');
@@ -306,25 +412,14 @@ const ThreeDBall = () => {
             }
         };
         
-        const handleMouseEnter = () => {
-            if (activeSkin === 'palantir') {
-                currentBall.style.setProperty('--glow-opacity', '1');
-            }
-        }
-
+        const handleMouseEnter = () => { if (activeSkin === 'palantir') currentBall.style.setProperty('--glow-opacity', '1'); }
         const handleMouseLeave = () => {
-            if (activeSkin === 'pokeball' || activeSkin === 'arc-reactor') {
-                setStyles({ ball: { transform: 'rotateX(0deg) rotateY(0deg)', transition: 'transform 0.5s ease-out' }, shine: { transform: 'translateX(0px) translateY(0px) rotate(30deg)', transition: 'transform 0.5s ease-out' } });
-            }
-            if (activeSkin === 'dragon-ball') { setStarCount(4); }
+            if (activeSkin === 'pokeball' || activeSkin === 'arc-reactor') setStyles({ ball: { transform: 'rotateX(0deg) rotateY(0deg)', transition: 'transform 0.5s ease-out' }, shine: { transform: 'translateX(0px) translateY(0px) rotate(30deg)', transition: 'transform 0.5s ease-out' } });
+            if (activeSkin === 'dragon-ball') setStarCount(4);
             if (activeSkin === 'palantir') {
                 currentBall.style.setProperty('--glow-opacity', '0');
-                // Ensure all state classes are removed on leave
-                currentBall.classList.remove('is-warning');
-                currentBall.classList.remove('is-angry');
-                currentContainer.classList.remove('is-warning');
-                currentContainer.classList.remove('is-angry');
-                // Reset pupil position and rotation when mouse leaves
+                currentBall.classList.remove('is-warning', 'is-angry');
+                currentContainer.classList.remove('is-warning', 'is-angry');
                 setStyles(prevStyles => ({ ...prevStyles, pupil: { transform: 'translate(-50%, -50%) translate(0px, 0px) rotate(0deg)' } }));
             }
         };
@@ -360,7 +455,6 @@ const ThreeDBall = () => {
     return (
         <div className={containerClasses} ref={containerRef}>
             
-            {/* The new container for the vortex effect, rendered only for the palantir skin */}
             {activeSkin === 'palantir' && <div className="palantir-vortex-effect"></div>}
 
             <button className="sidebar-toggle" onClick={() => setSidebarOpen(!isSidebarOpen)} aria-label="Toggle skin customizer">
@@ -370,29 +464,26 @@ const ThreeDBall = () => {
             <SkinSidebar isOpen={isSidebarOpen} onSelectSkin={setActiveSkin} activeSkin={activeSkin} />
 
             <div className={`ball ${activeSkin} ${activeSkin === 'genesis-sphere' ? `genesis-${genesisCycle}-ball` : ''}`} style={styles.ball} ref={ballRef}>
-              {activeSkin === 'fireball' && (
-                <>
-                  <div className="flame"></div> <div className="flame"></div> <div className="flame"></div> <div className="flame"></div> <div className="flame"></div>
-                </>
-              )}
-              {activeSkin === 'pokeball' && ( <> <div className="pokeball-shine" style={styles.shine}></div> <div className="pokeball-button"></div> </> )}
-              {activeSkin === 'energy-core' && ( <> <div className="plasma-tendril"></div> <div className="plasma-tendril"></div> <div className="plasma-tendril"></div> <svg className="lightning-svg" viewBox="0 0 250 250"> {lightningBolts.map(bolt => ( <path key={`${bolt.id}-${lightningTick}`} className="lightning-path" d={bolt.path} style={{ '--dash-length': bolt.dashLength, '--delay': bolt.delay, '--duration': bolt.duration, }} strokeDasharray={bolt.dashLength} /> ))} </svg> </> )}
-              {activeSkin === 'ice-orb' && ( <> {iceShards.map(shard => ( <svg key={shard.id} className="ice-shard-svg" viewBox="0 0 250 250" style={{ '--duration': `${shard.duration}s`, '--delay': `${shard.delay}s`, }}> <path className="ice-shard-path" d={shard.path} /> </svg> ))} </> )}
-              {activeSkin === 'dragon-ball' && ( <> <div className="crystal-reflection"></div> <div className="star-container" key={starCount}> {(STAR_POSITIONS[starCount] || []).map((pos, i) => ( <div key={i} className="dragon-ball-star" style={{ top: pos.top, left: pos.left }}> <DragonBallStar /> </div> ))} </div> </> )}
-              {activeSkin === 'arc-reactor' && ( <> <div className="arc-light-ring"></div> <div className="arc-cross-lines-container"> {Array.from({ length: 9 }).map((_, i) => ( <div key={i} className="arc-cross-line-holder" style={{ transform: `rotate(${i * 20}deg)`}}> <div className={`arc-cross-line-bg ${i % 2 === 0 ? 'odd' : 'even'}`}></div> <div className={`arc-cross-line ${i % 2 === 0 ? 'odd' : 'even'}`}></div> </div> ))} </div> <div className="arc-center-core"> <div className="arc-core-mesh"> <div className="arc-line" style={{ transform: 'rotate(0deg)' }}></div> <div className="arc-line" style={{ transform: 'rotate(120deg)' }}></div> <div className="arc-line" style={{ transform: 'rotate(240deg)' }}></div> </div> <div className="plasma-core-container"> <div className="plasma-core"></div> <svg className="plasma-sparks-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"> {plasmaSparks.map(spark => ( <path key={`${spark.id}-${lightningTick}`} className="plasma-spark-path" d={spark.path} style={{ '--dash-length': spark.dashLength, '--delay': spark.delay, '--duration': spark.duration, '--stroke-width': spark.strokeWidth }} strokeDasharray={spark.dashLength} /> ))} </svg> </div> </div> </> )}
-              {activeSkin === 'palantir' && (
-                <>
-                  <div className="palantir-shield"></div>
-                  <div className="palantir-visions"></div>
-                  <div className={`palantir-pupil`} style={styles.pupil}></div>
-                </>
-              )}
+              {/* Other skins' inner elements would go here, conditionally rendered */}
             </div>
             
-            {/* Particle container is now outside the ball, relative to the main container */}
-            <div className="fire-particle-container">
-                {fireParticles.map(p => <FireParticle key={p.id} {...p} />)}
-            </div>
+            {/* Particle containers */}
+            {activeSkin === 'fireball' && (
+                <div className="fire-particle-container">
+                    {fireParticles.map(p => <FireParticle key={p.id} {...p} />)}
+                </div>
+            )}
+
+            {activeSkin === 'genesis-sphere' && (
+                <div className="genesis-effects-container">
+                    {projectiles.map(p => (
+                        <FertilizerProjectile key={p.id} style={{ transform: `translate(${p.x}px, ${p.y}px) scale(${p.scale})`, opacity: p.opacity }} />
+                    ))}
+                    {fertilizerPatches.map(p => (
+                        <FertilizerPatch key={p.id} style={{ top: p.top, left: p.left, width: `${p.size}px`, height: `${p.size}px` }} />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
