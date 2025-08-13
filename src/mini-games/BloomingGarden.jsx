@@ -316,6 +316,7 @@ const BloomingGarden = () => {
                   <p>Final Score: <span className="final-score">{score}</span></p>
                   <p style={{fontSize: '0.9rem', opacity: 0.7}}>High Score: {highScore}</p>
                   <button onClick={resetGame}>Play Again</button>
+                  
               </div>
           </div>
       )}
