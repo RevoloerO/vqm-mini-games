@@ -294,22 +294,24 @@ const BloomingGarden = () => {
         </header>
 
         {/* Game Board */}
-        <main className="garden-board">
-            {board.map((row, r) =>
-                row.map((cellValue, c) => (
-                    <div className="garden-tile" key={`${r}-${c}`} onClick={() => handleTileClick(r, c)}>
-                        {cellValue > 0 && (
-                            <Flower
-                                type={cellValue}
-                                isSelected={selected && selected.r === r && selected.c === c}
-                                isBursting={burstingCells.some(cell => cell.r === r && cell.c === c)}
-                                isSpawning={spawningCells.some(cell => cell.r === r && cell.c === c)}
-                            />
-                        )}
-                    </div>
-                ))
-            )}
-        </main>
+        <div className="game-board-perspective-wrapper">
+            <main className="garden-board">
+                {board.map((row, r) =>
+                    row.map((cellValue, c) => (
+                        <div className="garden-tile" key={`${r}-${c}`} onClick={() => handleTileClick(r, c)}>
+                            {cellValue > 0 && (
+                                <Flower
+                                    type={cellValue}
+                                    isSelected={selected && selected.r === r && selected.c === c}
+                                    isBursting={burstingCells.some(cell => cell.r === r && cell.c === c)}
+                                    isSpawning={spawningCells.some(cell => cell.r === r && cell.c === c)}
+                                />
+                            )}
+                        </div>
+                    ))
+                )}
+            </main>
+        </div>
         
         {/* Bottom UI: Next Flowers */}
         <footer className="blooming-garden-footer">

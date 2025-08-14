@@ -18,19 +18,19 @@
 }
 
 @keyframes flower-spawn {
-    0% { transform: scale(0.2) rotate(-360deg); opacity: 0; }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    0% { transform: translateY(-50px) rotateX(-55deg) translateZ(10px) scale(0.2); opacity: 0; }
+    100% { transform: translateY(-50px) rotateX(-55deg) translateZ(10px) scale(1); opacity: 1; }
 }
 
 @keyframes flower-burst {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.5); opacity: 0.7; }
-    100% { transform: scale(0); opacity: 0; }
+    0% { transform: translateY(-50px) rotateX(-55deg) translateZ(10px) scale(1); opacity: 1; }
+    50% { transform: translateY(-50px) rotateX(-55deg) translateZ(10px) scale(1.5); opacity: 0.7; }
+    100% { transform: translateY(-50px) rotateX(-55deg) translateZ(10px) scale(0); opacity: 0; }
 }
 
 @keyframes flower-select {
-    0%, 100% { transform: scale(1) rotate(-5deg); }
-    50% { transform: scale(1.15) rotate(5deg); }
+    0%, 100% { transform:  rotateX(-55deg) translateY(-50px) translateZ(-50px) scale(1); }
+    50% { transform: rotateX(-55deg) translateY(-75px) translateZ(-50px) scale(1.1); }
 }
 
 
@@ -58,6 +58,7 @@
     opacity: 0.8;
     filter: blur(2px);
     box-shadow: 0 0 20px rgba(255,255,255,0.5);
+    z-index: 1; /* Keep clouds in the background */
 }
 .cloud:before, .cloud:after {
     content: '';
@@ -84,6 +85,8 @@
     margin-bottom: 1rem;
     padding: 0 1rem;
     box-sizing: border-box;
+    position: relative; /* Establish stacking context */
+    z-index: 10; /* Ensure header is above clouds */
 }
 
 .garden-score-box {
@@ -130,18 +133,24 @@
 }
 
 /* --- Board and Tile Styles --- */
+.game-board-perspective-wrapper {
+    perspective: 1000px;
+    margin: 2rem 0;
+}
+
 .garden-board {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     gap: 5px;
-    background: rgba(0,0,0,0.1);
-    padding: 10px;
-    border-radius: 15px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 5;
+    /* --- Angled 3D styles --- */
+    transform-style: preserve-3d;
+    transform: rotateX(55deg);
 }
 
 .garden-tile {
-    --tile-size: clamp(30px, 10vw, 55px);
+    --tile-size: clamp(30px, 10vw, 50px);
     width: var(--tile-size);
     height: var(--tile-size);
     background-color: #a1d48c;
@@ -153,59 +162,75 @@
     border-radius: 10px;
     cursor: pointer;
     position: relative;
-    transition: background-color 0.2s;
+    transition: transform 0.2s, background-color 0.2s;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+    transform-style: preserve-3d;
 }
 .garden-tile:hover {
     background-color: #b2e1a0;
+    transform: translateZ(5px);
 }
 
-/* --- Flower Styles --- */
+
+/* --- 3D Flower Object Styles --- */
 .flower {
-    width: 90%;
-    height: 90%;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: none;
-}
-.flower-center {
-    width: 35%;
-    height: 35%;
-    border-radius: 50%;
-    z-index: 1;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-}
-.flower-petal {
+    width: 80%; /* Smaller base for the 3D object */
+    height: 80%;
     position: absolute;
-    width: 50%;
-    height: 50%;
-    border-radius: 50% 0;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+    pointer-events: none;
+    transform-style: preserve-3d;
+    transform:  rotateX(-55deg) translateY(-50px) translateZ(-50px); /* Lift on Y and Z axes */
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.flower-petal-1 { transform: rotate(45deg); }
-.flower-petal-2 { transform: rotate(135deg); }
-.flower-petal-3 { transform: rotate(225deg); }
-.flower-petal-4 { transform: rotate(315deg); }
 
-/* Flower Color Themes */
-.flower-1 .flower-petal { background: #e74c3c; } .flower-1 .flower-center { background: #c0392b; } /* Red */
-.flower-2 .flower-petal { background: #f1c40f; } .flower-2 .flower-center { background: #f39c12; } /* Yellow */
-.flower-3 .flower-petal { background: #3498db; } .flower-3 .flower-center { background: #2980b9; } /* Blue */
-.flower-4 .flower-petal { background: #9b59b6; } .flower-4 .flower-center { background: #8e44ad; } /* Purple */
-.flower-5 .flower-petal { background: #2ecc71; } .flower-5 .flower-center { background: #27ae60; } /* Green */
-.flower-6 .flower-petal { background: #e67e22; } .flower-6 .flower-center { background: #d35400; } /* Orange */
+/* This is the top face of the flower puck */
+.flower-center {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-sizing: border-box;
+    transform: translateZ(50px); /* Lifts the top face up */
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+}
+
+/* This creates the stem of the flower */
+.flower-center::after {
+    content: '';
+    position: absolute;
+    width: 4px; /* Stem thickness */
+    height: 50px; /* Stem length */
+    background: #27ae60; /* A nice green for the stem */
+    filter: brightness(0.8);
+    left: 50%;
+    top: 90%; /* Start from the bottom of the circle */
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+
+/* Remove the old petal styles */
+.flower-petal { display: none; }
+
+/* 3D Flower Color Themes */
+.flower-1 .flower-center { background: radial-gradient(circle at 30% 30%, #ff7675, #e74c3c); }
+.flower-2 .flower-center { background: radial-gradient(circle at 30% 30%, #fdcb6e, #f1c40f); }
+.flower-3 .flower-center { background: radial-gradient(circle at 30% 30%, #74b9ff, #3498db); }
+.flower-4 .flower-center { background: radial-gradient(circle at 30% 30%, #a29bfe, #9b59b6); }
+.flower-5 .flower-center { background: radial-gradient(circle at 30% 30%, #55efc4, #2ecc71); }
+.flower-6 .flower-center { background: radial-gradient(circle at 30% 30%, #fab1a0, #e67e22); }
+
 
 /* Flower States */
 .flower.selected {
     animation: flower-select 1.5s ease-in-out infinite;
 }
 .flower.spawn {
-    animation: flower-spawn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: flower-spawn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 .flower.burst {
     animation: flower-burst 0.5s ease-out forwards;
@@ -219,6 +244,8 @@
     justify-content: center;
     align-items: center;
     margin-top: 1rem;
+    position: relative; /* Establish stacking context */
+    z-index: 10; /* Ensure header is above clouds */
 }
 .next-flowers-box {
     display: flex;
@@ -239,12 +266,22 @@
     width: 30px;
     height: 30px;
     border-radius: 8px;
-    border: 2px solid rgba(255,255,255,0.8);
     position: relative;
+    transform-style: preserve-3d;
+    perspective: 100px;
 }
-.flower-preview .flower { width: 100%; height: 100%; }
-.flower-preview .flower-petal { width: 45%; height: 45%; }
-.flower-preview .flower-center { width: 30%; height: 30%; }
+.flower-preview .flower { 
+    width: 100%; 
+    height: 100%; 
+    transform: translateY(-30px) rotateX(-25deg) rotateY(25deg); /* Give preview a slight 3D angle */
+}
+.flower-preview .flower-center {
+    transform: translateZ(2px);
+}
+.flower-preview .flower-center::before {
+    transform: translateZ(-4px);
+}
+
 
 /* --- Modal Styles --- */
 .info-modal-overlay, .game-over-overlay {
@@ -328,5 +365,5 @@
 .color-legend-item .flower-preview {
     width: 35px;
     height: 35px;
+    border: none;
 }
-
