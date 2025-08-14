@@ -1,12 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import './BloomingGarden.css';
+
+// --- SVG Icons ---
+const InfoIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+);
 
 // --- Game Constants ---
 const GRID_SIZE = 8;
 const FLOWERS_TO_MATCH = 5;
 const FLOWERS_TO_SPAWN = 3;
 const FLOWER_TYPES = 6;
+const FLOWER_COLORS = {
+    1: 'Red',
+    2: 'Yellow',
+    3: 'Blue',
+    4: 'Purple',
+    5: 'Green',
+    6: 'Orange'
+};
+
 
 // --- Helper Functions ---
 const createEmptyBoard = () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
@@ -116,6 +134,7 @@ const BloomingGarden = () => {
   const [isGameOver, setIsGameOver] = useState(false);
   const [burstingCells, setBurstingCells] = useState([]);
   const [spawningCells, setSpawningCells] = useState([]);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
 
   // --- Flower Generation ---
@@ -209,20 +228,18 @@ const BloomingGarden = () => {
         const flowerType = tempBoard[startPos.r][startPos.c];
         tempBoard[startPos.r][startPos.c] = 0;
         
-        // This is a simplified animation. For complex paths, you'd update state for each step.
         setBoard(tempBoard);
-        await new Promise(res => setTimeout(res, 50)); // short delay for visual separation
+        await new Promise(res => setTimeout(res, 50)); 
 
         tempBoard[endPos.r][endPos.c] = flowerType;
         setBoard(tempBoard);
         setSelected(null);
         
-        await new Promise(res => setTimeout(res, 200)); // wait for move animation to feel complete
+        await new Promise(res => setTimeout(res, 200));
         
         await processMatches(tempBoard, false);
 
       } else {
-        // Invalid move, maybe add a little shake animation
          setSelected(null);
       }
       setIsProcessing(false);
@@ -251,7 +268,7 @@ const BloomingGarden = () => {
   // --- Initial Game Setup ---
   useEffect(() => {
     resetGame();
-  }, []); // Note: resetGame is not in dependency array to prevent re-running on score change.
+  }, []); 
 
   // --- Render ---
   return (
@@ -264,8 +281,9 @@ const BloomingGarden = () => {
       <div className="game-content">
         {/* Top UI: Score, Reset */}
         <header className="blooming-garden-header">
-            {/* A placeholder for a potential back button */}
-            <div style={{width: '50px'}}></div> 
+            <button onClick={() => setIsInfoModalOpen(true)} className="garden-button info-button" aria-label="Game Information">
+                <InfoIcon />
+            </button>
             <div className="garden-score-box">
                 <div className="score-label">SCORE</div>
                 <div className="score-value">{score}</div>
@@ -316,7 +334,36 @@ const BloomingGarden = () => {
                   <p>Final Score: <span className="final-score">{score}</span></p>
                   <p style={{fontSize: '0.9rem', opacity: 0.7}}>High Score: {highScore}</p>
                   <button onClick={resetGame}>Play Again</button>
-                  
+              </div>
+          </div>
+      )}
+
+      {/* Info Modal */}
+      {isInfoModalOpen && (
+          <div className="info-modal-overlay">
+              <div className="info-modal-box">
+                  <h2>How to Play</h2>
+                  <p>
+                      The goal is to clear flowers by lining up <strong>5 or more</strong> of the same color.
+                  </p>
+                  <ul>
+                      <li>Select a flower to move.</li>
+                      <li>Select an empty tile to move it to.</li>
+                      <li>A path must be clear for the flower to move.</li>
+                      <li>After each move, 3 new flowers will appear.</li>
+                  </ul>
+                  <h3>Flower Colors</h3>
+                  <div className="color-legend">
+                      {Object.entries(FLOWER_COLORS).map(([type, name]) => (
+                          <div key={type} className="color-legend-item">
+                              <div className={`flower-preview flower-${type}`}>
+                                  <Flower type={type} />
+                              </div>
+                              <span>{name}</span>
+                          </div>
+                      ))}
+                  </div>
+                  <button onClick={() => setIsInfoModalOpen(false)}>Got it!</button>
               </div>
           </div>
       )}

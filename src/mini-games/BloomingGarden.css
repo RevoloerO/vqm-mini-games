@@ -125,6 +125,9 @@
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
     color: #27ae60;
 }
+.info-button:hover {
+    color: #3498db;
+}
 
 /* --- Board and Tile Styles --- */
 .garden-board {
@@ -243,8 +246,8 @@
 .flower-preview .flower-petal { width: 45%; height: 45%; }
 .flower-preview .flower-center { width: 30%; height: 30%; }
 
-/* --- Game Over Overlay --- */
-.game-over-overlay {
+/* --- Modal Styles --- */
+.info-modal-overlay, .game-over-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.5);
     backdrop-filter: blur(5px);
@@ -252,24 +255,42 @@
     z-index: 100;
     animation: pop-in 0.3s ease;
 }
-.game-over-box {
+.info-modal-box, .game-over-box {
     background: white;
-    padding: 2rem 3rem;
+    padding: 2rem;
     border-radius: 20px;
     text-align: center;
     color: #333;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    max-width: 90%;
+    width: 400px;
+}
+.info-modal-box h2, .game-over-box h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem;
+    margin: 0 0 1rem 0;
+    color: #333;
 }
 .game-over-box h2 {
-    font-family: 'Fredoka One', cursive;
-    font-size: 2.5rem;
     color: #e17055;
-    margin: 0 0 0.5rem 0;
 }
-.game-over-box p { font-size: 1.2rem; margin: 0 0 1.5rem 0; }
+.info-modal-box p, .game-over-box p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0 0 1.5rem 0;
+}
+.info-modal-box ul {
+    text-align: left;
+    padding-left: 20px;
+    margin-bottom: 1.5rem;
+}
+.info-modal-box li {
+    margin-bottom: 0.5rem;
+}
 .game-over-box .final-score { font-weight: 700; color: #27ae60; }
-.game-over-box button {
+
+.info-modal-box button, .game-over-box button {
     padding: 0.8rem 2.5rem; font-size: 1rem;
     font-weight: 700;
     background: #27ae60; color: white;
@@ -277,8 +298,35 @@
     transition: all 0.2s;
     box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
 }
-.game-over-box button:hover {
+.info-modal-box button:hover, .game-over-box button:hover {
     background: #2ecc71;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5);
 }
+.info-modal-box button {
+    background: #3498db;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+.info-modal-box button:hover {
+    background: #5dade2;
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5);
+}
+
+.color-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+.color-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+}
+.color-legend-item .flower-preview {
+    width: 35px;
+    height: 35px;
+}
+
