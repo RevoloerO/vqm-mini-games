@@ -18,19 +18,19 @@
 }
 
 @keyframes flower-spawn {
-    0% { transform: translateY(-50px) rotateX(-45deg) translateZ(10px) scale(0.2); opacity: 0; }
-    100% { transform: translateY(-50px) rotateX(-45deg) translateZ(10px) scale(1); opacity: 1; }
+    0% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(0.2); opacity: 0; }
+    100% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(1); opacity: 1; }
 }
 
 @keyframes flower-burst {
-    0% { transform: translateY(-50px) rotateX(-45deg) translateZ(10px) scale(1); opacity: 1; }
-    50% { transform: translateY(-50px) rotateX(-45deg) translateZ(10px) scale(1.5); opacity: 0.7; }
-    100% { transform: translateY(-50px) rotateX(-45deg) translateZ(10px) scale(0); opacity: 0; }
+    0% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(1); opacity: 1; }
+    50% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(1.5); opacity: 0.7; }
+    100% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(0); opacity: 0; }
 }
 
 @keyframes flower-select {
-    0%, 100% { transform:  rotateX(-45deg) translateY(-50px) translateZ(-50px) scale(1); }
-    50% { transform: rotateX(-45deg) translateY(-75px) translateZ(-50px) scale(1.1); }
+    0%, 100% { transform:  rotateX(-30deg) translateY(-50px) translateZ(-50px) scale(1); }
+    50% { transform: rotateX(-30deg) translateY(-75px) translateZ(-50px) scale(1.1); }
 }
 
 
@@ -146,7 +146,7 @@
     z-index: 5;
     /* --- Angled 3D styles --- */
     transform-style: preserve-3d;
-    transform: rotateX(45deg); /* <-- Changed from 55deg */
+    transform: rotateX(30deg); /* <-- Changed from 45deg */
 }
 
 .garden-tile {
@@ -182,7 +182,7 @@
     position: absolute;
     pointer-events: none;
     transform-style: preserve-3d;
-    transform:  rotateX(-45deg) translateY(-50px) translateZ(-50px); /* <-- Changed from -55deg */
+    transform:  rotateX(-30deg) translateY(-50px) translateZ(-50px); /* <-- Changed from -45deg */
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
