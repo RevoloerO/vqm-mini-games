@@ -17,12 +17,12 @@ const FLOWERS_TO_MATCH = 5;
 const FLOWERS_TO_SPAWN = 3;
 const FLOWER_TYPES = 6;
 const FLOWER_COLORS = {
-    1: 'Red',
-    2: 'Yellow',
-    3: 'Blue',
-    4: 'Purple',
-    5: 'Green',
-    6: 'Orange'
+    1: 'Rose',
+    2: 'Sunflower',
+    3: 'Bluebell',
+    4: 'Lavender',
+    5: 'Zinnia',
+    6: 'Marigold'
 };
 
 
@@ -346,7 +346,7 @@ const BloomingGarden = () => {
               <div className="info-modal-box">
                   <h2>How to Play</h2>
                   <p>
-                      The goal is to clear flowers by lining up <strong>5 or more</strong> of the same color.
+                      The goal is to clear flowers by lining up <strong>5 or more</strong> of the same type.
                   </p>
                   <ul>
                       <li>Select a flower to move.</li>
@@ -354,7 +354,7 @@ const BloomingGarden = () => {
                       <li>A path must be clear for the flower to move.</li>
                       <li>After each move, 3 new flowers will appear.</li>
                   </ul>
-                  <h3>Flower Colors</h3>
+                  <h3>Flower Types</h3>
                   <div className="color-legend">
                       {Object.entries(FLOWER_COLORS).map(([type, name]) => (
                           <div key={type} className="color-legend-item">

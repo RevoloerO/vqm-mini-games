@@ -146,7 +146,7 @@
     z-index: 5;
     /* --- Angled 3D styles --- */
     transform-style: preserve-3d;
-    transform: rotateX(30deg); /* <-- Changed from 45deg */
+    transform: rotateX(30deg);
 }
 
 .garden-tile {
@@ -177,23 +177,22 @@
 
 /* --- 3D Flower Object Styles --- */
 .flower {
-    width: 80%; /* Smaller base for the 3D object */
+    width: 80%;
     height: 80%;
     position: absolute;
     pointer-events: none;
     transform-style: preserve-3d;
-    transform:  rotateX(-30deg) translateY(-50px) translateZ(-50px); /* <-- Changed from -45deg */
+    transform:  rotateX(-30deg) translateY(-50px) translateZ(-50px);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* This is the top face of the flower puck */
 .flower-center {
     position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 50%;
     box-sizing: border-box;
-    transform: translateZ(50px); /* Lifts the top face up */
+    transform: translateZ(50px);
     transform-style: preserve-3d;
     backface-visibility: hidden;
 }
@@ -204,25 +203,100 @@
     position: absolute;
     width: 4px; /* Stem thickness */
     height: 50px; /* Stem length */
-    background: #27ae60; /* A nice green for the stem */
+    background: #27ae60; 
     filter: brightness(0.8);
     left: 50%;
-    top: 90%; /* Start from the bottom of the circle */
+    top: 90%; 
     transform: translateX(-50%);
     border-radius: 2px;
 }
 
-
-/* Remove the old petal styles */
 .flower-petal { display: none; }
 
-/* 3D Flower Color Themes */
-.flower-1 .flower-center { background: radial-gradient(circle at 30% 30%, #ff7675, #e74c3c); }
-.flower-2 .flower-center { background: radial-gradient(circle at 30% 30%, #fdcb6e, #f1c40f); }
-.flower-3 .flower-center { background: radial-gradient(circle at 30% 30%, #74b9ff, #3498db); }
-.flower-4 .flower-center { background: radial-gradient(circle at 30% 30%, #a29bfe, #9b59b6); }
-.flower-5 .flower-center { background: radial-gradient(circle at 30% 30%, #55efc4, #2ecc71); }
-.flower-6 .flower-center { background: radial-gradient(circle at 30% 30%, #fab1a0, #e67e22); }
+/* --- Flower Type Styles --- */
+
+/* 1: Rose */
+.flower-1 .flower-center {
+    background: #e74c3c;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+.flower-1 .flower-center::before, .flower-1 .flower-center::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #ff7675;
+    transform-style: preserve-3d;
+}
+.flower-1 .flower-center::before {
+    transform: translateZ(-2px) scale(0.8) rotate(20deg);
+}
+.flower-1 .flower-center::after {
+    transform: translateZ(-4px) scale(0.6) rotate(-20deg);
+    background: #d63031;
+}
+
+/* 2: Sunflower */
+.flower-2 .flower-center {
+    background: #6D4C41; /* Brown center */
+    border-radius: 50%;
+    width: 50%;
+    height: 50%;
+    left: 25%;
+    top: 25%;
+}
+.flower-2 .flower-center::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: #f1c40f;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+/* 3: Bluebell */
+.flower-3 .flower-center {
+    background: #3498db;
+    border-radius: 50% 50% 20% 20%;
+    transform: translateZ(50px) rotate(45deg);
+}
+.flower-3 .flower-center::after {
+    height: 30px; /* Shorter stem */
+}
+
+
+/* 4: Lavender */
+.flower-4 .flower-center {
+    width: 50%;
+    height: 120%;
+    top: -10%;
+    left: 25%;
+    border-radius: 20px;
+    background: #9b59b6;
+    box-shadow: 0 0 5px #a29bfe, 0 0 10px #a29bfe;
+}
+
+/* 5: Zinnia (Green) */
+.flower-5 .flower-center {
+    background: #2ecc71;
+    box-shadow: 0 0 0 3px #55efc4, 0 0 0 6px #27ae60, 0 0 0 9px #55efc4;
+}
+
+
+/* 6: Marigold */
+.flower-6 .flower-center {
+    background: #e67e22;
+}
+.flower-6 .flower-center::before {
+    content: '';
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: 5px dashed #fab1a0;
+    transform: translateZ(-2px) rotate(25deg);
+}
 
 
 /* Flower States */
@@ -244,8 +318,8 @@
     justify-content: center;
     align-items: center;
     margin-top: 1rem;
-    position: relative; /* Establish stacking context */
-    z-index: 10; /* Ensure header is above clouds */
+    position: relative; 
+    z-index: 10;
 }
 .next-flowers-box {
     display: flex;
@@ -273,7 +347,7 @@
 .flower-preview .flower { 
     width: 100%; 
     height: 100%; 
-    transform: translateY(-30px) rotateX(-25deg) rotateY(25deg); /* Give preview a slight 3D angle */
+    transform: translateY(-30px) rotateX(-25deg) rotateY(25deg);
 }
 .flower-preview .flower-center {
     transform: translateZ(2px);
