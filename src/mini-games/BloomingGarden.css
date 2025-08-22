@@ -245,15 +245,24 @@
     height: 50%;
     left: 25%;
     top: 25%;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
 }
-.flower-2 .flower-center::before {
+.flower-2 .flower-center::before, .flower-2 .flower-center::after {
     content: '';
     position: absolute;
     top: -50%; left: -50%;
     width: 200%; height: 200%;
     background: #f1c40f;
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    /* A more detailed petal shape */
+    clip-path: polygon(50% 0%, 65% 25%, 98% 35%, 75% 65%, 79% 91%, 50% 70%, 21% 91%, 25% 65%, 2% 35%, 35% 25%);
 }
+
+.flower-2 .flower-center::after {
+    transform: rotate(22.5deg);
+    background: #f39c12; /* A slightly darker yellow for depth */
+    z-index: -1; /* Place it behind the main petal layer */
+}
+
 
 /* 3: Bluebell */
 .flower-3 .flower-center {
