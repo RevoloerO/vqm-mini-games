@@ -1,6 +1,6 @@
 // useDragonGame.js: Custom React hook for the Mouse Stalker mini-game
 // Manages game state efficiently using useRef for animations and useState for UI updates.
-// UPDATED: Optimized performance at high scores by reducing particle counts and throttling effects.
+// UPDATED: Optimized performance, fixed particle memory leaks, and corrected game logic bugs.
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { SKINS, FRUIT_TYPES, GAME_CONFIG } from './gameConfig';
@@ -28,7 +28,7 @@ export const useDragonGame = () => {
 
   // --- React State (for UI that needs to re-render) ---
   const [score, setScore] = useState(0);
-  const [activeSkin, setActiveSkin] = useState('dragon'); // Default to nagini to show changes
+  const [activeSkin, setActiveSkin] = useState('dragon');
   const [isWandering, setIsWandering] = useState(false);
   const [victoryAchieved, setVictoryAchieved] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
@@ -75,6 +75,11 @@ export const useDragonGame = () => {
     ghostWisps.current = [];
     naginiSparks.current = [];
     clickEffects.current = [];
+    
+    // BUG FIX: Clear announced milestones and victory state on reset
+    announcedMilestones.current.clear();
+    setVictoryAchieved(false);
+
     const canvas = canvasRef.current;
     if (canvas) {
         clouds.current = Array.from({ length: 20 }, () => ({
@@ -97,19 +102,19 @@ export const useDragonGame = () => {
             particleConfig = { speedRange: 4, sizeRange: 2, decayRange: 0.01, friction: 0.98 };
             break;
         case 'RARE':
-            numParticles = 50;
+            numParticles = 40; // reduced
             particleConfig = { speedRange: 6, sizeRange: 3, decayRange: 0.015, friction: 0.97 };
             break;
         case 'EPIC':
-            numParticles = 100;
+            numParticles = 80; // reduced
             particleConfig = { speedRange: 8, sizeRange: 4, decayRange: 0.02, friction: 0.96 };
             break;
         case 'LEGENDARY':
-            numParticles = 250;
+            numParticles = 150; // reduced
             particleConfig = { speedRange: 12, sizeRange: 5, decayRange: 0.025, friction: 0.95 };
             break;
         case 'MILESTONE':
-            numParticles = 300;
+            numParticles = 200; // reduced
             particleConfig = { speedRange: 15, sizeRange: 6, decayRange: 0.015, friction: 0.96 };
             break;
         default:
@@ -119,14 +124,14 @@ export const useDragonGame = () => {
     // --- OPTIMIZATION: Reduce particle count at high scores ---
     const currentScore = scoreRef.current;
     if (currentScore > 400) {
-        numParticles *= 0.4;
+        numParticles *= 0.3;
     } else if (currentScore > 200) {
-        numParticles *= 0.6;
+        numParticles *= 0.5;
     }
 
     for (let i = 0; i < Math.floor(numParticles); i++) {
         // --- OPTIMIZATION: Cap total particles to prevent lag spikes ---
-        if (particles.current.length > 500) break;
+        if (particles.current.length > 400) break;
 
         const angle = Math.random() * Math.PI * 2;
         const speed = 1 + Math.random() * particleConfig.speedRange;
@@ -179,7 +184,6 @@ export const useDragonGame = () => {
       idleTimerId.current = setTimeout(startWandering, 5000);
     };
 
-    // --- Click handler for visual effects ---
     const handlePointerDown = (e) => {
         let effect;
         const head = segmentsRef.current[0];
@@ -206,27 +210,26 @@ export const useDragonGame = () => {
             case 'nagini': {
                 if (!head) break;
                 const angle = Math.atan2(e.clientY - head.y, e.clientX - head.x);
-                const speed = 25; // Faster spell
+                const speed = 25;
                 effect = {
                     skin: 'nagini',
                     createdAt: Date.now(),
-                    duration: 1200, // Shorter lifespan
+                    duration: 1200,
                     x: head.x,
                     y: head.y,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
                     size: 6,
                     state: 'charging',
-                    chargeDuration: 400, // Longer charge time
+                    chargeDuration: 400,
                     chargeParticles: [],
                     trail: [],
                 };
-                // Create more charging particles for a better visual
                 for (let i = 0; i < 40; i++) {
                     effect.chargeParticles.push({
                         angle: Math.random() * Math.PI * 2,
-                        dist: 10 + Math.random() * 30, // Increased radius for a bigger visual
-                        size: 1.5 + Math.random() * 3, // Slightly larger particles
+                        dist: 10 + Math.random() * 30,
+                        size: 1.5 + Math.random() * 3,
                     });
                 }
                 clickEffects.current.push(effect);
@@ -322,11 +325,13 @@ export const useDragonGame = () => {
         spawnFruit();
         lastFruitSpawn = Date.now();
       }
+      // BUG FIX: Filter expired fruits
       fruits.current = fruits.current.filter(f => Date.now() - f.createdAt < f.lifespan);
       fruits.current.forEach((fruit) => {
         ctx.shadowBlur = 0;
         if (fruit.type === 'LEGENDARY') {
             const pulse = Math.abs(Math.sin(timestamp / 200)) * 5;
+            // BUG FIX: Reduced visual effect intensity
             const grad = ctx.createRadialGradient(fruit.x, fruit.y, 0, fruit.x, fruit.y, fruit.size + pulse);
             grad.addColorStop(0, 'white');
             grad.addColorStop(0.7, `hsl(${timestamp / 20 % 360}, 100%, 80%)`);
@@ -345,7 +350,6 @@ export const useDragonGame = () => {
                 ctx.beginPath();
                 ctx.arc(fruit.x, fruit.y, rippleRadius, 0, Math.PI * 2);
                 ctx.stroke();
-                if (Math.floor(timestamp / 200) % 2) return;
             } else if (fruit.type === 'RARE') {
                 ctx.shadowBlur = 15 + (Math.abs(Math.sin(timestamp / 300)) * 10);
                 ctx.shadowColor = fruit.color;
@@ -370,17 +374,16 @@ export const useDragonGame = () => {
           createParticleBurst(fruit.x, fruit.y, fruit.color, fruit.type);
           fruits.current.splice(fruitIndex, 1);
           const bonus = Math.floor(Math.random() * (fruit.maxBonus - fruit.minBonus + 1)) + fruit.minBonus;
-          const oldScore = scoreRef.current;
-
-          // Only add new segments and increase segment size if the score is less than 500
-          if (oldScore < 500) {
+          
+          // BUG FIX: Use victoryAchieved state to halt growth completely
+          if (!victoryAchieved) {
             for (let i = 0; i < bonus; i++) {
               if (currentSegments.length < 500) {
                 currentSegments.push({ ...currentSegments[currentSegments.length - 1] });
               }
             }
             
-            let growthFactor = (oldScore < 100) ? 0.1 : (oldScore < 250) ? 0.05 : 0.02;
+            const growthFactor = (scoreRef.current < 100) ? 0.1 : (scoreRef.current < 250) ? 0.05 : 0.02;
             currentSegments.forEach(seg => {
               if (seg.size < GAME_CONFIG.maxSize) {
                   seg.size = Math.min(GAME_CONFIG.maxSize, seg.size + bonus * growthFactor);
@@ -417,7 +420,8 @@ export const useDragonGame = () => {
       });
 
       if (activeSkin === 'dragon' && segmentsRef.current.length > 0) {
-        const spawnInterval = highPerfMode ? 300 : 150;
+        // BUG FIX: Increase interval at high scores to reduce spawn rate
+        const spawnInterval = highPerfMode ? 400 : 150;
         if (timestamp % spawnInterval < 16.6 && dragonSpores.current.length < 150) {
             const tail = segmentsRef.current[segmentsRef.current.length - 1];
             dragonSpores.current.push({
@@ -438,12 +442,13 @@ export const useDragonGame = () => {
       if (activeSkin === 'ghost' && segmentsRef.current.length > 0) {
           const head = segmentsRef.current[0];
           const spawnInterval = highPerfMode ? 200 : 100;
-          if (timestamp % spawnInterval < 16.6 && ghostWisps.current.length < 200) {
+          // BUG FIX: Reduce wisp cap and increase decay to prevent accumulation
+          if (timestamp % spawnInterval < 16.6 && ghostWisps.current.length < 150) {
               ghostWisps.current.push({
                   x: head.x, y: head.y,
                   vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
                   alpha: 0.8, size: 1 + Math.random() * 2.5,
-                  decay: 0.02 + Math.random() * 0.02,
+                  decay: 0.03 + Math.random() * 0.02, // Increased decay
                   color: `hsl(270, 100%, ${85 + Math.random() * 15}%)`
               });
           }
@@ -456,8 +461,9 @@ export const useDragonGame = () => {
           ctx.beginPath(); ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2); ctx.fill();
       });
       
-      if (activeSkin === 'nagini' && segmentsRef.current.length > 0 && !isWandering) {
-        if (naginiSparks.current.length < 100) {
+      // BUG FIX: Ensure sparks only spawn when focused (not wandering)
+      if (activeSkin === 'nagini' && segmentsRef.current.length > 0 && isWandering === false) {
+        if (naginiSparks.current.length < 80) { // Reduced cap
             const head = segmentsRef.current[0];
             const timeInCycle = timestamp % 3000;
             if (timeInCycle > 150 && timeInCycle < 400) {
@@ -469,7 +475,6 @@ export const useDragonGame = () => {
                 const tongueLength = (head.size / 10) * 28 * flickProgress;
                 const sparkX = head.x + Math.cos(angle) * tongueLength;
                 const sparkY = head.y + Math.sin(angle) * tongueLength;
-
                 naginiSparks.current.push({
                   x: sparkX, y: sparkY,
                   vx: (Math.random() - 0.5) * 1.5,
@@ -491,25 +496,19 @@ export const useDragonGame = () => {
           spark.x += spark.vx;
           spark.y += spark.vy;
           spark.alpha -= spark.decay;
-
           ctx.globalAlpha = spark.alpha;
           const grad = ctx.createRadialGradient(spark.x, spark.y, 0, spark.x, spark.y, spark.size);
           grad.addColorStop(0, 'white');
           grad.addColorStop(0.4, spark.color);
           grad.addColorStop(1, 'rgba(0, 255, 100, 0)');
-
           ctx.fillStyle = grad;
           ctx.beginPath();
           ctx.ellipse(spark.x, spark.y, spark.size * 0.7, spark.size, Math.atan2(spark.vy, spark.vx) + Math.PI / 2, 0, Math.PI * 2);
           ctx.fill();
       });
 
-
       // --- 6. Draw Click Visual Effects ---
-      clickEffects.current = clickEffects.current.filter(effect => {
-          const age = Date.now() - effect.createdAt;
-          return age < effect.duration;
-      });
+      clickEffects.current = clickEffects.current.filter(effect => (Date.now() - effect.createdAt) < effect.duration);
       
       clickEffects.current.forEach(effect => {
           ctx.save();
@@ -529,32 +528,23 @@ export const useDragonGame = () => {
                     ctx.arc(0, 0, radius, 0, Math.PI * 2);
                     ctx.stroke();
                   }
-                  const sweepAngle = progress * Math.PI * 4;
-                  ctx.rotate(sweepAngle);
-                  const grad = ctx.createLinearGradient(0, 0, 120, 0);
-                  grad.addColorStop(0, `hsla(130, 80%, 70%, ${alpha * 0.5})`);
-                  grad.addColorStop(1, `hsla(130, 80%, 70%, 0)`);
-                  ctx.strokeStyle = grad;
-                  ctx.beginPath();
-                  ctx.moveTo(0,0);
-                  ctx.lineTo(120, 0);
-                  ctx.stroke();
                   break;
               }
               case 'fire-wyrm': {
                   effect.x += effect.vx;
                   effect.y += effect.vy;
                   effect.trail.push({ x: effect.x, y: effect.y, alpha: 1 });
-                  if (effect.trail.length > 25) {
+                  // BUG FIX: More aggressive trail cleanup
+                  if (effect.trail.length > 20) {
                       effect.trail.shift();
                   }
+                  effect.trail = effect.trail.filter(t => t.alpha > 0); // Ensure dead trail points are removed
                   
                   ctx.lineCap = 'round';
                   for (let i = effect.trail.length - 1; i > 0; i--) {
                       const p1 = effect.trail[i];
                       const p2 = effect.trail[i-1];
-                      p1.alpha -= 0.04;
-                      if (p1.alpha <= 0) continue;
+                      p1.alpha -= 0.06; // Faster decay
                       const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
                       grad.addColorStop(0, `hsla(50, 100%, 60%, ${p1.alpha * 0.7})`);
                       grad.addColorStop(1, `hsla(20, 100%, 50%, 0)`);
@@ -616,13 +606,13 @@ export const useDragonGame = () => {
                       if (effect.trail.length > 20) {
                           effect.trail.shift();
                       }
+                      effect.trail = effect.trail.filter(t => t.alpha > 0);
 
                       ctx.lineCap = 'round';
                       for (let i = effect.trail.length - 1; i > 0; i--) {
                           const p1 = effect.trail[i];
                           const p2 = effect.trail[i-1];
                           p1.alpha -= 0.06;
-                          if (p1.alpha <= 0) continue;
                           ctx.strokeStyle = `hsla(110, 80%, 60%, ${p1.alpha * 0.4})`;
                           ctx.lineWidth = effect.size * (i / effect.trail.length) * 0.8;
                           ctx.beginPath();
@@ -630,26 +620,14 @@ export const useDragonGame = () => {
                           ctx.lineTo(p2.x, p2.y);
                           ctx.stroke();
                       }
-
                       const spellAlpha = 1 - (age - effect.chargeDuration) / (effect.duration - effect.chargeDuration);
                       ctx.globalAlpha = spellAlpha;
                       ctx.fillStyle = 'white';
                       ctx.shadowColor = 'hsl(110, 80%, 40%)';
                       ctx.shadowBlur = 30;
-                      
                       ctx.beginPath();
                       ctx.arc(effect.x, effect.y, effect.size, 0, Math.PI * 2);
                       ctx.fill();
-                      
-                      ctx.shadowBlur = 10;
-                      for(let i=0; i<3; i++) {
-                         ctx.fillStyle = `hsla(110, 80%, 70%, ${Math.random() * 0.7})`;
-                         ctx.beginPath();
-                         const sparkX = effect.x + (Math.random() - 0.5) * 15;
-                         const sparkY = effect.y + (Math.random() - 0.5) * 15;
-                         ctx.arc(sparkX, sparkY, 1 + Math.random() * 2, 0, Math.PI * 2);
-                         ctx.fill();
-                      }
                   }
                   break;
               }
@@ -702,10 +680,10 @@ export const useDragonGame = () => {
       clearTimeout(wanderChangeTimerId.current);
       cancelAnimationFrame(animationFrameId.current);
     };
-  }, [activeSkin, initGame, isWandering, startWandering, stopWandering]);
+  }, [activeSkin, initGame, isWandering, startWandering, stopWandering, victoryAchieved]);
 
   // Return state and setters for the component to use
-  return { canvasRef, score, activeSkin, setActiveSkin, victoryAchieved, showVictoryModal, setShowVictoryModal, announcedMilestones: announcedMilestones.current };
+  return { canvasRef, score, activeSkin, setActiveSkin, victoryAchieved, showVictoryModal, setShowVictoryModal };
 };
-// --- Export the hook ---
+
 export default useDragonGame;

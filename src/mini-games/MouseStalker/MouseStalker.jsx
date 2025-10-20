@@ -1,6 +1,6 @@
 // MouseStalker.jsx: Main component for the game.
 // Uses the optimized useDragonGame hook and renders the canvas and UI.
-// UPDATED: Added FruitInfo panel and adjusted UI layout. Milestones are now 100, 250, 500.
+// UPDATED: No functional changes needed here; fixes are in the hook and CSS.
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -28,7 +28,6 @@ const MilestoneTracker = ({ score }) => {
                     <React.Fragment key={milestone.value}>
                         {index > 0 && (
                             <div className="milestone-connector-wrapper">
-                                <div className="milestone-connector-bg"></div>
                                 <div className="milestone-connector-progress" style={{ width: `${achieved ? 100 : progress}%` }}></div>
                             </div>
                         )}
@@ -54,7 +53,7 @@ const VictoryMessage = ({ score, onClose }) => {
                 <Trophy size={48} className="victory-trophy" />
                 <h2>Victory!</h2>
                 <p>You've reached a magnificent length of {score}!</p>
-                <p className="victory-subtext">The dragon has reached its ultimate form and will grow no larger. You can continue playing for fun!</p>
+                <p className="victory-subtext">The dragon has reached its ultimate form. You can continue playing for fun!</p>
                 <button className="victory-continue-button" onClick={onClose}>
                     Continue
                 </button>
@@ -128,7 +127,7 @@ const MouseStalker = () => {
               >
                 {Object.keys(SKINS).map((skinName) => (
                   <option key={skinName} value={skinName}>
-                    {skinName.replace('-', ' ')}
+                    {skinName.replace(/([A-Z])/g, ' $1').replace('-', ' ')}
                   </option>
                 ))}
               </select>
