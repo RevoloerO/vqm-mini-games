@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './BloomingGarden.css';
 
 // --- SVG Icons ---
@@ -8,6 +9,13 @@ const InfoIcon = (props) => (
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="16" x2="12" y2="12"></line>
         <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+);
+
+const UndoIcon = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M3 7v6h6"></path>
+        <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
     </svg>
 );
 
@@ -25,11 +33,66 @@ const FLOWER_COLORS = {
     6: 'Marigold'
 };
 
+// --- Power-Up Constants ---
+const POWER_UP_TYPES = {
+    BOMB: 100,
+    RAINBOW: 101,
+    LINE_HORIZONTAL: 102,
+    LINE_VERTICAL: 103,
+    MULTIPLIER: 104
+};
+
+const POWER_UP_SPAWN_CHANCE = 0.08; // 8% chance on regular spawn
+const POWER_UP_POINTS_MILESTONE = 200; // Spawn power-up every 200 points
+const POWER_UP_COUNTER_GUARANTEE = 50; // Guarantee power-up every 50 normal flowers
+
+const POWER_UP_WEIGHTS = {
+    [POWER_UP_TYPES.BOMB]: 0.30,
+    [POWER_UP_TYPES.RAINBOW]: 0.25,
+    [POWER_UP_TYPES.LINE_HORIZONTAL]: 0.125,
+    [POWER_UP_TYPES.LINE_VERTICAL]: 0.125,
+    [POWER_UP_TYPES.MULTIPLIER]: 0.20
+};
+
+// --- Milestone Constants ---
+const MILESTONES = [100, 250, 500, 1000, 2000, 5000, 10000];
+
 
 // --- Helper Functions ---
 const createEmptyBoard = () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
 
+// Check if a cell value is a power-up
+const isPowerUp = (value) => value >= 100;
+
+// Get random power-up type based on weighted probabilities
+const getRandomPowerUp = () => {
+    const rand = Math.random();
+    let cumulative = 0;
+
+    for (const [type, weight] of Object.entries(POWER_UP_WEIGHTS)) {
+        cumulative += weight;
+        if (rand <= cumulative) {
+            return parseInt(type);
+        }
+    }
+    return POWER_UP_TYPES.BOMB; // Fallback
+};
+
+// Get base flower type for power-ups (visual representation)
+const getPowerUpBaseType = (powerUpType) => {
+    // Cycle through flower types based on power-up type for visual variety
+    const mapping = {
+        [POWER_UP_TYPES.BOMB]: 1,
+        [POWER_UP_TYPES.RAINBOW]: 3,
+        [POWER_UP_TYPES.LINE_HORIZONTAL]: 5,
+        [POWER_UP_TYPES.LINE_VERTICAL]: 5,
+        [POWER_UP_TYPES.MULTIPLIER]: 2
+    };
+    return mapping[powerUpType] || 1;
+};
+
 // Pathfinding for flower movement (A* algorithm for better performance)
+// Rainbow flowers don't block paths - they're treated as empty for pathfinding
 const findPath = (start, end, board) => {
     const heuristic = (a, b) => Math.abs(a.r - b.r) + Math.abs(a.c - b.c);
 
@@ -57,7 +120,11 @@ const findPath = (start, end, board) => {
             const newR = current.r + dr;
             const newC = current.c + dc;
 
-            if (newR >= 0 && newR < GRID_SIZE && newC >= 0 && newC < GRID_SIZE && board[newR][newC] === 0 && !closedSet.has(`${newR}-${newC}`)) {
+            // Allow movement through empty tiles (Rainbow wildcards don't block)
+            const cellValue = board[newR]?.[newC];
+            const isPassable = cellValue === 0;
+
+            if (newR >= 0 && newR < GRID_SIZE && newC >= 0 && newC < GRID_SIZE && isPassable && !closedSet.has(`${newR}-${newC}`)) {
                 const g = current.g + 1;
                 let neighbor = openSet.find(node => node.r === newR && node.c === newC);
 
@@ -77,6 +144,23 @@ const findPath = (start, end, board) => {
 };
 
 
+// Get the base type of a flower (ignoring power-up status for matching)
+const getFlowerBaseType = (value) => {
+    if (value === 0) return 0;
+    if (isPowerUp(value)) {
+        // Power-ups match with their base flower type
+        return getPowerUpBaseType(value);
+    }
+    return value;
+};
+
+// Check if two flowers can match (including Rainbow wildcard logic)
+const canMatch = (type1, type2) => {
+    if (type1 === 0 || type2 === 0) return false;
+    if (type1 === POWER_UP_TYPES.RAINBOW || type2 === POWER_UP_TYPES.RAINBOW) return true;
+    return getFlowerBaseType(type1) === getFlowerBaseType(type2);
+};
+
 // Check for matching lines of flowers
 const checkForMatches = (board) => {
     const matchedTiles = new Set();
@@ -88,12 +172,23 @@ const checkForMatches = (board) => {
             if (flowerType === 0) continue;
 
             for (const { dr, dc } of directions) {
-                const line = [{r, c}];
+                const line = [{r, c, type: flowerType}];
+                const baseType = getFlowerBaseType(flowerType);
+
                 for (let i = 1; i < GRID_SIZE; i++) {
                     const newR = r + i * dr;
                     const newC = c + i * dc;
-                    if (newR >= 0 && newR < GRID_SIZE && newC >= 0 && newC < GRID_SIZE && board[newR][newC] === flowerType) {
-                        line.push({ r: newR, c: newC });
+                    if (newR >= 0 && newR < GRID_SIZE && newC >= 0 && newC < GRID_SIZE) {
+                        const nextType = board[newR][newC];
+                        // Match if same base type OR if either is a Rainbow
+                        if (canMatch(flowerType, nextType) &&
+                            (getFlowerBaseType(nextType) === baseType ||
+                             nextType === POWER_UP_TYPES.RAINBOW ||
+                             flowerType === POWER_UP_TYPES.RAINBOW)) {
+                            line.push({ r: newR, c: newC, type: nextType });
+                        } else {
+                            break;
+                        }
                     } else {
                         break;
                     }
@@ -109,7 +204,9 @@ const checkForMatches = (board) => {
 
 // --- Flower Component with SVG Shapes ---
 const Flower = ({ type, isSelected, isBursting, isSpawning, isInvalid }) => {
-    const classNames = `flower flower-${type} ${isSelected ? 'selected' : ''} ${isBursting ? 'burst' : ''} ${isSpawning ? 'spawn' : ''} ${isInvalid ? 'invalid' : ''}`;
+    const powerUpType = isPowerUp(type) ? type : null;
+    const baseType = powerUpType ? getPowerUpBaseType(powerUpType) : type;
+    const classNames = `flower flower-${baseType} ${powerUpType ? 'power-up' : ''} ${isSelected ? 'selected' : ''} ${isBursting ? 'burst' : ''} ${isSpawning ? 'spawn' : ''} ${isInvalid ? 'invalid' : ''}`;
 
     // SVG paths for different flower shapes
     const shapes = {
@@ -139,19 +236,71 @@ const Flower = ({ type, isSelected, isBursting, isSpawning, isInvalid }) => {
         }
     };
 
-    const shape = shapes[type] || shapes[1];
+    const shape = shapes[baseType] || shapes[1];
+
+    // Power-up icon overlays
+    const renderPowerUpIcon = () => {
+        if (!powerUpType) return null;
+
+        switch (powerUpType) {
+            case POWER_UP_TYPES.BOMB:
+                return (
+                    <svg className="power-up-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="14" r="6" fill="#2c3e50"/>
+                        <path d="M12 5 L14 8 M18 8 L15 10 M19 5 C19 5 18 4 17 5" stroke="#e74c3c" strokeWidth="1.5" fill="none"/>
+                        <circle cx="10" cy="12" r="1.5" fill="#fff" opacity="0.6"/>
+                    </svg>
+                );
+            case POWER_UP_TYPES.RAINBOW:
+                return (
+                    <svg className="power-up-icon rainbow-icon" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="8" fill="url(#rainbow-gradient)"/>
+                        <defs>
+                            <linearGradient id="rainbow-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#ff0080"/>
+                                <stop offset="25%" stopColor="#ff8c00"/>
+                                <stop offset="50%" stopColor="#ffd700"/>
+                                <stop offset="75%" stopColor="#00ff00"/>
+                                <stop offset="100%" stopColor="#00bfff"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                );
+            case POWER_UP_TYPES.LINE_HORIZONTAL:
+                return (
+                    <svg className="power-up-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M4 12 L20 12 M20 12 L17 9 M20 12 L17 15" stroke="#e67e22" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                    </svg>
+                );
+            case POWER_UP_TYPES.LINE_VERTICAL:
+                return (
+                    <svg className="power-up-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 4 L12 20 M12 20 L9 17 M12 20 L15 17" stroke="#e67e22" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                    </svg>
+                );
+            case POWER_UP_TYPES.MULTIPLIER:
+                return (
+                    <svg className="power-up-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2 L14.5 9 L22 9.5 L16.5 14.5 L18.5 22 L12 18 L5.5 22 L7.5 14.5 L2 9.5 L9.5 9 Z" fill="#f39c12"/>
+                    </svg>
+                );
+            default:
+                return null;
+        }
+    };
 
     return (
         <div className={classNames}>
             <svg viewBox={shape.viewBox} className="flower-svg">
                 <defs>
-                    <linearGradient id={`grad-${type}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id={`grad-${baseType}`} x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" className="gradient-start" />
                         <stop offset="100%" className="gradient-end" />
                     </linearGradient>
                 </defs>
-                <path d={shape.path} fill={`url(#grad-${type})`} className="flower-shape" />
+                <path d={shape.path} fill={`url(#grad-${baseType})`} className="flower-shape" />
             </svg>
+            {renderPowerUpIcon()}
         </div>
     );
 };
@@ -198,6 +347,21 @@ const BloomingGarden = () => {
   const [showCombo, setShowCombo] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
+  // --- Power-Up State ---
+  const [normalFlowerCounter, setNormalFlowerCounter] = useState(0);
+  const [lastPowerUpScore, setLastPowerUpScore] = useState(0);
+
+  // --- Undo State ---
+  const [undoHistory, setUndoHistory] = useState(null);
+  const [undoAvailable, setUndoAvailable] = useState(false);
+  const [showUndoFeedback, setShowUndoFeedback] = useState(false);
+
+  // --- Milestone State ---
+  const [currentMilestoneIndex, setCurrentMilestoneIndex] = useState(0);
+  const [milestonesReached, setMilestonesReached] = useState(0);
+  const [showMilestoneCelebration, setShowMilestoneCelebration] = useState(false);
+  const [celebrationMilestone, setCelebrationMilestone] = useState(0);
+
 
   // --- Initial Game Setup ---
   useEffect(() => {
@@ -215,10 +379,26 @@ const BloomingGarden = () => {
 
   // --- Flower Generation ---
   const generateNextFlowers = useCallback(() => {
-    const newNext = Array.from({ length: FLOWERS_TO_SPAWN }, () => Math.ceil(Math.random() * FLOWER_TYPES));
+    const newNext = Array.from({ length: FLOWERS_TO_SPAWN }, () => {
+      // Check if we should spawn a power-up
+      const shouldSpawnPowerUp =
+        Math.random() < POWER_UP_SPAWN_CHANCE ||
+        normalFlowerCounter >= POWER_UP_COUNTER_GUARANTEE ||
+        (score - lastPowerUpScore >= POWER_UP_POINTS_MILESTONE && score > 0);
+
+      if (shouldSpawnPowerUp) {
+        // Reset counters
+        setNormalFlowerCounter(0);
+        setLastPowerUpScore(score);
+        return getRandomPowerUp();
+      } else {
+        setNormalFlowerCounter(c => c + 1);
+        return Math.ceil(Math.random() * FLOWER_TYPES);
+      }
+    });
     setNextFlowers(newNext);
     return newNext;
-  }, []);
+  }, [normalFlowerCounter, score, lastPowerUpScore]);
 
   // --- Flower Spawning ---
     const spawnFlowers = useCallback((currentBoard, flowersToSpawn) => {
@@ -246,6 +426,154 @@ const BloomingGarden = () => {
 
         return newBoard;
     }, []);
+
+  // --- Milestone Functions ---
+  const getMilestoneProgress = useCallback(() => {
+    if (currentMilestoneIndex >= MILESTONES.length) {
+      // Max level reached
+      return { percentage: 100, current: score, target: MILESTONES[MILESTONES.length - 1], isMaxLevel: true };
+    }
+
+    const previousMilestone = currentMilestoneIndex === 0 ? 0 : MILESTONES[currentMilestoneIndex - 1];
+    const currentTarget = MILESTONES[currentMilestoneIndex];
+    const progress = score - previousMilestone;
+    const range = currentTarget - previousMilestone;
+    const percentage = Math.min(100, (progress / range) * 100);
+
+    return { percentage, current: score, target: currentTarget, isMaxLevel: false };
+  }, [score, currentMilestoneIndex]);
+
+  const checkMilestone = useCallback((newScore) => {
+    if (currentMilestoneIndex >= MILESTONES.length) return;
+
+    const currentTarget = MILESTONES[currentMilestoneIndex];
+
+    if (newScore >= currentTarget) {
+      // Milestone reached!
+      setMilestonesReached(prev => prev + 1);
+      setCelebrationMilestone(currentTarget);
+      setShowMilestoneCelebration(true);
+
+      // Move to next milestone
+      setCurrentMilestoneIndex(prev => prev + 1);
+
+      // Hide celebration after animation
+      setTimeout(() => {
+        setShowMilestoneCelebration(false);
+      }, 2000);
+
+      // Check if we hit multiple milestones (rare but possible with big combos)
+      if (currentMilestoneIndex + 1 < MILESTONES.length && newScore >= MILESTONES[currentMilestoneIndex + 1]) {
+        setTimeout(() => {
+          checkMilestone(newScore);
+        }, 2100);
+      }
+    }
+  }, [currentMilestoneIndex]);
+
+  // --- Undo Functions ---
+  const saveUndoHistory = useCallback((currentBoard, currentScore, currentNextFlowers, selectedPosition) => {
+    setUndoHistory({
+      board: currentBoard.map(row => [...row]),
+      score: currentScore,
+      nextFlowers: [...currentNextFlowers],
+      selected: selectedPosition ? { ...selectedPosition } : null,
+      timestamp: Date.now()
+    });
+    setUndoAvailable(true);
+  }, []);
+
+  const executeUndo = useCallback(() => {
+    if (!undoHistory || !undoAvailable || isProcessing) return;
+
+    // Restore previous state
+    setBoard(undoHistory.board.map(row => [...row]));
+    setScore(undoHistory.score);
+    setNextFlowers([...undoHistory.nextFlowers]);
+    setSelected(null);
+    setIsGameOver(false);
+
+    // Mark undo as used
+    setUndoAvailable(false);
+    setUndoHistory(null);
+
+    // Show feedback
+    setShowUndoFeedback(true);
+    setTimeout(() => setShowUndoFeedback(false), 500);
+  }, [undoHistory, undoAvailable, isProcessing]);
+
+  // --- Power-Up Activation Functions ---
+  const activatePowerUps = useCallback((matches, boardState) => {
+    let additionalTiles = [];
+    let multiplierCount = 0;
+    let activatedPowerUps = [];
+
+    // First pass: Check for multipliers and collect power-ups
+    matches.forEach(({ r, c }) => {
+      const cellValue = boardState[r][c];
+      if (cellValue === POWER_UP_TYPES.MULTIPLIER) {
+        multiplierCount++;
+        activatedPowerUps.push({ type: POWER_UP_TYPES.MULTIPLIER, r, c });
+      } else if (isPowerUp(cellValue)) {
+        activatedPowerUps.push({ type: cellValue, r, c });
+      }
+    });
+
+    // Second pass: Activate special effects (Bomb, Line Clearer)
+    activatedPowerUps.forEach(({ type, r, c }) => {
+      switch (type) {
+        case POWER_UP_TYPES.BOMB:
+          // Clear 3x3 area
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const newR = r + dr;
+              const newC = c + dc;
+              if (newR >= 0 && newR < GRID_SIZE && newC >= 0 && newC < GRID_SIZE) {
+                if (boardState[newR][newC] !== 0 && !matches.some(m => m.r === newR && m.c === newC)) {
+                  additionalTiles.push({ r: newR, c: newC });
+                }
+              }
+            }
+          }
+          break;
+
+        case POWER_UP_TYPES.LINE_HORIZONTAL:
+          // Clear entire row
+          for (let col = 0; col < GRID_SIZE; col++) {
+            if (boardState[r][col] !== 0 && !matches.some(m => m.r === r && m.c === col)) {
+              additionalTiles.push({ r, c: col });
+            }
+          }
+          break;
+
+        case POWER_UP_TYPES.LINE_VERTICAL:
+          // Clear entire column
+          for (let row = 0; row < GRID_SIZE; row++) {
+            if (boardState[row][c] !== 0 && !matches.some(m => m.r === row && m.c === c)) {
+              additionalTiles.push({ r: row, c });
+            }
+          }
+          break;
+
+        case POWER_UP_TYPES.RAINBOW:
+          // Rainbow is handled in match detection, no special activation
+          break;
+
+        default:
+          break;
+      }
+    });
+
+    // Remove duplicates from additional tiles
+    const uniqueAdditional = additionalTiles.filter((tile, index, self) =>
+      index === self.findIndex(t => t.r === tile.r && t.c === tile.c)
+    );
+
+    return {
+      additionalTiles: uniqueAdditional,
+      multiplier: Math.pow(2, multiplierCount) // 2^n for n multipliers
+    };
+  }, []);
 
   // --- Match Processing ---
     const processMatches = useCallback(async (boardWithMatches, turnMade = false, currentCombo = 0) => {
@@ -284,16 +612,21 @@ const BloomingGarden = () => {
             setShowCombo(false);
         }
 
-        // Calculate base points
-        const basePoints = matches.length * 10 + (matches.length - FLOWERS_TO_MATCH) * 5;
+        // Activate power-ups and get additional tiles + multiplier
+        const powerUpResult = activatePowerUps(matches, boardWithMatches);
+        const allClearedTiles = [...matches, ...powerUpResult.additionalTiles];
 
-        // Apply combo multiplier (minimum 1x)
-        const multiplier = Math.max(1, newCombo);
-        const pointsEarned = basePoints * multiplier;
+        // Calculate base points (including bonus tiles from power-ups)
+        const basePoints = allClearedTiles.length * 10 + (matches.length - FLOWERS_TO_MATCH) * 5;
+
+        // Apply combo multiplier (minimum 1x) and power-up multiplier
+        const comboMultiplier = Math.max(1, newCombo);
+        const finalMultiplier = comboMultiplier * powerUpResult.multiplier;
+        const pointsEarned = Math.floor(basePoints * finalMultiplier);
 
         // Calculate center position of matched flowers
-        const avgRow = matches.reduce((sum, m) => sum + m.r, 0) / matches.length;
-        const avgCol = matches.reduce((sum, m) => sum + m.c, 0) / matches.length;
+        const avgRow = allClearedTiles.reduce((sum, m) => sum + m.r, 0) / allClearedTiles.length;
+        const avgCol = allClearedTiles.reduce((sum, m) => sum + m.c, 0) / allClearedTiles.length;
 
         // Create floating score popup
         const floatingScore = {
@@ -315,20 +648,23 @@ const BloomingGarden = () => {
         setScorePulse(true);
         setTimeout(() => setScorePulse(false), 300);
 
-        setScore(s => s + pointsEarned);
-        setBurstingCells(matches);
+        // Update score and check for milestones
+        const newScore = score + pointsEarned;
+        setScore(newScore);
+        checkMilestone(newScore);
+        setBurstingCells(allClearedTiles);
 
         await new Promise(res => setTimeout(res, 250));
 
         let clearedBoard = boardWithMatches.map(row => [...row]);
-        matches.forEach(({ r, c }) => clearedBoard[r][c] = 0);
+        allClearedTiles.forEach(({ r, c }) => clearedBoard[r][c] = 0);
 
         setBoard(clearedBoard);
         setBurstingCells([]);
 
         // Recursive call to handle chain reactions
         await processMatches(clearedBoard, true, newCombo);
-    }, [nextFlowers, generateNextFlowers, spawnFlowers]);
+    }, [nextFlowers, generateNextFlowers, spawnFlowers, activatePowerUps, score, checkMilestone]);
 
 
   // --- Tile Hover Handler ---
@@ -374,6 +710,9 @@ const BloomingGarden = () => {
       const path = findPath(startPos, endPos, board);
 
       if (path) {
+        // Save undo history BEFORE making the move
+        saveUndoHistory(board, score, nextFlowers, startPos);
+
         // Move flower instantly
         let tempBoard = board.map(row => [...row]);
         const flowerType = tempBoard[startPos.r][startPos.c];
@@ -396,7 +735,7 @@ const BloomingGarden = () => {
       }
       setIsProcessing(false);
     }
-  }, [board, isProcessing, isGameOver, selected, processMatches]);
+  }, [board, isProcessing, isGameOver, selected, processMatches, saveUndoHistory, score, nextFlowers]);
 
   // --- Game Reset ---
     const resetGame = useCallback(() => {
@@ -414,11 +753,22 @@ const BloomingGarden = () => {
         setIsGameOver(false);
         setIsProcessing(false);
         setBurstingCells([]);
+        setNormalFlowerCounter(0);
+        setLastPowerUpScore(0);
+        setUndoHistory(null);
+        setUndoAvailable(false);
+        setCurrentMilestoneIndex(0);
+        setMilestonesReached(0);
     }, [spawnFlowers, generateNextFlowers, score, highScore]); 
 
   // --- Render ---
   return (
     <div className="blooming-garden-container">
+      {/* Back Button */}
+      <Link to="/vqm-mini-games" className="back-button-simple">
+        ← Back
+      </Link>
+
       {/* Animated Background Elements */}
       <div className="cloud cloud-1"></div>
       <div className="cloud cloud-2"></div>
@@ -427,15 +777,48 @@ const BloomingGarden = () => {
       <div className="game-content">
         {/* Top UI: Score, Reset */}
         <header className="blooming-garden-header">
-            <button onClick={() => setIsInfoModalOpen(true)} className="garden-button info-button" aria-label="Game Information">
-                <InfoIcon />
-            </button>
+            <div className="header-left-buttons">
+                <button onClick={() => setIsInfoModalOpen(true)} className="garden-button info-button" aria-label="Game Information">
+                    <InfoIcon />
+                </button>
+                <button
+                    onClick={executeUndo}
+                    className={`garden-button undo-button ${!undoAvailable || isProcessing || isGameOver ? 'disabled' : ''}`}
+                    disabled={!undoAvailable || isProcessing || isGameOver}
+                    aria-label="Undo Last Move"
+                    title={undoAvailable ? "Undo Last Move" : "No moves to undo"}
+                >
+                    <UndoIcon />
+                </button>
+            </div>
             <div className="garden-score-box">
                 {highScore > 0 && (
-                    <div className="session-best">Best This Session: {highScore}</div>
+                    <div className="session-best">Best: {highScore}</div>
                 )}
                 <div className="score-label">SCORE</div>
                 <div className={`score-value ${scorePulse ? 'pulse' : ''}`}>{score}</div>
+
+                {/* Progress Bar to Next Milestone - Inside Score Box */}
+                {(() => {
+                    const progress = getMilestoneProgress();
+                    return (
+                        <div className="milestone-progress-container">
+                            <div className="milestone-labels">
+                                <span className="progress-label">Progress</span>
+                                <span className="milestone-target">
+                                    {progress.isMaxLevel ? "MAX!" : `→ ${progress.target}`}
+                                </span>
+                            </div>
+                            <div className="progress-bar-track">
+                                <div
+                                    className={`progress-bar-fill ${progress.isMaxLevel ? 'max-level' : ''} ${progress.percentage >= 90 ? 'near-complete' : ''}`}
+                                    style={{ width: `${progress.percentage}%` }}
+                                >
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
             <button onClick={resetGame} className="garden-button" aria-label="Reset Game">
                 <RefreshCw size={24} />
@@ -528,6 +911,37 @@ const BloomingGarden = () => {
           </div>
       )}
 
+      {/* Undo Feedback Overlay */}
+      {showUndoFeedback && (
+          <div className="undo-feedback-overlay">
+              <div className="undo-feedback-text">
+                  Move Undone
+              </div>
+          </div>
+      )}
+
+      {/* Milestone Celebration Overlay */}
+      {showMilestoneCelebration && (
+          <div className="milestone-celebration-overlay">
+              <div className="milestone-celebration-content">
+                  <div className="milestone-icon">🏆</div>
+                  <div className="milestone-text">
+                      <div className="milestone-reached-label">MILESTONE REACHED!</div>
+                      <div className="milestone-value">{celebrationMilestone}</div>
+                  </div>
+                  <div className="milestone-confetti">
+                      {Array.from({ length: 20 }).map((_, i) => (
+                          <div key={i} className="confetti-piece" style={{
+                              left: `${Math.random() * 100}%`,
+                              animationDelay: `${Math.random() * 0.5}s`,
+                              backgroundColor: ['#ff6b9d', '#ffd93d', '#74b9ff', '#a29bfe', '#55efc4', '#fdcb6e'][Math.floor(Math.random() * 6)]
+                          }}></div>
+                      ))}
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* Get Ready Overlay */}
       {showGetReady && (
           <div className="get-ready-overlay">
@@ -547,6 +961,11 @@ const BloomingGarden = () => {
                   {highScore > 0 && (
                       <p style={{fontSize: '0.9rem', opacity: 0.7}}>Best This Session: {highScore}</p>
                   )}
+                  {milestonesReached > 0 && (
+                      <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>
+                          🏆 Milestones Reached: <strong>{milestonesReached}</strong>
+                      </p>
+                  )}
                   <button onClick={resetGame}>Play Again</button>
               </div>
           </div>
@@ -565,6 +984,7 @@ const BloomingGarden = () => {
                       <li>Select an empty tile to move it to.</li>
                       <li>A path must be clear for the flower to move.</li>
                       <li>After each move, 3 new flowers will appear.</li>
+                      <li><strong>Undo button</strong> lets you reverse your last move (one undo per turn).</li>
                   </ul>
                   <h3>Flower Types</h3>
                   <div className="color-legend">
@@ -577,6 +997,50 @@ const BloomingGarden = () => {
                           </div>
                       ))}
                   </div>
+
+                  <h3>Power-Up Flowers</h3>
+                  <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>
+                      Special flowers that spawn randomly with unique abilities!
+                  </p>
+                  <div className="power-up-legend">
+                      <div className="power-up-legend-item">
+                          <div className="flower-preview">
+                              <Flower type={POWER_UP_TYPES.BOMB} />
+                          </div>
+                          <div className="power-up-info">
+                              <strong>Bomb</strong>
+                              <span>Explodes in 3x3 area</span>
+                          </div>
+                      </div>
+                      <div className="power-up-legend-item">
+                          <div className="flower-preview">
+                              <Flower type={POWER_UP_TYPES.RAINBOW} />
+                          </div>
+                          <div className="power-up-info">
+                              <strong>Rainbow</strong>
+                              <span>Matches any color</span>
+                          </div>
+                      </div>
+                      <div className="power-up-legend-item">
+                          <div className="flower-preview">
+                              <Flower type={POWER_UP_TYPES.LINE_HORIZONTAL} />
+                          </div>
+                          <div className="power-up-info">
+                              <strong>Line Clear</strong>
+                              <span>Clears entire row/column</span>
+                          </div>
+                      </div>
+                      <div className="power-up-legend-item">
+                          <div className="flower-preview">
+                              <Flower type={POWER_UP_TYPES.MULTIPLIER} />
+                          </div>
+                          <div className="power-up-info">
+                              <strong>Multiplier</strong>
+                              <span>Doubles match points (stacks!)</span>
+                          </div>
+                      </div>
+                  </div>
+
                   <button onClick={() => setIsInfoModalOpen(false)}>Got it!</button>
               </div>
           </div>
