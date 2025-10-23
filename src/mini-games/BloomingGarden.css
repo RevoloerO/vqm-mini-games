@@ -18,19 +18,46 @@
 }
 
 @keyframes flower-spawn {
-    0% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(0.2); opacity: 0; }
-    100% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(1); opacity: 1; }
+    0% { transform: scale(0.2); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes flower-burst {
-    0% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(1); opacity: 1; }
-    50% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(1.5); opacity: 0.7; }
-    100% { transform: translateY(-50px) rotateX(-30deg) translateZ(10px) scale(0); opacity: 0; }
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.7; }
+    100% { transform: scale(0); opacity: 0; }
 }
 
 @keyframes flower-select {
-    0%, 100% { transform:  rotateX(-30deg) translateY(-50px) translateZ(-50px) scale(1); }
-    50% { transform: rotateX(-30deg) translateY(-75px) translateZ(-50px) scale(1.1); }
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes flower-invalid {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes score-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+@keyframes float-up {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-40px) scale(1.3);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-80px) scale(0.8);
+        opacity: 0;
+    }
 }
 
 
@@ -55,10 +82,10 @@
     position: absolute;
     background: white;
     border-radius: 50%;
-    opacity: 0.8;
+    opacity: 0.4;
     filter: blur(2px);
     box-shadow: 0 0 20px rgba(255,255,255,0.5);
-    z-index: 1; /* Keep clouds in the background */
+    z-index: 0; /* Keep clouds behind everything */
 }
 .cloud:before, .cloud:after {
     content: '';
@@ -66,11 +93,11 @@
     background: white;
     border-radius: 50%;
 }
-.cloud-1 { width: 150px; height: 40px; top: 10%; animation: cloud-drift-1 80s linear infinite; }
+.cloud-1 { width: 150px; height: 40px; top: 5%; animation: cloud-drift-1 80s linear infinite; }
 .cloud-1:before { width: 70px; height: 70px; top: -30px; left: 20px; }
 .cloud-1:after { width: 90px; height: 60px; top: -20px; right: 10px; }
 
-.cloud-2 { width: 200px; height: 60px; top: 25%; animation: cloud-drift-2 120s linear infinite -40s; }
+.cloud-2 { width: 200px; height: 60px; top: 75%; animation: cloud-drift-2 120s linear infinite -40s; }
 .cloud-2:before { width: 100px; height: 90px; top: -40px; left: 30px; }
 .cloud-2:after { width: 120px; height: 80px; top: -30px; right: 20px; }
 
@@ -90,23 +117,37 @@
 }
 
 .garden-score-box {
-    background: rgba(255, 255, 255, 0.5);
-    padding: 0.5rem 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.6rem 2rem;
     border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 2px 4px rgba(0,0,0,0.05);
     text-align: center;
     color: #333;
     font-weight: 700;
 }
-.garden-score-box .score-label {
-    font-size: 0.9rem;
+.garden-score-box .session-best {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #555;
     opacity: 0.7;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.5px;
+}
+.garden-score-box .score-label {
+    font-size: 1rem;
+    opacity: 0.8;
+    font-weight: 800;
+    letter-spacing: 1px;
 }
 .garden-score-box .score-value {
     font-family: 'Fredoka One', cursive;
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     color: #27ae60;
     line-height: 1;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.garden-score-box .score-value.pulse {
+    animation: score-pulse 0.3s ease-out;
 }
 
 .garden-button {
@@ -134,7 +175,6 @@
 
 /* --- Board and Tile Styles --- */
 .game-board-perspective-wrapper {
-    perspective: 1000px;
     margin: 2rem 0;
 }
 
@@ -144,13 +184,79 @@
     gap: 5px;
     position: relative;
     z-index: 5;
-    /* --- Angled 3D styles --- */
-    transform-style: preserve-3d;
-    transform: rotateX(30deg);
+}
+
+/* --- Path Preview Overlay --- */
+.path-preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.path-line {
+    fill: none;
+    stroke: #55efc4;
+    stroke-width: 4;
+    stroke-dasharray: 10, 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+    animation: dash-march 0.5s linear infinite;
+}
+
+@keyframes dash-march {
+    to {
+        stroke-dashoffset: -16;
+    }
+}
+
+/* --- Floating Score Popups --- */
+.floating-score {
+    position: absolute;
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.5rem;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 1000;
+    animation: float-up 1.5s ease-out forwards;
+    text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 0 20px rgba(255, 255, 255, 0.6),
+        2px 2px 4px rgba(0, 0, 0, 0.5);
+    transform-origin: center;
+}
+
+.floating-score-normal {
+    color: #27ae60;
+}
+
+.floating-score-big {
+    color: #3498db;
+    font-size: 3rem;
+}
+
+.floating-score-mega {
+    background: linear-gradient(45deg, #f093fb 0%, #f5576c 25%, #ffd93d 50%, #6BCF7F 75%, #4facfe 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 3.5rem;
+    animation: float-up 1.5s ease-out forwards, rainbow-shift 1s linear infinite;
+}
+
+@keyframes rainbow-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .garden-tile {
-    --tile-size: clamp(30px, 10vw, 50px);
+    --tile-size: clamp(40px, 12vw, 60px);
     width: var(--tile-size);
     height: var(--tile-size);
     background-color: #a1d48c;
@@ -167,156 +273,75 @@
     justify-content: center;
     align-items: center;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
-    transform-style: preserve-3d;
 }
 .garden-tile:hover {
     background-color: #b2e1a0;
-    transform: translateZ(5px);
+    transform: scale(1.05);
 }
 
 
-/* --- 3D Flower Object Styles --- */
+/* --- Flower Object Styles --- */
 .flower {
-    width: 80%;
-    height: 80%;
+    width: 85%;
+    height: 85%;
     position: absolute;
     pointer-events: none;
-    transform-style: preserve-3d;
-    transform:  rotateX(-30deg) translateY(-50px) translateZ(-50px);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.flower-center {
-    position: absolute;
+.flower-svg {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
-    box-sizing: border-box;
-    transform: translateZ(50px);
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
-/* This creates the stem of the flower */
-.flower-center::after {
-    content: '';
-    position: absolute;
-    width: 4px; /* Stem thickness */
-    height: 50px; /* Stem length */
-    background: #27ae60; 
-    filter: brightness(0.8);
-    left: 50%;
-    top: 90%; 
-    transform: translateX(-50%);
-    border-radius: 2px;
+.flower-shape {
+    stroke: rgba(0,0,0,0.1);
+    stroke-width: 0.5;
 }
 
-.flower-petal { display: none; }
+/* --- Flower Type Gradient Colors --- */
 
-/* --- Flower Type Styles --- */
+/* 1: Star - Rose Red */
+.flower-1 .gradient-start { stop-color: #ff6b9d; }
+.flower-1 .gradient-end { stop-color: #c23866; }
 
-/* 1: Rose */
-.flower-1 .flower-center {
-    background: #e74c3c;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-}
-.flower-1 .flower-center::before, .flower-1 .flower-center::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: #ff7675;
-    transform-style: preserve-3d;
-}
-.flower-1 .flower-center::before {
-    transform: translateZ(-2px) scale(0.8) rotate(20deg);
-}
-.flower-1 .flower-center::after {
-    transform: translateZ(-4px) scale(0.6) rotate(-20deg);
-    background: #d63031;
-}
+/* 2: Heart - Sunflower Yellow */
+.flower-2 .gradient-start { stop-color: #ffd93d; }
+.flower-2 .gradient-end { stop-color: #f39c12; }
 
-/* 2: Sunflower */
-.flower-2 .flower-center {
-    background: #6D4C41; /* Brown center */
-    border-radius: 50%;
-    width: 50%;
-    height: 50%;
-    left: 25%;
-    top: 25%;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-}
-.flower-2 .flower-center::before, .flower-2 .flower-center::after {
-    content: '';
-    position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: #f1c40f;
-    /* A more detailed petal shape */
-    clip-path: polygon(50% 0%, 65% 25%, 98% 35%, 75% 65%, 79% 91%, 50% 70%, 21% 91%, 25% 65%, 2% 35%, 35% 25%);
-}
+/* 3: Circle - Bluebell Blue */
+.flower-3 .gradient-start { stop-color: #74b9ff; }
+.flower-3 .gradient-end { stop-color: #0984e3; }
 
-.flower-2 .flower-center::after {
-    transform: rotate(22.5deg);
-    background: #f39c12; /* A slightly darker yellow for depth */
-    z-index: -1; /* Place it behind the main petal layer */
-}
+/* 4: Square - Lavender Purple */
+.flower-4 .gradient-start { stop-color: #a29bfe; }
+.flower-4 .gradient-end { stop-color: #6c5ce7; }
 
+/* 5: Triangle - Zinnia Green */
+.flower-5 .gradient-start { stop-color: #55efc4; }
+.flower-5 .gradient-end { stop-color: #00b894; }
 
-/* 3: Bluebell */
-.flower-3 .flower-center {
-    background: #3498db;
-    border-radius: 50% 50% 20% 20%;
-    transform: translateZ(50px) rotate(45deg);
-}
-.flower-3 .flower-center::after {
-    height: 30px; /* Shorter stem */
-}
-
-
-/* 4: Lavender */
-.flower-4 .flower-center {
-    width: 50%;
-    height: 120%;
-    top: -10%;
-    left: 25%;
-    border-radius: 20px;
-    background: #9b59b6;
-    box-shadow: 0 0 5px #a29bfe, 0 0 10px #a29bfe;
-}
-
-/* 5: Zinnia (Green) */
-.flower-5 .flower-center {
-    background: #2ecc71;
-    box-shadow: 0 0 0 3px #55efc4, 0 0 0 6px #27ae60, 0 0 0 9px #55efc4;
-}
-
-
-/* 6: Marigold */
-.flower-6 .flower-center {
-    background: #e67e22;
-}
-.flower-6 .flower-center::before {
-    content: '';
-    position: absolute;
-    width: 100%; height: 100%;
-    border-radius: 50%;
-    box-sizing: border-box;
-    border: 5px dashed #fab1a0;
-    transform: translateZ(-2px) rotate(25deg);
-}
+/* 6: Hexagon - Marigold Orange */
+.flower-6 .gradient-start { stop-color: #ffeaa7; }
+.flower-6 .gradient-end { stop-color: #fdcb6e; }
 
 
 /* Flower States */
 .flower.selected {
-    animation: flower-select 1.5s ease-in-out infinite;
+    animation: flower-select 0.8s ease-in-out infinite;
 }
 .flower.spawn {
-    animation: flower-spawn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: flower-spawn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 .flower.burst {
-    animation: flower-burst 0.5s ease-out forwards;
+    animation: flower-burst 0.25s ease-out forwards;
+}
+.flower.invalid {
+    animation: flower-invalid 0.5s ease-in-out;
+}
+.flower.invalid .flower-svg {
+    filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.8));
 }
 
 /* --- Bottom UI --- */
@@ -350,24 +375,15 @@
     height: 30px;
     border-radius: 8px;
     position: relative;
-    transform-style: preserve-3d;
-    perspective: 100px;
 }
-.flower-preview .flower { 
-    width: 100%; 
-    height: 100%; 
-    transform: translateY(-30px) rotateX(-25deg) rotateY(25deg);
-}
-.flower-preview .flower-center {
-    transform: translateZ(2px);
-}
-.flower-preview .flower-center::before {
-    transform: translateZ(-4px);
+.flower-preview .flower {
+    width: 100%;
+    height: 100%;
 }
 
 
 /* --- Modal Styles --- */
-.info-modal-overlay, .game-over-overlay {
+.info-modal-overlay, .game-over-overlay, .get-ready-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.5);
     backdrop-filter: blur(5px);
@@ -375,6 +391,138 @@
     z-index: 100;
     animation: pop-in 0.3s ease;
 }
+
+.get-ready-overlay {
+    background: rgba(0,0,0,0.3);
+    animation: fade-in 0.5s ease;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes combo-bounce {
+    0% {
+        transform: scale(0.5) rotate(-5deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.3) rotate(2deg);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(0.9) rotate(-1deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes combo-mega-bounce {
+    0% {
+        transform: scale(0.3) rotate(-10deg);
+        opacity: 0;
+    }
+    30% {
+        transform: scale(1.5) rotate(5deg);
+    }
+    50% {
+        transform: scale(1.2) rotate(-3deg);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(1.4) rotate(2deg);
+    }
+    85% {
+        transform: scale(0.95) rotate(-1deg);
+    }
+    100% {
+        transform: scale(1.1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes combo-shake {
+    0%, 100% { transform: translateX(0) scale(1.1); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-3px) scale(1.1); }
+    20%, 40%, 60%, 80% { transform: translateX(3px) scale(1.1); }
+}
+
+/* --- Combo Overlay --- */
+.combo-overlay {
+    position: fixed;
+    top: 35%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    pointer-events: none;
+}
+
+.combo-text {
+    font-family: 'Fredoka One', cursive;
+    font-weight: 900;
+    text-align: center;
+    text-shadow:
+        0 0 20px rgba(255, 255, 255, 0.9),
+        0 0 40px rgba(255, 255, 255, 0.6),
+        3px 3px 6px rgba(0, 0, 0, 0.8);
+    animation: combo-bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 2x-3x Combo: Green, medium size */
+.combo-2 {
+    font-size: 3.5rem;
+    color: #27ae60;
+}
+
+/* 4x-5x Combo: Blue, larger size, bigger bounce */
+.combo-4 {
+    font-size: 4.5rem;
+    color: #3498db;
+    animation: combo-mega-bounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 6x+ Combo: Rainbow gradient, huge size, shake + bounce */
+.combo-6 {
+    font-size: 5.5rem;
+    background: linear-gradient(45deg, #f093fb 0%, #f5576c 25%, #ffd93d 50%, #6BCF7F 75%, #4facfe 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: combo-mega-bounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), combo-shake 0.5s ease-in-out 0.8s, rainbow-shift 1s linear infinite;
+}
+
+.get-ready-box {
+    background: white;
+    padding: 3rem 4rem;
+    border-radius: 30px;
+    text-align: center;
+    color: #333;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+    animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.get-ready-box h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    margin: 0 0 1rem 0;
+    color: #27ae60;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.get-ready-box .flower-icon {
+    font-size: 4rem;
+    animation: flower-spin 1.5s ease-in-out infinite;
+}
+
+@keyframes flower-spin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(10deg) scale(1.1); }
+}
+
 .info-modal-box, .game-over-box {
     background: white;
     padding: 2rem;
