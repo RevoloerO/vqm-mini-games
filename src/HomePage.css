@@ -1,4 +1,4 @@
-/* --- Responsive Design --- *//* --- Google Font Import --- */
+/* --- Google Font Import --- */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 /* --- Keyframe Animations --- */
@@ -373,7 +373,13 @@ input:checked + .slider:before {
     text-shadow: 0 2px 12px var(--shadow-color);
 }
 
-@keyframes letterSlide {
+/* Optimized title animation using CSS animations instead of multiple DOM elements */
+.animated-title {
+    opacity: 0;
+    animation: titleFadeIn 0.6s ease forwards 0.2s;
+}
+
+@keyframes titleFadeIn {
     from {
         opacity: 0;
         transform: translateY(-20px);
@@ -501,7 +507,7 @@ input:checked + .slider:before {
 }
 
 /* Desktop: Hero takes full width, others split into 2 columns */
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
     .game-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -531,7 +537,7 @@ input:checked + .slider:before {
     max-width: 600px;
 }
 
-@media (max-width: 899px) {
+@media (max-width: 1023px) {
     .game-card:first-child {
         padding: 3rem 2.5rem; /* Normal on mobile */
     }
@@ -584,11 +590,6 @@ input:checked + .slider:before {
 }
 
 
-/* 3. Visual Overload - Remove shimmer */
-.game-card::before {
-    display: none;
-}
-
 /* 3. Visual Overload - Simplify hover */
 .game-card:hover,
 .game-card:focus-visible {
@@ -599,13 +600,13 @@ input:checked + .slider:before {
 }
 
 .game-card:active {
-    transform: perspective(1000px) translateY(-8px) scale(0.98);
+    transform: translateY(-8px) scale(0.98);
     transition: all 0.1s ease;
     box-shadow: 0 15px 45px var(--card-hover-glow);
 }
 
 .game-card:first-child:active {
-    transform: perspective(1000px) translateY(-8px) scale(0.99);
+    transform: translateY(-8px) scale(0.99);
 }
 
 /* --- Game Card Content --- */
@@ -739,7 +740,7 @@ input:checked + .slider:before {
 }
 
 /* --- Responsive Design --- */
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
     .homepage-container {
         padding: 1.5rem 1rem;
     }
@@ -810,13 +811,13 @@ input:checked + .slider:before {
     }
 }
 
-@media (min-width: 700px) {
+@media (min-width: 768px) {
     .game-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1024px) {
     .game-grid {
         grid-template-columns: repeat(3, 1fr);
     }

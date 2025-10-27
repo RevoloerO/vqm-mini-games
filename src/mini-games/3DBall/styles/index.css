@@ -1,0 +1,13 @@
+/*
+ * Consolidated skin styles for 3DBall
+ * All skin CSS is organized here for easier management
+ */
+
+/* Base styles */
+@import url('../3DBall.css');
+
+/* Skin categories */
+@import url('../normal_skins.css');
+@import url('../magical_skins.css');
+@import url('../scifi_skins.css');
+@import url('../genesis_sphere.css');

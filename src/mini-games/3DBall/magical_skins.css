@@ -24,10 +24,8 @@
   transform: translate(-50%, -50%); /* Centering fix */
 }
 
-.flame:nth-child(2) { width: 150px; height: 150px; background: #ff8a00; animation-duration: 3s; animation-delay: -1s; }
-.flame:nth-child(3) { width: 100px; height: 100px; background: #a40606; animation-duration: 2.5s; animation-delay: -2s; }
-.flame:nth-child(4) { width: 250px; height: 250px; background: #ff5733; animation-duration: 5s; animation-delay: -3s; }
-.flame:nth-child(5) { width: 180px; height: 180px; background: #ffc300; animation-duration: 3.5s; animation-delay: -0.5s; }
+.flame:nth-child(2) { width: 150px; height: 150px; background: #ff8a00; animation-duration: 3s; }
+.flame:nth-child(3) { width: 100px; height: 100px; background: #a40606; animation-duration: 2.5s; animation-delay: 1s; }
 
 
 /* --- REWORKED: Fire Particle Effect --- */
@@ -296,7 +294,7 @@
   filter: blur(10px);
   opacity: 0;
   animation: show-vision 15s infinite ease-in-out;
-  animation-delay: -5s;
+  animation-delay: 5s;
 }
 
 /* The dragon pupil element */
@@ -309,9 +307,10 @@
   background: radial-gradient(ellipse at center, #ff8a00, #d80000 60%, #4d0000 100%);
   border-radius: 50%;
   box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, inset 0 0 3px #000;
-  transform: translate(-50%, -50%) rotate(0deg);
-  /* Slower transitions for a smoother effect */
-  transition: transform 0.1s linear, width 0.5s ease-in-out, height 0.5s ease-in-out, background 0.5s ease, box-shadow 0.5s ease;
+  /* Use CSS custom properties set by JavaScript for smooth transform */
+  transform: translate(-50%, -50%) translate(var(--pupil-x, 0px), var(--pupil-y, 0px)) rotate(var(--pupil-rotation, 0deg));
+  /* Separate transitions - transform is fast, size/color changes are slow */
+  transition: width 0.5s ease-in-out, height 0.5s ease-in-out, background 0.5s ease, box-shadow 0.5s ease;
   z-index: 1;
 }
 
