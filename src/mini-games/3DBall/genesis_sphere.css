@@ -44,6 +44,88 @@
     }
 }
 
+@keyframes green-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 30px 20px rgba(76, 175, 80, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+}
+
+@keyframes brown-splash {
+    0% {
+        box-shadow: 0 0 0 0 rgba(121, 85, 72, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 20px 10px rgba(121, 85, 72, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(121, 85, 72, 0);
+    }
+}
+
+@keyframes grass-grow {
+    0% {
+        transform: scale(0) translateY(10px);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes ball-crack {
+    0% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.5);
+    }
+    100% {
+        filter: brightness(1.3);
+    }
+}
+
+@keyframes crack-spread {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+        filter: brightness(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: brightness(1.5);
+    }
+}
+
+@keyframes grid-fade {
+    0%, 100% {
+        opacity: 0.1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes orbit-soil {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 
 /* --- Phase 1: Seeding --- */
 .three-ball-container.genesis-seeding {
@@ -57,6 +139,64 @@
     animation: soil-grind-rotate 10s linear infinite;
 }
 
+/* Progress Ring */
+.genesis-progress-ring-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.genesis-progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-progress {
+    transition: stroke-dashoffset 0.3s ease;
+    filter: drop-shadow(0 0 5px #a1887f);
+}
+
+.progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #a1887f;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(161, 136, 127, 0.8);
+}
+
+/* Grid Overlay */
+.grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.2;
+    animation: grid-fade 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.grid-line {
+    position: absolute;
+    background: rgba(161, 136, 127, 0.3);
+}
+
+.grid-line-horizontal {
+    width: 100%;
+    height: 1px;
+}
+
+.grid-line-vertical {
+    width: 1px;
+    height: 100%;
+}
+
+/* Fertilizer Projectile with Trail */
 .fertilizer-projectile {
     position: absolute;
     top: 0;
@@ -65,10 +205,23 @@
     height: 20px;
     background: radial-gradient(circle, #a1887f, #5d4037);
     border-radius: 50%;
-    box-shadow: 0 0 10px #8d6e63;
+    box-shadow: 0 0 10px #8d6e63, 0 0 20px rgba(161, 136, 127, 0.5);
     will-change: transform, opacity;
 }
 
+.projectile-trail {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(161, 136, 127, 0.6), transparent);
+    border-radius: 50%;
+    filter: blur(8px);
+}
+
+/* Fertilizer Patch */
 .fertilizer-patch {
     position: absolute;
     background: #3e2723;
@@ -77,34 +230,771 @@
     filter: blur(15px);
     animation: patch-fade-in 0.5s forwards;
     transform: translate(-50%, -50%);
+    z-index: 0;
 }
 
+.fertilizer-patch.new-hit {
+    animation: patch-fade-in 0.5s forwards, green-pulse 0.5s ease-out;
+}
+
+.fertilizer-patch.wasted-hit {
+    animation: patch-fade-in 0.5s forwards, brown-splash 0.5s ease-out;
+}
+
+/* Grass Sprout */
+.grass-sprout {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, #81c784, #4caf50);
+    border-radius: 50%;
+    animation: grass-grow 1.5s ease-out forwards;
+    filter: blur(10px);
+}
+
+.fertilizer-patch.sprouted {
+    z-index: 1;
+}
+
+/* Soil Particles */
+.soil-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: radial-gradient(circle, #6d4c41, #4e342e);
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(62, 39, 35, 0.8);
+    animation: orbit-soil linear infinite;
+    will-change: transform;
+}
+
+/* Bloom Particles */
+.bloom-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    box-shadow: 0 0 10px currentColor;
+    will-change: transform, opacity;
+}
+
+
+/* Ball Cracking Effect */
+.ball.genesis-seeding-ball.cracking {
+    animation: soil-grind-rotate 10s linear infinite, ball-crack 2s forwards;
+    position: relative;
+}
+
+.ball.genesis-seeding-ball.cracking::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(45deg, transparent 48%, rgba(129, 199, 132, 0.8) 49%, rgba(129, 199, 132, 0.8) 51%, transparent 52%),
+        linear-gradient(-45deg, transparent 48%, rgba(129, 199, 132, 0.8) 49%, rgba(129, 199, 132, 0.8) 51%, transparent 52%),
+        linear-gradient(135deg, transparent 48%, rgba(129, 199, 132, 0.8) 49%, rgba(129, 199, 132, 0.8) 51%, transparent 52%),
+        radial-gradient(circle at 30% 40%, rgba(129, 199, 132, 0.6) 0%, transparent 2%),
+        radial-gradient(circle at 70% 60%, rgba(129, 199, 132, 0.6) 0%, transparent 2%);
+    border-radius: 50%;
+    opacity: 0;
+    animation: crack-spread 2s forwards;
+    pointer-events: none;
+}
 
 /* --- Phase 2: Growth --- */
 .three-ball-container.genesis-growth {
     background-color: #a5d6a7; /* Lush meadow color */
+    transition: background-color 1s ease-in-out;
 }
+
 .ball.genesis-growth-ball {
     background: radial-gradient(circle, #81c784 0%, #4caf50 100%);
     box-shadow: inset 0 0 40px #66bb6a, 0 0 50px rgba(76, 175, 80, 0.7);
+    animation: ball-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ball-pulse {
+    0%, 100% {
+        box-shadow: inset 0 0 40px #66bb6a, 0 0 50px rgba(76, 175, 80, 0.7);
+    }
+    50% {
+        box-shadow: inset 0 0 50px #66bb6a, 0 0 70px rgba(76, 175, 80, 0.9);
+    }
 }
 
 
-/* --- Phase 3: Destruction --- */
+/* --- Phase 3: Growth - Living World --- */
+
+/* Flower and Leaf Particles */
+.growth-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    will-change: transform, opacity;
+}
+
+.growth-particle.growth-flower {
+    background: radial-gradient(circle, #ff69b4 30%, #ffc0cb 60%, transparent 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255, 105, 180, 0.6);
+}
+
+.growth-particle.growth-leaf {
+    background: radial-gradient(ellipse 50% 70%, #66bb6a 30%, #4caf50 60%, transparent 100%);
+    border-radius: 50% 0 50% 50%;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.6);
+}
+
+/* Butterflies */
+.growth-butterfly {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #ff9800 30%, #ffeb3b 70%);
+    border-radius: 50% 50% 0 0;
+    box-shadow: 0 0 5px rgba(255, 152, 0, 0.8);
+    animation: butterfly-flight 8s infinite ease-in-out;
+    will-change: transform, offset-distance;
+}
+
+.growth-butterfly::before {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: inherit;
+    border-radius: 50%;
+    top: 50%;
+    left: -4px;
+    transform: translateY(-50%);
+}
+
+.growth-butterfly::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: inherit;
+    border-radius: 50%;
+    top: 50%;
+    right: -4px;
+    transform: translateY(-50%);
+}
+
+@keyframes butterfly-flight {
+    0%, 100% {
+        offset-distance: 0%;
+        transform: scale(1);
+    }
+    25% {
+        offset-distance: 25%;
+        transform: scale(1.2);
+    }
+    50% {
+        offset-distance: 50%;
+        transform: scale(1);
+    }
+    75% {
+        offset-distance: 75%;
+        transform: scale(0.8);
+    }
+}
+
+/* Pollen Particles */
+.growth-pollen {
+    position: absolute;
+    background: radial-gradient(circle, #ffeb3b, #ffc107);
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(255, 235, 59, 0.8);
+    animation: pollen-drift linear infinite;
+    will-change: transform, bottom;
+}
+
+@keyframes pollen-drift {
+    0% {
+        bottom: 0;
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(var(--drift-offset, 0));
+    }
+    100% {
+        bottom: 100%;
+        transform: translateX(0);
+    }
+}
+
+/* Grass Blades */
+.growth-grass-blade {
+    position: absolute;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to top, #4caf50, #81c784);
+    border-radius: 50% 50% 0 0;
+    transform-origin: bottom center;
+    animation: grass-sway ease-in-out infinite;
+}
+
+@keyframes grass-sway {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(3deg);
+    }
+    75% {
+        transform: rotate(-3deg);
+    }
+}
+
+/* Vines */
+.growth-vine {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    height: 300px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    opacity: 0;
+    animation: vine-grow 2s ease-out forwards;
+}
+
+@keyframes vine-grow {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* --- Phase 4: Destruction --- */
+
+/* Stormy weather background */
+.three-ball-container.genesis-stormy {
+    background-color: #2c2c2c;
+    transition: background-color 1s ease-in-out;
+}
+
+.three-ball-container.genesis-stormy::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.2));
+    animation: storm-clouds 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes storm-clouds {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Lightning bolts */
+.genesis-lightning {
+    position: absolute;
+    width: 4px;
+    background: linear-gradient(to bottom,
+        #fff 0%,
+        #a7d8ff 50%,
+        transparent 100%);
+    box-shadow: 0 0 10px #fff, 0 0 20px #0af, 0 0 30px #0af;
+    animation: lightning-flash 0.4s ease-out forwards;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes lightning-flash {
+    0%, 100% {
+        opacity: 0;
+    }
+    10%, 30%, 50% {
+        opacity: 1;
+    }
+    20%, 40% {
+        opacity: 0.3;
+    }
+    60% {
+        opacity: 0;
+    }
+}
+
+/* Fire spread effect */
+.fire-spread {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle,
+        #ffeb3b 0%,
+        #ff9800 20%,
+        #f44336 40%,
+        #d32f2f 60%,
+        transparent 100%);
+    animation: fire-expand 3s ease-out forwards;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    z-index: 5;
+}
+
+@keyframes fire-expand {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(15);
+        opacity: 0;
+    }
+}
+
+/* Ball igniting */
+.ball.genesis-seeding-ball.igniting,
+.ball.genesis-growth-ball.igniting {
+    animation: ball-ignite 3s ease-out forwards;
+}
+
+@keyframes ball-ignite {
+    0% {
+        filter: brightness(1);
+    }
+    25% {
+        filter: brightness(1.5) hue-rotate(-30deg);
+    }
+    50% {
+        filter: brightness(2) hue-rotate(-60deg);
+        box-shadow: inset 0 0 60px #ff5722, 0 0 100px rgba(255, 87, 34, 1);
+    }
+    100% {
+        filter: brightness(2.5) hue-rotate(-90deg);
+        box-shadow: inset 0 0 80px #d84315, 0 0 120px rgba(255, 87, 34, 1);
+    }
+}
+
+/* Destruction phase */
 .three-ball-container.genesis-destruction {
     background-color: #424242; /* Scorched earth color */
 }
+
 .ball.genesis-destruction-ball {
     background: radial-gradient(circle, #ff7043 0%, #d84315 100%);
     box-shadow: inset 0 0 50px #bf360c, 0 0 60px rgba(255, 87, 34, 0.8);
+    filter: contrast(1.3) brightness(1.2) hue-rotate(calc(var(--heat-intensity, 0) * 10deg));
+    animation: heat-shimmer 0.5s infinite alternate;
+}
+
+@keyframes heat-shimmer {
+    0% {
+        transform: scale(1) translateY(0);
+    }
+    100% {
+        transform: scale(1.02) translateY(-2px);
+    }
+}
+
+/* --- Phase 5: Active Fire --- */
+
+/* Lava cracks container */
+.lava-cracks-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 250px;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* Lava crack */
+.lava-crack {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: linear-gradient(180deg,
+        #ff4500 0%,
+        #ff6347 50%,
+        #ff4500 100%);
+    box-shadow: 0 0 10px #ff4500, 0 0 20px rgba(255, 69, 0, 0.6);
+    animation: crack-glow 1.5s infinite alternate;
+    border-radius: 2px;
+}
+
+@keyframes crack-glow {
+    0% {
+        box-shadow: 0 0 10px #ff4500, 0 0 20px rgba(255, 69, 0, 0.6);
+        filter: brightness(1);
+    }
+    100% {
+        box-shadow: 0 0 15px #ff6347, 0 0 30px rgba(255, 99, 71, 0.8);
+        filter: brightness(1.5);
+    }
+}
+
+/* Ember particle */
+.ember-particle {
+    position: absolute;
+    background: radial-gradient(circle, #ffeb3b, #ff9800, #f44336);
+    border-radius: 50%;
+    box-shadow: 0 0 10px #ff9800, 0 0 20px rgba(255, 152, 0, 0.6);
+    will-change: transform, opacity, width, height;
+    pointer-events: none;
+}
+
+/* Smoke plume */
+.smoke-plume {
+    position: absolute;
+    background: radial-gradient(circle, rgba(50, 50, 50, 0.7), transparent);
+    border-radius: 50%;
+    filter: blur(20px);
+    animation: smoke-rise 4s ease-out forwards;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+@keyframes smoke-rise {
+    0% {
+        transform: translateY(0) translateX(0) scale(0.5);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translateY(-100px) translateX(var(--drift-offset, 0)) scale(1.2);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(-200px) translateX(calc(var(--drift-offset, 0) * 1.5)) scale(2);
+        opacity: 0;
+    }
 }
 
 
-/* --- Phase 4: Restoration --- */
+/* --- Phase 6: Restoration - Healing Rain --- */
+
+/* Rain droplet */
+.rain-drop {
+    position: absolute;
+    width: 2px;
+    background: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(173, 216, 230, 0.8) 30%,
+        rgba(173, 216, 230, 0.4) 100%);
+    animation: rain-fall linear forwards;
+    pointer-events: none;
+    z-index: 2;
+}
+
+@keyframes rain-fall {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(calc(100vh + 20px));
+        opacity: 0;
+    }
+}
+
+/* Steam effect when rain hits hot ground */
+.steam-particle {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle,
+        rgba(255, 255, 255, 0.6),
+        transparent);
+    filter: blur(10px);
+    animation: steam-rise 2s ease-out forwards;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes steam-rise {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) scale(2);
+        opacity: 0;
+    }
+}
+
+/* Ball cooling gradient */
+.ball.genesis-cooling {
+    background: radial-gradient(circle,
+        color-mix(in srgb,
+            #ff7043 calc(var(--temperature, 1) * 100%),
+            #90caf9 calc((1 - var(--temperature, 1)) * 100%)
+        ) 0%,
+        color-mix(in srgb,
+            #d84315 calc(var(--temperature, 1) * 100%),
+            #42a5f5 calc((1 - var(--temperature, 1)) * 100%)
+        ) 100%);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: inset 0 0 40px color-mix(in srgb,
+            #bf360c calc(var(--temperature, 1) * 100%),
+            #64b5f6 calc((1 - var(--temperature, 1)) * 100%)
+        ),
+        0 0 50px color-mix(in srgb,
+            rgba(255, 87, 34, 0.8) calc(var(--temperature, 1) * 100%),
+            rgba(66, 165, 245, 0.7) calc((1 - var(--temperature, 1)) * 100%)
+        );
+}
+
+/* Water puddle */
+.water-puddle {
+    position: absolute;
+    background: radial-gradient(ellipse,
+        rgba(144, 202, 249, 0.4),
+        rgba(66, 165, 245, 0.2),
+        transparent);
+    border-radius: 50%;
+    filter: blur(3px);
+    animation: puddle-form 1s ease-out forwards;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+@keyframes puddle-form {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Restoration phase final state */
 .three-ball-container.genesis-restoration {
     background-color: #546e7a; /* Wet, dark soil color */
 }
+
 .ball.genesis-restoration-ball {
     background: radial-gradient(circle, #90caf9 0%, #42a5f5 100%);
     box-shadow: inset 0 0 40px #64b5f6, 0 0 50px rgba(66, 165, 245, 0.7);
+    animation: water-ripple 3s ease-in-out infinite;
+}
+
+@keyframes water-ripple {
+    0%, 100% {
+        box-shadow: inset 0 0 40px #64b5f6, 0 0 50px rgba(66, 165, 245, 0.7);
+    }
+    50% {
+        box-shadow: inset 0 0 50px #64b5f6, 0 0 70px rgba(66, 165, 245, 0.9);
+    }
+}
+
+/* --- Phase 7: Water World --- */
+
+/* Water ripple effect */
+.water-ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border: 2px solid rgba(66, 165, 245, 0.6);
+    border-radius: 50%;
+    animation: ripple-expand 3s ease-out forwards;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+@keyframes ripple-expand {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 600px;
+        height: 600px;
+        opacity: 0;
+    }
+}
+
+/* Rising bubbles */
+.restoration-bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%,
+        rgba(255, 255, 255, 0.8),
+        rgba(173, 216, 230, 0.4));
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5),
+                0 0 15px rgba(66, 165, 245, 0.3);
+    animation: bubble-rise 4s ease-in-out forwards;
+    pointer-events: none;
+    z-index: 3;
+}
+
+@keyframes bubble-rise {
+    0% {
+        transform: translateY(0) translateX(0) scale(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+        transform: translateY(-20px) translateX(0) scale(1);
+    }
+    50% {
+        transform: translateY(-200px) translateX(calc((sin(var(--bubble-id, 0)) * 30px))) scale(1.2);
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-400px) translateX(calc((sin(var(--bubble-id, 0)) * 50px))) scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Healing particles (blue sparkles) */
+.healing-particle {
+    position: absolute;
+    background: radial-gradient(circle,
+        rgba(144, 202, 249, 1),
+        rgba(66, 165, 245, 0.8),
+        transparent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(144, 202, 249, 0.8),
+                0 0 15px rgba(66, 165, 245, 0.4);
+    animation: sparkle-twinkle 1.5s ease-in-out infinite;
+    pointer-events: none;
+    will-change: transform, opacity;
+    z-index: 3;
+}
+
+@keyframes sparkle-twinkle {
+    0%, 100% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.8);
+    }
+}
+
+/* Reflection shimmer effect on ball */
+.ball.genesis-restoration-ball::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 60%;
+    height: 60%;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(255, 255, 255, 0.1) 30%,
+        transparent 60%);
+    border-radius: 50%;
+    animation: shimmer-reflection 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes shimmer-reflection {
+    0%, 100% {
+        opacity: 0.3;
+        transform: translate(0, 0);
+    }
+    50% {
+        opacity: 0.6;
+        transform: translate(10px, -10px);
+    }
+}
+
+/* --- Genesis Cycle UI --- */
+
+.genesis-ui {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 100;
+    pointer-events: none;
+    user-select: none;
+}
+
+.cycle-counter {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.phase-indicator {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 8px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.phase-dot {
+    font-size: 24px;
+    opacity: 0.3;
+    transition: all 0.3s ease;
+    filter: grayscale(1);
+    transform: scale(0.8);
+}
+
+.phase-dot.active {
+    opacity: 1;
+    filter: grayscale(0);
+    transform: scale(1.2);
+    animation: phase-pulse 1s ease-in-out infinite;
+}
+
+@keyframes phase-pulse {
+    0%, 100% {
+        transform: scale(1.2);
+    }
+    50% {
+        transform: scale(1.4);
+    }
+}
+
+.phase-timer {
+    height: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg,
+        #4caf50 0%,
+        #81c784 50%,
+        #66bb6a 100%);
+    transition: width 0.1s linear;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
 }

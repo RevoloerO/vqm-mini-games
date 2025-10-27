@@ -32,41 +32,511 @@ const ThreeDBall = () => {
     
     // --- Genesis Sphere State ---
     const [genesisCycle, setGenesisCycle] = useState('seeding');
+    const [transitionState, setTransitionState] = useState(null); // 'seeding-to-growth', 'growth-to-destruction', etc.
+    const [ballState, setBallState] = useState('normal'); // 'cracking', 'igniting', etc.
     const [fertilizerPatches, setFertilizerPatches] = useState([]);
+    const [soilParticles, setSoilParticles] = useState([]);
+    const [bloomParticles, setBloomParticles] = useState([]);
+    const [fertilizationProgress, setFertilizationProgress] = useState(0);
+
+    // Phase 3: Growth state
+    const [flowerParticles, setFlowerParticles] = useState([]);
+    const [butterflies, setButterflies] = useState([]);
+    const [pollenParticles, setPollenParticles] = useState([]);
+    const [grassBlades, setGrassBlades] = useState([]);
+    const [vines, setVines] = useState([]);
+
+    // Phase 4: Destruction state
+    const [weatherState, setWeatherState] = useState('calm'); // 'calm', 'stormy'
+    const [genesisLightning, setGenesisLightning] = useState([]);
+    const [fireAreas, setFireAreas] = useState([]);
+
+    // Phase 5: Active Fire state
+    const [emberParticles, setEmberParticles] = useState([]);
+    const [smokePlumes, setSmokePlumes] = useState([]);
+    const [lavaCracks, setLavaCracks] = useState([]);
+    const [heatIntensity, setHeatIntensity] = useState(0);
+
+    // Phase 6: Restoration state
+    const [rainDrops, setRainDrops] = useState([]);
+    const [steamParticles, setSteamParticles] = useState([]);
+    const [puddles, setPuddles] = useState([]);
+    const [ballTemperature, setBallTemperature] = useState(1); // 1 = hot, 0 = cool
+
+    // Phase 7: Water World state
+    const [waterRipples, setWaterRipples] = useState([]);
+    const [bubbles, setBubbles] = useState([]);
+    const [healingParticles, setHealingParticles] = useState([]);
+
+    // Cycle tracking
+    const [cycleCount, setCycleCount] = useState(1);
+    const [timeInPhase, setTimeInPhase] = useState(0);
+    const phaseStartTimeRef = useRef(Date.now());
+
     const fertilizationGrid = useRef(null);
     const isFertilized = useRef(false);
+    const lightningIntervalRef = useRef(null);
+    const rainIntervalRef = useRef(null);
+    const emberIntervalRef = useRef(null);
+    const smokeIntervalRef = useRef(null);
+    const rippleIntervalRef = useRef(null);
+    const bubbleIntervalRef = useRef(null);
     const GRID_SIZE = 10; // 10x10 grid
 
     // --- Genesis Sphere Logic ---
-    const handleFertilizerLand = useCallback((x, y) => {
+    const handleFertilizerLand = useCallback((x, y, isNew) => {
         if (!containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
-        
+
         const newPatch = {
             id: Date.now() + Math.random(),
             top: `${(y / rect.height) * 100}%`,
             left: `${(x / rect.width) * 100}%`,
             size: 150 + Math.random() * 100,
+            isNew, // Track if this hit a new cell
+            sprouted: false,
         };
         setFertilizerPatches(prev => [...prev, newPatch]);
 
         if (isFertilized.current) return;
-        const gridX = Math.floor((x / rect.width) * GRID_SIZE);
-        const gridY = Math.floor((y / rect.height) * GRID_SIZE);
-        if (fertilizationGrid.current && !fertilizationGrid.current[gridY][gridX]) {
-            fertilizationGrid.current[gridY][gridX] = true;
-            
-            if (fertilizationGrid.current.every(row => row.every(cell => cell))) {
-                isFertilized.current = true;
-                setGenesisCycle('growth');
-            }
+
+        // Update progress
+        const totalCells = GRID_SIZE * GRID_SIZE;
+        const fertilizedCount = fertilizationGrid.current.flat().filter(Boolean).length;
+        const progress = fertilizedCount / totalCells;
+        setFertilizationProgress(progress);
+
+        // Check if fully fertilized
+        if (fertilizationGrid.current.every(row => row.every(cell => cell))) {
+            isFertilized.current = true;
+            transitionToGrowth();
         }
+    }, []);
+
+    // Transition from seeding to growth with dramatic sequence
+    const transitionToGrowth = useCallback(() => {
+        setTransitionState('seeding-to-growth');
+
+        // Generate soil particles orbiting the ball
+        const particles = Array.from({ length: 30 }, (_, i) => ({
+            id: i,
+            angle: (i / 30) * Math.PI * 2,
+            distance: 180 + Math.random() * 40,
+            size: 3 + Math.random() * 5,
+            speed: 0.5 + Math.random() * 1,
+        }));
+        setSoilParticles(particles);
+
+        // Step 1: Sprout animation (500ms)
+        setTimeout(() => {
+            setFertilizerPatches(prev => prev.map(p => ({ ...p, sprouted: true })));
+        }, 500);
+
+        // Step 2: Crack ball (2000ms)
+        setTimeout(() => {
+            setBallState('cracking');
+        }, 2000);
+
+        // Step 3: Complete transition and bloom explosion (5000ms)
+        setTimeout(() => {
+            setGenesisCycle('growth');
+            setTransitionState(null);
+            setBallState('normal');
+            setSoilParticles([]);
+
+            // Spawn bloom particles
+            const blooms = Array.from({ length: 50 }, (_, i) => ({
+                id: i,
+                angle: (i / 50) * Math.PI * 2 + (Math.random() - 0.5) * 0.3,
+                distance: 0,
+                targetDistance: 200 + Math.random() * 150,
+                size: 8 + Math.random() * 12,
+                color: ['#ff69b4', '#ffc0cb', '#ff1493', '#ffb6c1', '#ff69b4'][Math.floor(Math.random() * 5)],
+                opacity: 1,
+            }));
+            setBloomParticles(blooms);
+
+            // Fade out bloom particles and initialize living world
+            setTimeout(() => {
+                setBloomParticles([]);
+                initializeLivingWorld();
+            }, 2000);
+        }, 5000);
+    }, []);
+
+    // Initialize Phase 3: Growth living world
+    const initializeLivingWorld = useCallback(() => {
+        // Spawn flower particles
+        const flowers = Array.from({ length: 20 }, (_, i) => ({
+            id: Date.now() + i,
+            angle: (i / 20) * Math.PI * 2,
+            distance: 0,
+            maxDistance: 300 + Math.random() * 200,
+            speed: 2 + Math.random() * 3,
+            rotation: Math.random() * 360,
+            type: Math.random() > 0.5 ? 'flower' : 'leaf'
+        }));
+        setFlowerParticles(flowers);
+
+        // Create butterflies
+        const butterflyList = Array.from({ length: 3 }, (_, i) => ({
+            id: i,
+            pathIndex: i,
+            delay: i * 2.5,
+        }));
+        setButterflies(butterflyList);
+
+        // Create pollen particles
+        const pollen = Array.from({ length: 30 }, (_, i) => ({
+            id: i,
+            x: Math.random() * 100,
+            y: 100 + Math.random() * 20,
+            speed: 0.5 + Math.random() * 1,
+            drift: Math.random() * 30 - 15,
+            size: 2 + Math.random() * 3,
+        }));
+        setPollenParticles(pollen);
+
+        // Create grass blades
+        const blades = Array.from({ length: 40 }, (_, i) => ({
+            id: i,
+            x: (i / 40) * 100,
+            height: 50 + Math.random() * 50,
+            delay: Math.random() * 3,
+            duration: 3 + Math.random() * 2,
+        }));
+        setGrassBlades(blades);
+
+        // Create vines spiraling around ball
+        const vineList = Array.from({ length: 4 }, (_, i) => ({
+            id: i,
+            startAngle: (i / 4) * Math.PI * 2,
+            spirals: 2 + Math.random(),
+            thickness: 3 + Math.random() * 2,
+        }));
+        setVines(vineList);
+    }, []);
+
+    // Transition from growth to destruction with dramatic sequence
+    const transitionToDestruction = useCallback(() => {
+        setTransitionState('growth-to-destruction');
+        setWeatherState('stormy');
+
+        // Clear growth elements
+        setFlowerParticles([]);
+        setButterflies([]);
+        setPollenParticles([]);
+        setGrassBlades([]);
+        setVines([]);
+
+        let strikeCount = 0;
+        const maxStrikes = 6;
+
+        // Lightning strike function
+        const createLightningStrike = () => {
+            if (!containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+            const x = Math.random() * rect.width;
+            const y = Math.random() * rect.height;
+
+            const bolt = {
+                id: Date.now() + Math.random(),
+                x,
+                y,
+                height: y,
+            };
+            setGenesisLightning(prev => [...prev, bolt]);
+
+            // Remove lightning after animation
+            setTimeout(() => {
+                setGenesisLightning(prev => prev.filter(b => b.id !== bolt.id));
+            }, 500);
+
+            // Spawn fire at impact
+            const fire = {
+                id: Date.now() + Math.random(),
+                x: `${(x / rect.width) * 100}%`,
+                y: `${(y / rect.height) * 100}%`,
+            };
+            setFireAreas(prev => [...prev, fire]);
+
+            strikeCount++;
+            if (strikeCount >= maxStrikes) {
+                clearInterval(lightningIntervalRef.current);
+
+                // Ignite the ball
+                setTimeout(() => {
+                    setBallState('igniting');
+                }, 500);
+
+                // Complete transition to destruction
+                setTimeout(() => {
+                    setGenesisCycle('destruction');
+                    setTransitionState(null);
+                    setBallState('normal');
+                    setWeatherState('calm');
+                    setGenesisLightning([]);
+                    setFireAreas([]);
+                }, 3000);
+            }
+        };
+
+        // Start lightning strikes
+        lightningIntervalRef.current = setInterval(createLightningStrike, 800);
+    }, []);
+
+    // Transition from destruction to restoration with rain
+    const transitionToRestoration = useCallback(() => {
+        setTransitionState('destruction-to-restoration');
+
+        // Stop fire effects
+        setEmberParticles([]);
+        setSmokePlumes([]);
+        setLavaCracks([]);
+        if (emberIntervalRef.current) clearInterval(emberIntervalRef.current);
+        if (smokeIntervalRef.current) clearInterval(smokeIntervalRef.current);
+
+        // Start rain system
+        rainIntervalRef.current = setInterval(() => {
+            if (!containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+
+            const newDrops = Array.from({ length: 5 }, () => ({
+                id: Date.now() + Math.random(),
+                x: Math.random() * rect.width,
+                y: -20,
+                speed: 5 + Math.random() * 3,
+                length: 15 + Math.random() * 10,
+            }));
+
+            setRainDrops(prev => [...prev, ...newDrops]);
+
+            // Cleanup old rain drops after animation
+            setTimeout(() => {
+                setRainDrops(prev => prev.filter(d => !newDrops.find(nd => nd.id === d.id)));
+            }, 1500);
+        }, 100);
+
+        // Gradually cool down the ball
+        const coolSteps = 60;
+        let step = 0;
+        const coolInterval = setInterval(() => {
+            step++;
+            setBallTemperature(1 - (step / coolSteps));
+
+            // Spawn steam when rain hits hot ground
+            if (Math.random() > 0.7 && containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const steam = {
+                    id: Date.now() + Math.random(),
+                    x: `${Math.random() * 100}%`,
+                    y: `${80 + Math.random() * 20}%`,
+                };
+                setSteamParticles(prev => [...prev, steam]);
+
+                setTimeout(() => {
+                    setSteamParticles(prev => prev.filter(s => s.id !== steam.id));
+                }, 2000);
+            }
+
+            if (step >= coolSteps) {
+                clearInterval(coolInterval);
+                if (rainIntervalRef.current) {
+                    clearInterval(rainIntervalRef.current);
+                    rainIntervalRef.current = null;
+                }
+
+                // Create puddles
+                const newPuddles = Array.from({ length: 8 }, (_, i) => ({
+                    id: i,
+                    x: `${10 + Math.random() * 80}%`,
+                    y: `${60 + Math.random() * 35}%`,
+                    size: 40 + Math.random() * 60,
+                }));
+                setPuddles(newPuddles);
+
+                // Complete transition
+                setTimeout(() => {
+                    setGenesisCycle('restoration');
+                    setTransitionState(null);
+                    setBallState('normal');
+                    setRainDrops([]);
+                    setSteamParticles([]);
+                    setBallTemperature(0);
+                }, 1000);
+            }
+        }, 100);
     }, []);
 
     // --- Particle System Hooks ---
     const fireParticles = useFireParticleSystem(activeSkin === 'fireball', ballRef, mousePosRef);
     const projectiles = useFertilizerSystem(activeSkin === 'genesis-sphere' && genesisCycle === 'seeding', containerRef, handleFertilizerLand, fertilizationGrid);
 
+    // Phase 7: Restoration water world effects
+    useEffect(() => {
+        if (activeSkin !== 'genesis-sphere' || genesisCycle !== 'restoration') {
+            // Cleanup
+            setWaterRipples([]);
+            setBubbles([]);
+            setHealingParticles([]);
+            if (rippleIntervalRef.current) clearInterval(rippleIntervalRef.current);
+            if (bubbleIntervalRef.current) clearInterval(bubbleIntervalRef.current);
+            return;
+        }
+
+        // Spawn water ripples periodically
+        rippleIntervalRef.current = setInterval(() => {
+            if (!containerRef.current) return;
+
+            const newRipple = {
+                id: Date.now() + Math.random(),
+            };
+            setWaterRipples(prev => [...prev.slice(-5), newRipple]);
+
+            // Remove ripple after animation completes
+            setTimeout(() => {
+                setWaterRipples(prev => prev.filter(r => r.id !== newRipple.id));
+            }, 3000);
+        }, 1500);
+
+        // Spawn bubbles periodically
+        bubbleIntervalRef.current = setInterval(() => {
+            if (!containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+
+            const newBubble = {
+                id: Date.now() + Math.random(),
+                x: rect.width / 2 + (Math.random() - 0.5) * 150,
+                y: rect.height / 2 + (Math.random() - 0.5) * 150,
+                size: 10 + Math.random() * 20,
+                delay: Math.random() * 1,
+            };
+            setBubbles(prev => [...prev.slice(-10), newBubble]);
+
+            // Remove bubble after animation completes
+            setTimeout(() => {
+                setBubbles(prev => prev.filter(b => b.id !== newBubble.id));
+            }, 4000 + newBubble.delay * 1000);
+        }, 600);
+
+        // Spawn healing particles continuously
+        const healingInterval = setInterval(() => {
+            if (!containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+
+            const newParticle = {
+                id: Date.now() + Math.random(),
+                x: rect.width / 2 + (Math.random() - 0.5) * 200,
+                y: rect.height / 2 + (Math.random() - 0.5) * 200,
+                size: 3 + Math.random() * 5,
+                angle: Math.random() * Math.PI * 2,
+                speed: 1 + Math.random() * 2,
+            };
+            setHealingParticles(prev => [...prev.slice(-20), newParticle]);
+
+            // Remove particle after animation
+            setTimeout(() => {
+                setHealingParticles(prev => prev.filter(p => p.id !== newParticle.id));
+            }, 3000);
+        }, 200);
+
+        return () => {
+            if (rippleIntervalRef.current) clearInterval(rippleIntervalRef.current);
+            if (bubbleIntervalRef.current) clearInterval(bubbleIntervalRef.current);
+            clearInterval(healingInterval);
+        };
+    }, [activeSkin, genesisCycle]);
+
+    // Phase timer - tracks time in current phase
+    useEffect(() => {
+        if (activeSkin !== 'genesis-sphere') return;
+
+        phaseStartTimeRef.current = Date.now();
+        setTimeInPhase(0);
+
+        const timerInterval = setInterval(() => {
+            const elapsed = Date.now() - phaseStartTimeRef.current;
+            setTimeInPhase(elapsed);
+        }, 100);
+
+        return () => clearInterval(timerInterval);
+    }, [activeSkin, genesisCycle]);
+
+    // Phase 5: Destruction active fire effects
+    useEffect(() => {
+        if (activeSkin !== 'genesis-sphere' || genesisCycle !== 'destruction') {
+            // Cleanup
+            setEmberParticles([]);
+            setSmokePlumes([]);
+            setLavaCracks([]);
+            setHeatIntensity(0);
+            if (emberIntervalRef.current) clearInterval(emberIntervalRef.current);
+            if (smokeIntervalRef.current) clearInterval(smokeIntervalRef.current);
+            return;
+        }
+
+        // Generate lava cracks on ball
+        const cracks = Array.from({ length: 12 }, (_, i) => ({
+            id: i,
+            angle: (i / 12) * Math.PI * 2 + (Math.random() - 0.5) * 0.3,
+            length: 80 + Math.random() * 60,
+            thickness: 2 + Math.random() * 2,
+            glowDelay: Math.random() * 2,
+        }));
+        setLavaCracks(cracks);
+
+        // Gradually increase heat intensity
+        const heatInterval = setInterval(() => {
+            setHeatIntensity(prev => Math.min(prev + 0.05, 1));
+        }, 200);
+
+        // Spawn ember particles
+        emberIntervalRef.current = setInterval(() => {
+            if (!containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+
+            const newEmbers = Array.from({ length: 2 }, () => ({
+                id: Date.now() + Math.random(),
+                x: rect.width / 2 + (Math.random() - 0.5) * 100,
+                y: rect.height / 2 + (Math.random() - 0.5) * 100,
+                size: 3 + Math.random() * 5,
+                velocity: { x: (Math.random() - 0.5) * 2, y: -2 - Math.random() * 3 },
+            }));
+
+            setEmberParticles(prev => [...prev.slice(-30), ...newEmbers]);
+
+            // Cleanup old embers
+            setTimeout(() => {
+                setEmberParticles(prev => prev.filter(e => !newEmbers.find(ne => ne.id === e.id)));
+            }, 3000);
+        }, 150);
+
+        // Spawn smoke plumes
+        smokeIntervalRef.current = setInterval(() => {
+            if (!containerRef.current) return;
+            const rect = containerRef.current.getBoundingClientRect();
+
+            const newSmoke = {
+                id: Date.now() + Math.random(),
+                x: rect.width / 2 + (Math.random() - 0.5) * 120,
+                y: rect.height / 2 + 60,
+                size: 40 + Math.random() * 40,
+                drift: (Math.random() - 0.5) * 50,
+            };
+
+            setSmokePlumes(prev => [...prev.slice(-15), newSmoke]);
+
+            setTimeout(() => {
+                setSmokePlumes(prev => prev.filter(s => s.id !== newSmoke.id));
+            }, 4000);
+        }, 300);
+
+        return () => {
+            clearInterval(heatInterval);
+            if (emberIntervalRef.current) clearInterval(emberIntervalRef.current);
+            if (smokeIntervalRef.current) clearInterval(smokeIntervalRef.current);
+        };
+    }, [activeSkin, genesisCycle]);
 
     // Initialize Genesis Sphere when skin changes
     useEffect(() => {
@@ -75,8 +545,76 @@ const ThreeDBall = () => {
             fertilizationGrid.current = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
             setFertilizerPatches([]);
             setGenesisCycle('seeding');
+            setTransitionState(null);
+            setBallState('normal');
+            setSoilParticles([]);
+            setBloomParticles([]);
+            setFertilizationProgress(0);
+            setFlowerParticles([]);
+            setButterflies([]);
+            setPollenParticles([]);
+            setGrassBlades([]);
+            setVines([]);
+            setWeatherState('calm');
+            setGenesisLightning([]);
+            setFireAreas([]);
+            setEmberParticles([]);
+            setSmokePlumes([]);
+            setLavaCracks([]);
+            setHeatIntensity(0);
+            setRainDrops([]);
+            setSteamParticles([]);
+            setPuddles([]);
+            setBallTemperature(1);
+            setWaterRipples([]);
+            setBubbles([]);
+            setHealingParticles([]);
+            setCycleCount(1);
+            setTimeInPhase(0);
+            if (lightningIntervalRef.current) {
+                clearInterval(lightningIntervalRef.current);
+                lightningIntervalRef.current = null;
+            }
+            if (rainIntervalRef.current) {
+                clearInterval(rainIntervalRef.current);
+                rainIntervalRef.current = null;
+            }
+            if (emberIntervalRef.current) clearInterval(emberIntervalRef.current);
+            if (smokeIntervalRef.current) clearInterval(smokeIntervalRef.current);
+            if (rippleIntervalRef.current) clearInterval(rippleIntervalRef.current);
+            if (bubbleIntervalRef.current) clearInterval(bubbleIntervalRef.current);
         } else {
             setFertilizerPatches([]);
+            setSoilParticles([]);
+            setBloomParticles([]);
+            setFlowerParticles([]);
+            setButterflies([]);
+            setPollenParticles([]);
+            setGrassBlades([]);
+            setVines([]);
+            setGenesisLightning([]);
+            setFireAreas([]);
+            setEmberParticles([]);
+            setSmokePlumes([]);
+            setLavaCracks([]);
+            setRainDrops([]);
+            setSteamParticles([]);
+            setPuddles([]);
+            setWaterRipples([]);
+            setBubbles([]);
+            setHealingParticles([]);
+            if (lightningIntervalRef.current) {
+                clearInterval(lightningIntervalRef.current);
+                lightningIntervalRef.current = null;
+            }
+            if (rainIntervalRef.current) {
+                clearInterval(rainIntervalRef.current);
+                rainIntervalRef.current = null;
+            }
+            if (emberIntervalRef.current) clearInterval(emberIntervalRef.current);
+            if (smokeIntervalRef.current) clearInterval(smokeIntervalRef.current);
+            if (rippleIntervalRef.current) clearInterval(rippleIntervalRef.current);
+            if (bubbleIntervalRef.current) clearInterval(bubbleIntervalRef.current);
         }
     }, [activeSkin]);
 
@@ -93,15 +631,43 @@ const ThreeDBall = () => {
         let timeout;
 
         if (genesisCycle === 'growth') {
-            timeout = setTimeout(() => setGenesisCycle('destruction'), cycleDurations.growth);
+            timeout = setTimeout(() => transitionToDestruction(), cycleDurations.growth);
         } else if (genesisCycle === 'destruction') {
-            timeout = setTimeout(() => setGenesisCycle('restoration'), cycleDurations.destruction);
+            timeout = setTimeout(() => transitionToRestoration(), cycleDurations.destruction);
         } else if (genesisCycle === 'restoration') {
             timeout = setTimeout(() => {
+                // Increment cycle count
+                setCycleCount(prev => prev + 1);
+
+                // Reset all state for new cycle
                 isFertilized.current = false;
                 fertilizationGrid.current = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(false));
                 setFertilizerPatches([]);
                 setGenesisCycle('seeding');
+                setTransitionState(null);
+                setBallState('normal');
+                setSoilParticles([]);
+                setBloomParticles([]);
+                setFertilizationProgress(0);
+                setFlowerParticles([]);
+                setButterflies([]);
+                setPollenParticles([]);
+                setGrassBlades([]);
+                setVines([]);
+                setWeatherState('calm');
+                setGenesisLightning([]);
+                setFireAreas([]);
+                setEmberParticles([]);
+                setSmokePlumes([]);
+                setLavaCracks([]);
+                setHeatIntensity(0);
+                setRainDrops([]);
+                setSteamParticles([]);
+                setPuddles([]);
+                setBallTemperature(1);
+                setWaterRipples([]);
+                setBubbles([]);
+                setHealingParticles([]);
             }, cycleDurations.restoration);
         }
 
@@ -111,6 +677,16 @@ const ThreeDBall = () => {
 
     }, [activeSkin, genesisCycle]);
 
+    // Helper function to get current phase duration
+    const getPhaseDuration = useCallback(() => {
+        const cycleDurations = {
+            seeding: Infinity, // User-controlled
+            growth: 20000,
+            destruction: 10000,
+            restoration: 20000,
+        };
+        return cycleDurations[genesisCycle] || 0;
+    }, [genesisCycle]);
 
     // General mouse move handler for all skins
     useEffect(() => {
@@ -344,7 +920,8 @@ const ThreeDBall = () => {
         activeSkin === 'ice-orb' ? 'frost-overlay' : '',
         activeSkin === 'dragon-ball' ? 'dragon-radar-bg' : '',
         activeSkin === 'palantir' ? 'palantir-vortex-bg' : '',
-        activeSkin === 'genesis-sphere' ? `genesis-${genesisCycle}` : ''
+        activeSkin === 'genesis-sphere' ? `genesis-${genesisCycle}` : '',
+        activeSkin === 'genesis-sphere' && weatherState === 'stormy' ? 'genesis-stormy' : ''
     ].filter(Boolean).join(' ');
 
 
@@ -359,13 +936,68 @@ const ThreeDBall = () => {
 
             <SkinSidebar isOpen={isSidebarOpen} onSelectSkin={setActiveSkin} activeSkin={activeSkin} />
 
-            <div className={`ball ${activeSkin} ${activeSkin === 'genesis-sphere' ? `genesis-${genesisCycle}-ball` : ''}`} ref={ballRef}>
+            <div
+                className={`ball ${activeSkin} ${activeSkin === 'genesis-sphere' ? `genesis-${genesisCycle}-ball ${ballState !== 'normal' ? ballState : ''} ${transitionState === 'destruction-to-restoration' ? 'genesis-cooling' : ''}` : ''}`}
+                ref={ballRef}
+                style={activeSkin === 'genesis-sphere' ? {
+                    '--progress': fertilizationProgress,
+                    '--heat-intensity': heatIntensity,
+                    '--temperature': ballTemperature,
+                } : {}}
+            >
               {/* Other skins' inner elements would go here, conditionally rendered */}
             </div>
-            
+
             {/* Particle containers */}
             {activeSkin === 'fireball' && <FireballEffects particles={fireParticles} />}
-            {activeSkin === 'genesis-sphere' && <GenesisSphereEffects projectiles={projectiles} patches={fertilizerPatches} />}
+            {activeSkin === 'genesis-sphere' && (
+                <>
+                    <GenesisSphereEffects
+                        projectiles={projectiles}
+                        patches={fertilizerPatches}
+                        soilParticles={soilParticles}
+                        bloomParticles={bloomParticles}
+                        fertilizationProgress={fertilizationProgress}
+                        transitionState={transitionState}
+                        genesisCycle={genesisCycle}
+                        flowerParticles={flowerParticles}
+                        butterflies={butterflies}
+                        pollenParticles={pollenParticles}
+                        grassBlades={grassBlades}
+                        vines={vines}
+                        genesisLightning={genesisLightning}
+                        fireAreas={fireAreas}
+                        emberParticles={emberParticles}
+                        smokePlumes={smokePlumes}
+                        lavaCracks={lavaCracks}
+                        rainDrops={rainDrops}
+                        steamParticles={steamParticles}
+                        puddles={puddles}
+                        waterRipples={waterRipples}
+                        bubbles={bubbles}
+                        healingParticles={healingParticles}
+                    />
+
+                    {/* Genesis Cycle UI */}
+                    <div className="genesis-ui">
+                        <div className="cycle-counter">Cycle {cycleCount}</div>
+                        <div className="phase-indicator">
+                            <div className={`phase-dot ${genesisCycle === 'seeding' ? 'active' : ''}`} title="Seeding">🌱</div>
+                            <div className={`phase-dot ${genesisCycle === 'growth' ? 'active' : ''}`} title="Growth">🌿</div>
+                            <div className={`phase-dot ${genesisCycle === 'destruction' ? 'active' : ''}`} title="Destruction">🔥</div>
+                            <div className={`phase-dot ${genesisCycle === 'restoration' ? 'active' : ''}`} title="Restoration">💧</div>
+                        </div>
+                        {genesisCycle !== 'seeding' && (
+                            <div className="phase-timer">
+                                <div
+                                    className="timer-bar"
+                                    style={{ width: `${Math.min((timeInPhase / getPhaseDuration()) * 100, 100)}%` }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 };

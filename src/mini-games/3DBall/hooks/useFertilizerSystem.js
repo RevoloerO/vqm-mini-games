@@ -42,7 +42,26 @@ export const useFertilizerSystem = (isActive, containerRef, onLand, fertilizatio
                 }
 
                 // Handle landed projectiles
-                landedProjectiles.forEach(p => onLand(p.endX, p.endY));
+                landedProjectiles.forEach(p => {
+                    // Check if this projectile hit a new cell
+                    const container = containerRef.current;
+                    const grid = fertilizationGrid.current;
+                    if (container && grid) {
+                        const rect = container.getBoundingClientRect();
+                        const gridX = Math.floor((p.endX / rect.width) * grid[0].length);
+                        const gridY = Math.floor((p.endY / rect.height) * grid.length);
+                        const isNew = !grid[gridY]?.[gridX];
+
+                        // Update grid
+                        if (grid[gridY] && grid[gridY][gridX] !== undefined) {
+                            grid[gridY][gridX] = true;
+                        }
+
+                        onLand(p.endX, p.endY, isNew);
+                    } else {
+                        onLand(p.endX, p.endY, false);
+                    }
+                });
 
                 // Spawn new projectile if needed
                 if (shouldSpawn) {
