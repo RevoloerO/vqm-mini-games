@@ -341,7 +341,6 @@ const BloomingGarden = () => {
   const [scorePulse, setScorePulse] = useState(false);
   const [showGetReady, setShowGetReady] = useState(true);
   const [floatingScores, setFloatingScores] = useState([]);
-  const [hoveredTile, setHoveredTile] = useState(null);
   const [pathPreview, setPathPreview] = useState(null);
   const [comboCount, setComboCount] = useState(0);
   const [showCombo, setShowCombo] = useState(false);

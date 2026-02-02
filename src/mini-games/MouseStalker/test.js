@@ -99,8 +99,9 @@ function draw() {
         //ctx.quadraticCurveTo(15,-4, 16, -3);
         ctx.stroke();
 
-        // Draw swhiskers
+        // Draw whiskers
         ctx.strokeStyle = `hsl(130, 40%, 30%)`;
+        const headScale = 1; // Scale factor for the test drawing
         ctx.lineWidth = 1.5 / headScale;
         // Left whiskers
         ctx.beginPath();

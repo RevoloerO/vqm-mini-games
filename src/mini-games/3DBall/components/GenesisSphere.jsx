@@ -345,8 +345,6 @@ const SmokePlume = React.memo(({ smoke }) => (
  * Lava Crack Component
  */
 const LavaCrack = React.memo(({ crack }) => {
-    const x = Math.cos(crack.angle) * crack.length;
-    const y = Math.sin(crack.angle) * crack.length;
     const rotation = (crack.angle * 180) / Math.PI;
 
     return (
@@ -409,7 +407,7 @@ const Puddle = React.memo(({ puddle }) => (
 /**
  * Water Ripple Component
  */
-const WaterRipple = React.memo(({ ripple }) => (
+const WaterRipple = React.memo(() => (
     <div className="water-ripple" />
 ));
 

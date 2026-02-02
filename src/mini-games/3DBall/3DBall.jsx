@@ -1,5 +1,5 @@
 // 3DBall.jsx
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Paintbrush, X } from 'lucide-react';
 
 // Import consolidated stylesheets
@@ -111,6 +111,7 @@ const ThreeDBall = () => {
             isFertilized.current = true;
             transitionToGrowth();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Transition from seeding to growth with dramatic sequence
@@ -162,6 +163,7 @@ const ThreeDBall = () => {
                 initializeLivingWorld();
             }, 2000);
         }, 5000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Initialize Phase 3: Growth living world
@@ -326,7 +328,6 @@ const ThreeDBall = () => {
 
             // Spawn steam when rain hits hot ground
             if (Math.random() > 0.7 && containerRef.current) {
-                const rect = containerRef.current.getBoundingClientRect();
                 const steam = {
                     id: Date.now() + Math.random(),
                     x: `${Math.random() * 100}%`,
@@ -674,7 +675,7 @@ const ThreeDBall = () => {
         return () => {
             if (timeout) clearTimeout(timeout);
         };
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSkin, genesisCycle]);
 
     // Helper function to get current phase duration
@@ -806,113 +807,8 @@ const ThreeDBall = () => {
             currentContainer.removeEventListener('mouseenter', handleMouseEnter);
             currentContainer.removeEventListener('mouseleave', handleMouseLeave);
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSkin]);
-
-    // Lightning/spark generation - CSS animations handle the visual effects
-    // No need to regenerate paths on every tick since CSS animations provide the dynamism
-    const lightningBolts = useMemo(() => {
-        if (activeSkin !== 'energy-core') return [];
-        const createBoltPath = (type) => {
-            let path = 'M 125 125';
-            let currentX = 125, currentY = 125;
-            let baseSegments, segmentLength;
-            switch(type) {
-                case 'medium':
-                    baseSegments = 4;
-                    segmentLength = 30 + Math.random() * 20;
-                    break;
-                case 'full':
-                    baseSegments = 5;
-                    segmentLength = 40 + Math.random() * 25;
-                    break;
-                default:
-                    baseSegments = 3;
-                    segmentLength = 20 + Math.random() * 30;
-                    break;
-            }
-            const segments = baseSegments + Math.floor(Math.random() * 3);
-            const angle = Math.random() * 2 * Math.PI;
-            for (let i = 0; i < segments; i++) {
-                const angleOffset = (Math.random() - 0.5) * (Math.PI / 2);
-                currentX += Math.cos(angle + angleOffset) * segmentLength;
-                currentY += Math.sin(angle + angleOffset) * segmentLength;
-                path += ` L ${currentX.toFixed(2)} ${currentY.toFixed(2)}`;
-            }
-            return path;
-        };
-        const boltTypes = ['short', 'short', 'short', 'short', 'medium', 'medium', 'medium', 'medium', 'full', 'full', 'full', 'full'];
-        return boltTypes.map((type, i) => ({
-            id: i,
-            path: createBoltPath(type),
-            dashLength: 300 + Math.random() * 200,
-            delay: `${Math.random() * 0.2}s`,
-            duration: `${0.4 + Math.random() * 0.4}s`,
-        }));
-    }, [activeSkin]); // Removed lightningTick dependency - only regenerate when skin changes
-
-    const plasmaSparks = useMemo(() => {
-        if (activeSkin !== 'arc-reactor') return [];
-        const createSparkPath = () => {
-            const startX = 50 + (Math.random() - 0.5) * 50;
-            const startY = 50 + (Math.random() - 0.5) * 50;
-            let path = `M ${startX.toFixed(2)} ${startY.toFixed(2)}`;
-            let currentX = startX;
-            let currentY = startY;
-            const segments = 2 + Math.floor(Math.random() * 4);
-            const angle = Math.random() * Math.PI * 2;
-            const totalLength = 20 + Math.random() * 45;
-            for (let i = 0; i < segments; i++) {
-                const angleOffset = (Math.random() - 0.5) * (Math.PI / 2);
-                const segmentLength = totalLength / segments;
-                currentX += Math.cos(angle + angleOffset) * segmentLength;
-                currentY += Math.sin(angle + angleOffset) * segmentLength;
-                path += ` L ${currentX.toFixed(2)} ${currentY.toFixed(2)}`;
-            }
-            return path;
-        };
-        return Array.from({ length: 50 }).map((_, i) => ({
-            id: i,
-            path: createSparkPath(),
-            dashLength: 100 + Math.random() * 50,
-            delay: `${Math.random() * 0.1}s`,
-            duration: `${0.05 + Math.random() * 0.15}s`,
-            strokeWidth: `${(1 + Math.random() * 1.5).toFixed(2)}px`
-        }));
-    }, [activeSkin]); // Removed lightningTick dependency - only regenerate when skin changes
-
-    const iceShards = useMemo(() => {
-        if (activeSkin !== 'ice-orb') return [];
-        const createShardPath = () => {
-            let path = '';
-            const branches = 4 + Math.floor(Math.random() * 4);
-            const angleStep = (Math.PI * 2) / branches;
-            for (let i = 0; i < branches; i++) {
-                const angle = angleStep * i + (Math.random() - 0.5) * 0.5;
-                const length = 30 + Math.random() * 60;
-                const endX = 125 + Math.cos(angle) * length;
-                const endY = 125 + Math.sin(angle) * length;
-                path += `M 125 125 L ${endX.toFixed(2)} ${endY.toFixed(2)}`;
-                const subBranches = 1 + Math.floor(Math.random() * 2);
-                for (let j = 0; j < subBranches; j++) {
-                    const subAngle = angle + (Math.random() - 0.5) * (Math.PI / 4);
-                    const subLength = 15 + Math.random() * 20;
-                    const subStartX = 125 + Math.cos(angle) * (length * (0.3 + Math.random() * 0.4));
-                    const subStartY = 125 + Math.sin(angle) * (length * (0.3 + Math.random() * 0.4));
-                    const subEndX = subStartX + Math.cos(subAngle) * subLength;
-                    const subEndY = subStartY + Math.sin(subAngle) * subLength;
-                    path += ` M ${subStartX.toFixed(2)} ${subStartY.toFixed(2)} L ${subEndX.toFixed(2)} ${subEndY.toFixed(2)}`;
-                }
-            }
-            return path;
-        };
-        return Array.from({ length: 3 }).map((_, i) => ({
-            id: i,
-            path: createShardPath(),
-            duration: 25 + Math.random() * 20,
-            delay: i * -15,
-        }));
-    }, [activeSkin]);
-
 
     // Determine container classes based on active skin and cycle
     const containerClasses = [

@@ -182,7 +182,7 @@ export const SKINS = {
             const timeInCycle = timestamp % 3500;
             const blinkDuration = 150;
             if (timeInCycle < blinkDuration) {
-                const blinkProgress = Math.sin((timeInCycle / blinkDuration) * Math.PI);
+                // Blink animation draws closed eyelids
                 ctx.fillStyle = `hsl(${baseHue}, 70%, 50%)`;
                 ctx.strokeStyle = darkOutlineColor;
                 ctx.lineWidth = 1.5 / headScale;
@@ -256,6 +256,7 @@ export const SKINS = {
         }
         ctx.restore();
     },
+    // eslint-disable-next-line no-unused-vars
     'fire-wyrm': (ctx, segments, targetPos, timestamp, isWandering) => {
         const head = segments[0];
         if (!head) return;
@@ -572,6 +573,7 @@ export const SKINS = {
         }
         ctx.restore();
     },
+    // eslint-disable-next-line no-unused-vars
     snake: (ctx, segments, targetPos, timestamp, isWandering) => {
         if (segments.length < 2) return;
         ctx.lineCap = 'round';
@@ -618,6 +620,7 @@ export const SKINS = {
         ctx.fill();
         ctx.restore();
     },
+    // eslint-disable-next-line no-unused-vars
     ghost: (ctx, segments, targetPos, timestamp, isWandering) => {
         if (segments.length < 2) return;
         ctx.lineCap = 'round';
