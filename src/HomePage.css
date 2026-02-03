@@ -1,96 +1,264 @@
-/* --- Google Font Import --- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* ============================================
+   VQM's PLAYGROUND - DUAL THEME SYSTEM
+   Arcade (Neon Retro) + Floating Islands (Sky Dreams)
+   ============================================ */
 
-/* --- Keyframe Animations --- */
-@keyframes card-fade-in {
-    from {
-        opacity: 0;
-        /* 10. Animation Delays */
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+/* --- Font Imports --- */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800&display=swap');
 
-/* Bonus: Loading spinner animation */
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Moved from media query to be globally available */
+/* ============================================
+   SHARED KEYFRAME ANIMATIONS
+   ============================================ */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
-
-/* --- CSS Variables for Theming --- */
-:root[data-theme='light'] {
-    /* Matcha Latte Theme */
-    --bg-color: #F5F1E8;
-    --bg-gradient-1: #A8C99C;
-    --bg-gradient-2: #7FB77E;
-    --bg-gradient-3: #C7E8AC;
-    --bg-gradient-4: #E8D5B7;
-    --secondary-bg-color: rgba(255, 255, 255, 0.85);
-    --panel-bg-color: #FFFFFF;
-    --primary-text-color: #3D5A3C;
-    --secondary-text-color: #6B8E6B;
-    --accent-color: #7FB77E;
-    --accent-hover-color: #6B9D6A;
-    --border-color: rgba(127, 183, 126, 0.25);
-    --shadow-color: rgba(127, 183, 126, 0.15);
-    --switch-bg-color: #e2e8f0;
-    --switch-slider-color: #fff;
-    --card-hover-glow: rgba(127, 183, 126, 0.35);
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
-:root[data-theme='dark'] {
-    /* Vintage Green Tea Theme */
-    --bg-color: #1A1E1A;
-    --bg-gradient-1: #2D4A2D;
-    --bg-gradient-2: #3D5E3D;
-    --bg-gradient-3: #4A6B4A;
-    --bg-gradient-4: #2A3E2A;
-    --secondary-bg-color: rgba(45, 62, 45, 0.85);
-    --panel-bg-color: #212B21;
-    --primary-text-color: #E8F0E8;
-    --secondary-text-color: #A8C9A8;
-    --accent-color: #7FB77E;
-    --accent-hover-color: #8FC98E;
-    --border-color: rgba(127, 183, 126, 0.3);
-    --shadow-color: rgba(127, 183, 126, 0.25);
-    --switch-bg-color: #2d2a40;
-    --switch-slider-color: #7FB77E;
-    --card-hover-glow: rgba(127, 183, 126, 0.45);
+@keyframes icon-bounce {
+    0%, 100% { transform: scale(1.15) translateY(0); }
+    25% { transform: scale(1.15) translateY(-10px); }
+    50% { transform: scale(1.15) translateY(-5px); }
+    75% { transform: scale(1.15) translateY(-8px); }
 }
 
-/* Dark mode glass effect override */
-[data-theme='dark'] .game-card {
-    background: rgba(33, 43, 33, 0.6);
-    border: 1px solid rgba(127, 183, 126, 0.25);
+/* ============================================
+   ARCADE THEME - CSS Variables
+   ============================================ */
+:root[data-theme='arcade'] {
+    /* Background */
+    --bg-color: #0a0e27;
+    --bg-dark: #050810;
+
+    /* Neon Colors */
+    --neon-pink: #ff00ff;
+    --neon-cyan: #00ffff;
+    --neon-yellow: #ffd700;
+    --neon-orange: #ff6600;
+    --neon-green: #00ff88;
+
+    /* UI Colors */
+    --panel-bg: linear-gradient(180deg, #0d1230 0%, #1a1050 100%);
+    --primary-text: #ffffff;
+    --secondary-text: #a0a0ff;
+    --accent-color: #ff00ff;
+    --border-color: rgba(255, 0, 255, 0.4);
+    --card-bg: linear-gradient(180deg, rgba(10, 14, 39, 0.9) 0%, rgba(20, 10, 50, 0.85) 100%);
+    --card-glow: rgba(0, 255, 255, 0.5);
+
+    /* Fonts */
+    --font-display: 'Press Start 2P', cursive;
+    --font-body: 'Orbitron', sans-serif;
 }
 
-/* --- General Body Styles --- */
+/* ============================================
+   FLOATING ISLANDS (GRAND LINE) THEME - CSS Variables
+   ============================================ */
+:root[data-theme='floating-islands'] {
+    /* Ocean & Sky Colors */
+    --sky-top: #4A90B8;
+    --sky-middle: #6BB3D9;
+    --sky-bottom: #87CEEB;
+    --bg-color: #6BB3D9;
+    --ocean-deep: #1E5F8A;
+    --ocean-mid: #2980B9;
+    --ocean-light: #5DADE2;
+    --ocean-foam: rgba(255, 255, 255, 0.8);
+
+    /* Nature Colors */
+    --grass-green: #7CB342;
+    --grass-dark: #558B2F;
+    --leaf-green: #8BC34A;
+    --earth-brown: #6D4C41;
+    --earth-dark: #4E342E;
+    --rock-gray: #78909C;
+    --sand-color: #D7CCC8;
+    --cloud-white: rgba(255, 255, 255, 0.9);
+
+    /* Boat Colors */
+    --boat-hull: #8D6E63;
+    --boat-sail: #ECEFF1;
+    --boat-mast: #5D4037;
+
+    /* UI Colors */
+    --panel-bg: rgba(255, 255, 255, 0.95);
+    --primary-text: #1A3A4A;
+    --secondary-text: #456B7C;
+    --accent-color: #2980B9;
+    --border-color: rgba(41, 128, 185, 0.3);
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-glow: rgba(41, 128, 185, 0.4);
+
+    /* Fonts */
+    --font-display: 'Nunito', sans-serif;
+    --font-body: 'Nunito', sans-serif;
+}
+
+/* ============================================
+   ARCADE THEME - KEYFRAME ANIMATIONS
+   ============================================ */
+@keyframes scanline-scroll {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100px; }
+}
+
+@keyframes neon-border-pulse {
+    0%, 100% { border-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink), 0 0 20px rgba(255, 0, 255, 0.3); }
+    50% { border-color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan), 0 0 20px rgba(0, 255, 255, 0.3); }
+}
+
+@keyframes neon-flicker {
+    0%, 100% { opacity: 1; }
+    92% { opacity: 1; }
+    93% { opacity: 0.8; }
+    94% { opacity: 1; }
+    96% { opacity: 0.9; }
+    97% { opacity: 1; }
+}
+
+@keyframes marquee-light {
+    0%, 100% { opacity: 1; background: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); }
+    33% { opacity: 0.3; background: var(--neon-pink); box-shadow: 0 0 5px var(--neon-pink); }
+    66% { opacity: 0.6; background: var(--neon-cyan); box-shadow: 0 0 8px var(--neon-cyan); }
+}
+
+@keyframes grid-move {
+    0% { background-position: 0 0, 0 0; }
+    100% { background-position: 50px 50px, 50px 50px; }
+}
+
+@keyframes coin-blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.3; }
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes arcade-card-fade {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px var(--neon-pink), 0 0 40px rgba(255, 0, 255, 0.2); }
+    50% { box-shadow: 0 0 30px var(--neon-cyan), 0 0 60px rgba(0, 255, 255, 0.3); }
+}
+
+/* ============================================
+   FLOATING ISLANDS - KEYFRAME ANIMATIONS
+   ============================================ */
+@keyframes cloud-drift-slow {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes cloud-drift-medium {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes float-gentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+@keyframes float-card {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-8px) rotate(0.5deg); }
+    50% { transform: translateY(-12px) rotate(0deg); }
+    75% { transform: translateY(-6px) rotate(-0.5deg); }
+}
+
+@keyframes islands-card-fade {
+    from { opacity: 0; transform: translateY(30px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes leaf-sway {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+}
+
+@keyframes sun-pulse {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 183, 77, 0.6)); }
+    50% { filter: drop-shadow(0 0 20px rgba(255, 183, 77, 0.9)); }
+}
+
+@keyframes cloud-float {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0.7; }
+    50% { transform: translateY(-5px) translateX(5px); opacity: 0.9; }
+}
+
+/* Grand Line / Ocean Animations */
+@keyframes wave-motion {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(-10px) translateY(3px); }
+    50% { transform: translateX(-20px) translateY(0); }
+    75% { transform: translateX(-10px) translateY(-3px); }
+}
+
+@keyframes wave-continuous {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes boat-bob {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-8px) rotate(2deg); }
+}
+
+@keyframes boat-sail {
+    0%, 100% { transform: skewX(-2deg); }
+    50% { transform: skewX(2deg); }
+}
+
+@keyframes island-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes island-appear {
+    from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes grass-sway {
+    0%, 100% { transform: rotate(-3deg) scaleY(1); }
+    50% { transform: rotate(3deg) scaleY(1.05); }
+}
+
+@keyframes wake-fade {
+    0% { opacity: 0.6; transform: scaleX(0.5); }
+    100% { opacity: 0; transform: scaleX(1.5); }
+}
+
+@keyframes anchor-swing {
+    0%, 100% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+}
+
+/* ============================================
+   BASE LAYOUT STYLES
+   ============================================ */
 body {
     margin: 0;
-    font-family: 'Poppins', sans-serif;
-    background: var(--bg-color);
-    background-image:
-        radial-gradient(circle at var(--mouse-x, 10%) var(--mouse-y, 20%), var(--bg-gradient-1) 0%, transparent 50%),
-        radial-gradient(circle at 90% 30%, var(--bg-gradient-2) 0%, transparent 50%),
-        radial-gradient(circle at 50% 70%, var(--bg-gradient-3) 0%, transparent 50%),
-        radial-gradient(circle at 20% 80%, var(--bg-gradient-4) 0%, transparent 50%);
-    background-attachment: fixed;
-    color: var(--primary-text-color);
-    transition: background 0.5s ease;
     overflow-x: hidden;
     position: relative;
 }
 
-/* --- Layout --- */
 .app-layout {
     display: flex;
     min-height: 100vh;
@@ -101,22 +269,1051 @@ body {
     flex: 1;
     overflow-y: auto;
     min-height: 100vh;
-    background: transparent;
     position: relative;
     z-index: 1;
     width: 100%;
 }
 
-/* --- Overlay for mobile --- */
 .panel-overlay {
     display: none;
 }
 
-/* --- Side Panel --- */
+/* ============================================
+   ARCADE THEME - MAIN CONTENT STYLES
+   ============================================ */
+.arcade-content {
+    font-family: var(--font-body);
+    background: linear-gradient(180deg, #0a0e27 0%, #1a1040 50%, #0a0e27 100%);
+    color: var(--primary-text);
+}
+
+/* Arcade Grid Background */
+.arcade-content::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: grid-move 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Arcade Scanline Overlay */
+.arcade-content::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+    animation: scanline-scroll 8s linear infinite;
+}
+
+/* ============================================
+   FLOATING ISLANDS (GRAND LINE) - MAIN CONTENT STYLES
+   ============================================ */
+.islands-content {
+    font-family: var(--font-body);
+    background: linear-gradient(180deg,
+        var(--sky-top) 0%,
+        var(--sky-middle) 20%,
+        var(--sky-bottom) 35%,
+        var(--ocean-light) 35%,
+        var(--ocean-mid) 60%,
+        var(--ocean-deep) 100%);
+    background-attachment: fixed;
+    color: var(--primary-text);
+    min-height: 100vh;
+}
+
+/* Cloud Layers in Sky */
+.islands-content::before {
+    content: '';
+    position: fixed;
+    width: 200%;
+    height: 35%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 150px 50px at 10% 30%, var(--cloud-white) 0%, transparent 70%),
+        radial-gradient(ellipse 200px 60px at 30% 50%, var(--cloud-white) 0%, transparent 70%),
+        radial-gradient(ellipse 180px 55px at 60% 25%, var(--cloud-white) 0%, transparent 70%),
+        radial-gradient(ellipse 220px 65px at 85% 45%, var(--cloud-white) 0%, transparent 70%);
+    animation: cloud-drift-slow 120s linear infinite;
+    opacity: 0.8;
+}
+
+/* ============================================
+   ARCADE HEADER STYLES
+   ============================================ */
+.arcade-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 3rem;
+    background: linear-gradient(180deg, rgba(10, 14, 39, 0.95) 0%, rgba(26, 16, 64, 0.9) 100%);
+    border-bottom: 4px solid var(--neon-pink);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 0 30px rgba(255, 0, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.arcade-header.scrolled {
+    padding: 1rem 3rem;
+}
+
+.arcade-header.scrolled .arcade-title-main {
+    font-size: 1.5rem;
+}
+
+.arcade-header.scrolled .arcade-subtitle {
+    font-size: 0.4rem;
+}
+
+.arcade-marquee {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    width: 100%;
+}
+
+.marquee-lights {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.marquee-lights .light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--neon-yellow);
+    box-shadow: 0 0 10px var(--neon-yellow);
+    animation: marquee-light 1.5s ease-in-out infinite;
+}
+
+.marquee-lights .light:nth-child(2) { animation-delay: 0.2s; }
+.marquee-lights .light:nth-child(3) { animation-delay: 0.4s; }
+.marquee-lights.right .light:nth-child(1) { animation-delay: 0.4s; }
+.marquee-lights.right .light:nth-child(2) { animation-delay: 0.2s; }
+.marquee-lights.right .light:nth-child(3) { animation-delay: 0s; }
+
+.arcade-header .header-title-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideInRight 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.arcade-header .header-icon {
+    color: var(--neon-cyan);
+    filter: drop-shadow(0 0 15px var(--neon-cyan));
+    animation: neon-flicker 4s ease-in-out infinite;
+}
+
+.arcade-title-main {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin: 0;
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan), var(--neon-yellow));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.5));
+    letter-spacing: 4px;
+    animation: gradient-shift 3s ease infinite;
+    transition: font-size 0.3s ease;
+}
+
+.arcade-subtitle {
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    color: var(--neon-yellow);
+    margin-top: 0.75rem;
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px var(--neon-yellow);
+    animation: coin-blink 2s ease-in-out infinite;
+    transition: font-size 0.3s ease;
+}
+
+.arcade-btn {
+    position: absolute;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+    border: 2px solid var(--neon-cyan);
+    color: #fff;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.arcade-btn:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 0 30px var(--neon-pink);
+}
+
+/* ============================================
+   FLOATING ISLANDS HEADER STYLES
+   ============================================ */
+.islands-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 3rem;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    border-bottom: 3px solid rgba(124, 179, 66, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 30px rgba(92, 138, 97, 0.15);
+    transition: all 0.3s ease;
+}
+
+.islands-header.scrolled {
+    padding: 1rem 3rem;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.islands-header.scrolled .islands-title-main {
+    font-size: 1.8rem;
+}
+
+.islands-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    width: 100%;
+}
+
+.floating-clouds {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.floating-clouds .cloud {
+    color: rgba(255, 255, 255, 0.8);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    animation: cloud-float 4s ease-in-out infinite;
+}
+
+.floating-clouds .cloud.c1 { animation-delay: 0s; }
+.floating-clouds .cloud.c2 { animation-delay: 0.5s; }
+.floating-clouds .cloud.c3 { animation-delay: 1s; }
+.floating-clouds .cloud.c4 { animation-delay: 1.5s; }
+
+.islands-header .header-title-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideInRight 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.islands-icon {
+    color: var(--accent-color);
+    animation: anchor-swing 3s ease-in-out infinite;
+}
+
+.islands-title-main {
+    font-family: var(--font-display);
+    font-size: 2.8rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--primary-text);
+    text-shadow: 0 2px 10px rgba(92, 138, 97, 0.2);
+    letter-spacing: 1px;
+    transition: font-size 0.3s ease;
+}
+
+.islands-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--secondary-text);
+    margin-top: 0.5rem;
+}
+
+.islands-subtitle svg {
+    color: var(--accent-color);
+    animation: boat-bob 2s ease-in-out infinite;
+}
+
+.islands-btn {
+    position: absolute;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, var(--ocean-mid), var(--ocean-light));
+    border: 2px solid rgba(41, 128, 185, 0.5);
+    color: #fff;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(41, 128, 185, 0.3);
+    transition: all 0.3s ease;
+}
+
+.islands-btn:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 8px 30px rgba(41, 128, 185, 0.5);
+}
+
+/* ============================================
+   OCEAN SCENE & SAILING BOAT (VERTICAL LAYOUT)
+   ============================================ */
+.ocean-scene {
+    position: fixed;
+    left: 60px;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.ocean-waves {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    overflow: hidden;
+}
+
+.wave {
+    position: absolute;
+    width: 100%;
+    height: 200%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 1440'%3E%3Cpath fill='%23ffffff' fill-opacity='0.2' d='M50,0 Q100,360 50,720 T50,1440 L0,1440 L0,0 Z'%3E%3C/path%3E%3C/svg%3E");
+    background-size: 100% 50%;
+    animation: wave-vertical 10s linear infinite;
+}
+
+@keyframes wave-vertical {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+}
+
+.wave.wave-1 {
+    opacity: 0.5;
+    animation-duration: 10s;
+    left: 0;
+}
+
+.wave.wave-2 {
+    opacity: 0.3;
+    animation-duration: 12s;
+    animation-delay: -2s;
+    left: 10px;
+}
+
+.wave.wave-3 {
+    opacity: 0.2;
+    animation-duration: 14s;
+    animation-delay: -4s;
+    left: 20px;
+}
+
+.sailing-route {
+    position: absolute;
+    left: 30px;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    pointer-events: none;
+}
+
+.route-line {
+    width: 100%;
+    height: 100%;
+}
+
+/* Sailing Boat - Vertical Navigation */
+.sailing-boat {
+    position: absolute;
+    left: 50%;
+    top: var(--boat-y, 100px);
+    transform: translateX(-50%);
+    transition: top 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 20;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+}
+
+.sailing-boat.vertical {
+    /* Boat rotated for vertical sailing */
+}
+
+.sailing-boat.moving {
+    animation: boat-bob-vertical 0.5s ease-in-out;
+}
+
+.sailing-boat.going-down {
+    /* Sailing downward - boat faces down */
+}
+
+.sailing-boat.going-up .boat-body {
+    transform: scaleY(-1);
+}
+
+@keyframes boat-bob-vertical {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    25% { transform: translateX(-55%) translateY(-3px); }
+    75% { transform: translateX(-45%) translateY(3px); }
+}
+
+.boat-body {
+    position: relative;
+    width: 80px;
+    height: 100px;
+}
+
+.hull {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 25px;
+    background: linear-gradient(180deg, var(--boat-hull) 0%, var(--earth-dark) 100%);
+    border-radius: 0 0 35px 35px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.hull-detail {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: var(--earth-dark);
+    border-radius: 2px;
+}
+
+.sail {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.mast {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 70px;
+    background: linear-gradient(180deg, var(--boat-mast) 0%, var(--earth-dark) 100%);
+    border-radius: 2px;
+}
+
+.sail-fabric {
+    position: absolute;
+    bottom: 15px;
+    left: 5px;
+    width: 0;
+    height: 0;
+    border-left: 35px solid var(--boat-sail);
+    border-top: 20px solid transparent;
+    border-bottom: 35px solid transparent;
+    filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.1));
+    animation: boat-sail 3s ease-in-out infinite;
+}
+
+.flag {
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    animation: leaf-sway 1s ease-in-out infinite;
+}
+
+.boat-wake {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 10px;
+    background: radial-gradient(ellipse at center, var(--ocean-foam) 0%, transparent 70%);
+    opacity: 0;
+    animation: wake-fade 1s ease-out;
+}
+
+.sailing-boat.moving .boat-wake {
+    opacity: 0.6;
+    animation: wake-fade 0.8s ease-out;
+}
+
+/* ============================================
+   ISLAND CARDS (Grand Line Theme - VERTICAL)
+   ============================================ */
+.island-card {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    animation: island-appear 0.6s ease-out forwards;
+    opacity: 0;
+    max-width: 400px;
+}
+
+.island-card:nth-child(1) { animation-delay: 0.1s; }
+.island-card:nth-child(2) { animation-delay: 0.3s; }
+.island-card:nth-child(3) { animation-delay: 0.5s; }
+
+/* Alternating left/right alignment */
+.island-card:nth-child(odd) {
+    margin-left: 0;
+}
+
+.island-card:nth-child(even) {
+    margin-left: auto;
+    margin-right: 2rem;
+}
+
+.island-card:hover {
+    transform: translateY(-15px) scale(1.02);
+}
+
+.island-card:hover .island-platform {
+    animation: island-float 2s ease-in-out infinite;
+}
+
+/* Route connector between islands */
+.route-connector {
+    position: absolute;
+    left: -80px;
+    top: 50%;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.5), rgba(255,255,255,0.2));
+    z-index: 5;
+}
+
+.island-card:nth-child(even) .route-connector {
+    left: auto;
+    right: -80px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.5));
+}
+
+.island-name-banner {
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.banner-emoji {
+    font-size: 1.1rem;
+}
+
+.island-card:hover .island-name-banner {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-8px);
+}
+
+.island-platform {
+    position: relative;
+    border-radius: 24px 24px 50% 50%;
+    padding: 2rem 1.5rem 3.5rem;
+    min-height: 220px;
+    box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.2),
+        inset 0 2px 0 rgba(255, 255, 255, 0.8);
+    overflow: visible;
+    transition: box-shadow 0.3s ease;
+}
+
+.island-card:hover .island-platform {
+    box-shadow:
+        0 30px 60px rgba(0, 0, 0, 0.25),
+        inset 0 2px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================
+   ISLAND THEME: CHEESE (Mouse Stalker)
+   ============================================ */
+.island-theme-cheese .island-name-banner {
+    background: linear-gradient(135deg, #FFB300, #FF8F00);
+}
+
+.island-theme-cheese .island-platform,
+.platform-cheese {
+    background: linear-gradient(180deg,
+        #FFE082 0%,
+        #FFCA28 30%,
+        #FFB300 70%,
+        #FF8F00 100%);
+}
+
+.cheese-decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cheese-hole {
+    position: absolute;
+    background: radial-gradient(ellipse at 30% 30%,
+        rgba(255, 224, 130, 0.8) 0%,
+        rgba(255, 183, 77, 0.9) 40%,
+        rgba(245, 127, 23, 0.6) 100%);
+    border-radius: 50%;
+    box-shadow: inset 2px 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.cheese-hole.hole-1 {
+    width: 25px;
+    height: 20px;
+    top: 20%;
+    left: 15%;
+}
+
+.cheese-hole.hole-2 {
+    width: 18px;
+    height: 15px;
+    top: 50%;
+    right: 20%;
+}
+
+.cheese-hole.hole-3 {
+    width: 22px;
+    height: 18px;
+    bottom: 35%;
+    left: 25%;
+}
+
+.mouse-tail {
+    position: absolute;
+    bottom: 25%;
+    right: 10%;
+    width: 30px;
+    height: 4px;
+    background: #8D6E63;
+    border-radius: 2px;
+    transform: rotate(-20deg);
+}
+
+.mouse-tail::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: -3px;
+    width: 12px;
+    height: 10px;
+    background: #8D6E63;
+    border-radius: 50% 50% 40% 40%;
+}
+
+.cheese-wedge {
+    width: 40px;
+    height: 30px;
+    background: linear-gradient(135deg, #FFCA28 0%, #FF8F00 100%);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    margin: 0 auto;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.island-theme-cheese .island-icon {
+    color: #5D4037 !important;
+}
+
+.island-theme-cheese .base-cheese .layer-1 {
+    background: linear-gradient(180deg, #FF8F00 0%, #E65100 100%);
+}
+
+.island-theme-cheese .base-cheese .layer-2 {
+    background: linear-gradient(180deg, #E65100 0%, #BF360C 100%);
+}
+
+/* ============================================
+   ISLAND THEME: GARDEN (Blooming Garden)
+   ============================================ */
+.island-theme-garden .island-name-banner {
+    background: linear-gradient(135deg, #66BB6A, #43A047);
+}
+
+.island-theme-garden .island-platform,
+.platform-garden {
+    background: linear-gradient(180deg,
+        #C8E6C9 0%,
+        #A5D6A7 30%,
+        #81C784 70%,
+        #66BB6A 100%);
+}
+
+.garden-decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.garden-decorations .flower {
+    position: absolute;
+    font-size: 1.2rem;
+    animation: flower-sway 3s ease-in-out infinite;
+}
+
+@keyframes flower-sway {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    50% { transform: rotate(5deg) scale(1.1); }
+}
+
+.flower.flower-1 {
+    top: 15%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.flower.flower-2 {
+    top: 25%;
+    right: 15%;
+    animation-delay: 0.5s;
+    font-size: 1.4rem;
+}
+
+.flower.flower-3 {
+    bottom: 40%;
+    left: 20%;
+    animation-delay: 1s;
+}
+
+.garden-decorations .butterfly {
+    position: absolute;
+    top: 10%;
+    right: 25%;
+    font-size: 1rem;
+    animation: butterfly-fly 4s ease-in-out infinite;
+}
+
+@keyframes butterfly-fly {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(10px, -10px) rotate(10deg); }
+    50% { transform: translate(20px, 0) rotate(0deg); }
+    75% { transform: translate(10px, 10px) rotate(-10deg); }
+}
+
+.garden-grass {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.grass-tuft {
+    font-size: 1.2rem;
+    animation: grass-sway 2s ease-in-out infinite;
+}
+
+.grass-tuft:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.grass-tuft:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+.island-theme-garden .island-icon {
+    color: #2E7D32 !important;
+}
+
+.island-theme-garden .base-garden .layer-1 {
+    background: linear-gradient(180deg, #4E342E 0%, #3E2723 100%);
+}
+
+.island-theme-garden .base-garden .layer-2 {
+    background: linear-gradient(180deg, #3E2723 0%, #5D4037 100%);
+}
+
+/* ============================================
+   ISLAND THEME: CRYSTAL (3D Ball)
+   ============================================ */
+.island-theme-crystal .island-name-banner {
+    background: linear-gradient(135deg, #7E57C2, #5E35B1);
+}
+
+.island-theme-crystal .island-platform,
+.platform-crystal {
+    background: linear-gradient(180deg,
+        #E1BEE7 0%,
+        #CE93D8 30%,
+        #AB47BC 70%,
+        #7B1FA2 100%);
+}
+
+.crystal-decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.crystal-decorations .crystal {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 20px solid;
+    filter: drop-shadow(0 0 5px currentColor);
+}
+
+.crystal.crystal-1 {
+    top: 20%;
+    left: 12%;
+    border-bottom-color: rgba(156, 39, 176, 0.7);
+    transform: rotate(-10deg);
+}
+
+.crystal.crystal-2 {
+    top: 35%;
+    right: 15%;
+    border-bottom-color: rgba(103, 58, 183, 0.8);
+    border-left-width: 10px;
+    border-right-width: 10px;
+    border-bottom-width: 28px;
+    transform: rotate(5deg);
+}
+
+.crystal.crystal-3 {
+    bottom: 40%;
+    left: 25%;
+    border-bottom-color: rgba(186, 104, 200, 0.6);
+    border-left-width: 6px;
+    border-right-width: 6px;
+    border-bottom-width: 15px;
+    transform: rotate(-5deg);
+}
+
+.crystal-decorations .sparkle {
+    position: absolute;
+    font-size: 0.8rem;
+    animation: sparkle-twinkle 1.5s ease-in-out infinite;
+}
+
+@keyframes sparkle-twinkle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.7); }
+}
+
+.sparkle.sparkle-1 {
+    top: 15%;
+    right: 20%;
+    animation-delay: 0s;
+}
+
+.sparkle.sparkle-2 {
+    top: 45%;
+    left: 15%;
+    animation-delay: 0.75s;
+}
+
+.crystal-crown {
+    text-align: center;
+}
+
+.crown-gem {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 0 10px rgba(156, 39, 176, 0.5));
+    animation: gem-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gem-pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(156, 39, 176, 0.5)); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 20px rgba(156, 39, 176, 0.8)); }
+}
+
+.island-theme-crystal .island-icon {
+    color: #4A148C !important;
+}
+
+.island-theme-crystal .base-crystal .layer-1 {
+    background: linear-gradient(180deg, #6A1B9A 0%, #4A148C 100%);
+}
+
+.island-theme-crystal .base-crystal .layer-2 {
+    background: linear-gradient(180deg, #4A148C 0%, #311B92 100%);
+}
+
+/* Island top decoration container */
+.island-top-decoration {
+    position: relative;
+    z-index: 3;
+    margin-bottom: 0.5rem;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Island content */
+.island-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 0.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.island-icon {
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+    transition: transform 0.3s ease;
+}
+
+.island-card:hover .island-icon {
+    transform: scale(1.15);
+    animation: icon-bounce 0.6s ease;
+}
+
+.island-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #333;
+    margin: 0 0 0.75rem;
+}
+
+.island-description {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Island base (earth/rock bottom) */
+.island-base {
+    position: absolute;
+    bottom: -40px;
+    left: 10%;
+    right: 10%;
+    height: 70px;
+    overflow: visible;
+}
+
+.base-layer {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 0 0 50% 50%;
+}
+
+.base-layer.layer-1 {
+    top: 0;
+    width: 100%;
+    height: 30px;
+    background: linear-gradient(180deg, var(--earth-brown) 0%, var(--earth-dark) 100%);
+}
+
+.base-layer.layer-2 {
+    top: 25px;
+    width: 70%;
+    height: 30px;
+    background: linear-gradient(180deg, var(--earth-dark) 0%, var(--rock-gray) 100%);
+}
+
+.base-rocks {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.rock {
+    display: block;
+    background: var(--rock-gray);
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.rock.r1 { width: 14px; height: 12px; }
+.rock.r2 { width: 10px; height: 10px; margin-top: 4px; }
+
+/* Island shadow on water */
+.island-shadow {
+    position: absolute;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 25px;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.25) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* ============================================
+   SIDE PANEL - SHARED STYLES
+   ============================================ */
 .side-panel {
-    width: 280px;
-    background: var(--panel-bg-color);
-    border-right: 2px solid var(--border-color);
+    width: 300px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -126,40 +1323,21 @@ body {
     top: 0;
     height: 100vh;
     transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    box-shadow: 4px 0 30px var(--shadow-color);
     z-index: 1000;
     padding: 2rem 1rem;
-    backdrop-filter: blur(20px);
-    /* 1. Side Panel is Invisible - default state */
-    transform: translateX(-100%); 
+    transform: translateX(-100%);
 }
 
 .side-panel.open {
     transform: translateX(0);
 }
 
-.side-panel::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-    background: linear-gradient(135deg, var(--accent-color) 0%, transparent 100%);
-    opacity: 0.05;
-    pointer-events: none;
-}
-
-/* --- Panel Close Button --- */
 .panel-close-btn {
     position: absolute;
     top: 1.5rem;
     right: 1.5rem;
-    background: linear-gradient(135deg, var(--accent-color), var(--bg-gradient-2));
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     padding: 0;
     display: flex;
@@ -167,9 +1345,8 @@ body {
     justify-content: center;
     cursor: pointer;
     opacity: 0;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition: all 0.3s ease;
     z-index: 2;
-    box-shadow: 0 4px 15px var(--shadow-color);
 }
 
 .side-panel.open .panel-close-btn {
@@ -177,40 +1354,21 @@ body {
     transition-delay: 0.3s;
 }
 
-.panel-close-btn:hover,
-.panel-close-btn:focus-visible {
-    transform: scale(1.1) rotate(90deg);
-    box-shadow: 0 6px 20px var(--card-hover-glow);
-    outline: 3px solid var(--accent-color);
-    outline-offset: 3px;
-}
-
-/* --- 6. Side Panel Content Placeholders --- */
 .panel-content {
     width: 100%;
     padding: 1rem 0;
-    margin-top: 3rem; /* Make space for close button */
-}
-
-.panel-title {
-    font-size: 1.5rem;
-    margin: 2rem 0 1.5rem;
-    color: var(--primary-text-color);
-    text-align: center;
-    font-weight: 700;
+    margin-top: 3rem;
 }
 
 .settings-section {
     margin: 1.5rem 0;
     padding: 1.25rem;
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 15px;
+    border-radius: 12px;
 }
 
 .settings-section h3 {
-    margin: 0 0 1.25rem;
-    color: var(--primary-text-color);
-    font-size: 1.1rem;
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
 }
 
@@ -219,481 +1377,645 @@ body {
 }
 
 .settings-placeholder {
-    font-size: 0.9rem;
-    color: var(--secondary-text-color);
+    font-size: 0.85rem;
     font-style: italic;
     margin: 0;
 }
 
-/* --- Theme Switcher --- */
-.theme-switcher {
+/* Theme Grid */
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.theme-option {
     display: flex;
-    justify-content: space-around;
-    align-items: center;
-    color: var(--secondary-text-color);
-    font-size: 0.95rem;
-    width: 100%;
-    gap: 1rem;
-    opacity: 1;
-    transition: opacity 0.2s;
-    /* margin-top: 2rem; (Removed, now part of settings-section) */
-}
-
-.side-panel:not(.open) .theme-switcher {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.theme-label {
-    font-weight: 500;
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 28px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--switch-bg-color);
-    transition: 0.4s;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 20px;
-    width: 20px;
-    left: 4px;
-    bottom: 4px;
-    background: var(--switch-slider-color);
-    transition: 0.4s;
-}
-
-input:checked + .slider {
-    background: var(--accent-color);
-}
-
-input:checked + .slider:before {
-    transform: translateX(22px);
-}
-
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
-
-/* Focus styles for accessibility */
-.switch input:focus-visible + .slider {
-    outline: 2px solid var(--accent-color);
-    outline-offset: 2px;
-}
-
-/* --- Main Header --- */
-.main-header {
-    display: flex;
-    align-items: center;
-    padding: 2rem 3rem;
-    background: transparent;
-    gap: 1.5rem;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    transition: all 0.3s ease;
-    will-change: padding, background;
-}
-
-.main-header.scrolled {
-    padding: 1rem 3rem;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 4px 20px rgba(127, 183, 126, 0.1);
-}
-
-[data-theme='dark'] .main-header.scrolled {
-    background: rgba(33, 43, 33, 0.8);
-}
-
-.main-header.scrolled h1 {
-    font-size: 2.5rem;
-}
-
-.header-title-container {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    animation: slideInRight 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.header-icon {
-    color: var(--accent-color);
-    display: flex;
-    align-items: center;
-    animation: bounce 2s ease-in-out infinite;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-.main-header h1 {
-    margin: 0;
-    font-size: 4rem;
-    font-weight: 900;
-    color: var(--primary-text-color);
-    letter-spacing: -2px;
-    text-shadow: 0 2px 12px var(--shadow-color);
-}
-
-/* Optimized title animation using CSS animations instead of multiple DOM elements */
-.animated-title {
-    opacity: 0;
-    animation: titleFadeIn 0.6s ease forwards 0.2s;
-}
-
-@keyframes titleFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* --- Panel Toggle Button --- */
-.panel-toggle-btn {
-    background: linear-gradient(135deg, var(--accent-color), var(--bg-gradient-2));
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    width: 56px;
-    height: 56px;
-    border-radius: 20px;
-    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    box-shadow: 0 8px 25px var(--shadow-color);
-    position: relative;
-    overflow: hidden;
+    padding: 1rem 0.5rem;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    gap: 0.25rem;
 }
 
-.panel-toggle-btn::before {
+.theme-option .theme-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.theme-option .theme-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.theme-option .theme-description {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+/* ============================================
+   ARCADE SIDE PANEL
+   ============================================ */
+.arcade-panel {
+    background: var(--panel-bg);
+    border-right: 3px solid var(--neon-pink);
+    box-shadow: 4px 0 30px rgba(255, 0, 255, 0.4);
+}
+
+.arcade-panel::before {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan), var(--neon-yellow), var(--neon-pink));
+    background-size: 300% 100%;
+    animation: gradient-shift 3s ease infinite;
 }
 
-.panel-toggle-btn:hover::before {
-    left: 100%;
+.arcade-panel .panel-close-btn {
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+    border: 2px solid var(--neon-cyan);
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
 }
 
-.panel-toggle-btn.modern {
-    border-radius: 20px;
-    width: 56px;
-    height: 56px;
-    margin-right: 0;
-    animation: pulse 2s ease-in-out infinite;
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.panel-open .panel-toggle-btn.modern {
-    transform: rotate(180deg);
-}
-
-@keyframes pulse {
-    0%, 100% { 
-        box-shadow: 0 8px 25px var(--shadow-color);
-        transform: scale(1);
-    }
-    50% { 
-        box-shadow: 0 12px 35px var(--shadow-color);
-        transform: scale(1.05);
-    }
-}
-
-.panel-toggle-btn.modern:hover,
-.panel-toggle-btn.modern:focus-visible {
+.arcade-panel .panel-close-btn:hover {
     transform: scale(1.1) rotate(90deg);
-    box-shadow: 0 12px 40px var(--card-hover-glow);
-    outline: 3px solid var(--accent-color);
-    outline-offset: 3px;
+    box-shadow: 0 0 25px var(--neon-pink);
 }
 
-/* --- Homepage Container --- */
+.arcade-panel-title {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px var(--neon-yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.arcade-panel-title .title-icon {
+    color: var(--neon-cyan);
+    filter: drop-shadow(0 0 5px var(--neon-cyan));
+}
+
+.arcade-panel .settings-section {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 0, 255, 0.3);
+}
+
+.arcade-panel .settings-section h3 {
+    font-family: var(--font-display);
+    color: var(--neon-cyan);
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.arcade-panel .settings-placeholder {
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    color: var(--secondary-text);
+    letter-spacing: 1px;
+}
+
+.arcade-panel .theme-option {
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--primary-text);
+}
+
+.arcade-panel .theme-option:hover {
+    background: rgba(255, 0, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.arcade-panel .theme-option.active {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 255, 255, 0.15);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+}
+
+.arcade-panel .theme-option .theme-description {
+    color: var(--secondary-text);
+}
+
+.arcade-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--neon-pink);
+    border-radius: 8px;
+    color: var(--neon-pink);
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.arcade-toggle:hover {
+    background: rgba(255, 0, 255, 0.2);
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
+}
+
+.arcade-toggle.active {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+}
+
+.arcade-credits {
+    margin-top: 3rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--neon-yellow);
+    border-radius: 8px;
+    text-align: center;
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.credit-label {
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    color: var(--neon-yellow);
+    display: block;
+    margin-bottom: 0.5rem;
+    letter-spacing: 2px;
+}
+
+.credit-value {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--neon-green);
+    text-shadow: 0 0 15px var(--neon-green);
+}
+
+/* ============================================
+   FLOATING ISLANDS SIDE PANEL
+   ============================================ */
+.islands-panel {
+    background: var(--panel-bg);
+    border-right: 3px solid rgba(124, 179, 66, 0.3);
+    box-shadow: 4px 0 30px rgba(92, 138, 97, 0.2);
+    backdrop-filter: blur(20px);
+}
+
+.islands-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--grass-green), var(--leaf-green), var(--sunset-orange), var(--grass-green));
+    background-size: 300% 100%;
+    animation: gradient-shift 5s ease infinite;
+}
+
+.islands-panel .panel-close-btn {
+    background: linear-gradient(135deg, var(--grass-green), var(--leaf-green));
+    border: 2px solid rgba(124, 179, 66, 0.5);
+    color: white;
+    box-shadow: 0 4px 15px rgba(124, 179, 66, 0.3);
+}
+
+.islands-panel .panel-close-btn:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 6px 25px rgba(124, 179, 66, 0.4);
+}
+
+.islands-panel-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.islands-panel-title .title-icon {
+    color: var(--grass-green);
+    animation: leaf-sway 2s ease-in-out infinite;
+}
+
+.islands-panel .settings-section {
+    background: rgba(124, 179, 66, 0.1);
+    border: 2px solid rgba(124, 179, 66, 0.2);
+}
+
+.islands-panel .settings-section h3 {
+    font-family: var(--font-display);
+    color: var(--primary-text);
+    font-weight: 700;
+}
+
+.islands-panel .settings-placeholder {
+    color: var(--secondary-text);
+}
+
+.islands-panel .theme-option {
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--primary-text);
+}
+
+.islands-panel .theme-option:hover {
+    background: rgba(124, 179, 66, 0.15);
+    transform: translateY(-2px);
+}
+
+.islands-panel .theme-option.active {
+    border-color: var(--grass-green);
+    background: rgba(124, 179, 66, 0.2);
+    box-shadow: 0 4px 15px rgba(124, 179, 66, 0.3);
+}
+
+.islands-panel .theme-option .theme-description {
+    color: var(--secondary-text);
+}
+
+.islands-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid rgba(124, 179, 66, 0.3);
+    border-radius: 25px;
+    color: var(--primary-text);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.islands-toggle:hover {
+    background: rgba(124, 179, 66, 0.15);
+    box-shadow: 0 4px 15px rgba(124, 179, 66, 0.2);
+}
+
+.islands-toggle.active {
+    border-color: var(--grass-green);
+    background: rgba(124, 179, 66, 0.2);
+    color: var(--grass-green);
+}
+
+/* ============================================
+   HOMEPAGE CONTAINER
+   ============================================ */
 .homepage-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 4rem 4rem 3rem 4rem;
+    padding: 4rem;
     position: relative;
     z-index: 1;
 }
 
-/* --- 11. Game Filters --- */
-.game-filters {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2.5rem;
-    padding: 0 0.5rem;
-    flex-wrap: wrap;
-}
-.game-filters button {
-    background: var(--secondary-bg-color);
-    border: 2px solid var(--border-color);
-    color: var(--secondary-text-color);
-    padding: 0.6rem 1.5rem;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-}
-.game-filters button:hover {
-    background: var(--panel-bg-color);
-    border-color: var(--accent-color);
-    color: var(--primary-text-color);
-}
-.game-filters button.active {
-    background: linear-gradient(135deg, var(--accent-color), var(--bg-gradient-2));
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 6px 20px var(--shadow-color);
+.arcade-container {
+    padding: 3rem 4rem;
 }
 
+.islands-container {
+    padding: 2rem 4rem 4rem;
+    position: relative;
+}
 
-
-/* --- Hero + Grid Layout --- */
-.game-grid {
+/* ============================================
+   GAME GRID - ARCADE STYLE
+   ============================================ */
+.arcade-grid {
     display: grid;
-    gap: 3.5rem;
+    gap: 2.5rem;
     grid-template-columns: 1fr;
     margin-bottom: 3rem;
 }
 
-/* Desktop: Hero takes full width, others split into 2 columns */
+@media (min-width: 768px) {
+    .arcade-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (min-width: 1024px) {
-    .game-grid {
+    .arcade-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .game-card:first-child {
-        grid-column: 1 / -1; /* Full width */
-        grid-row: span 1;
+    .arcade-grid .game-card:first-child {
+        grid-column: 1 / -1;
     }
 }
 
-/* Hero card is larger and more prominent */
-.game-card:first-child {
-    padding: 4rem 3rem;
+/* ============================================
+   GAME GRID - ISLANDS STYLE (VERTICAL Grand Line Layout)
+   ============================================ */
+.islands-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6rem;
+    margin-bottom: 5rem;
+    padding: 2rem 0 80px;
+    padding-left: 120px; /* Space for the boat on the left */
+    position: relative;
 }
 
-.game-card:first-child .game-card-icon {
-    font-size: 80px; /* 2x normal */
+/* Vertical route line connecting islands */
+.islands-grid::before {
+    content: '';
+    position: absolute;
+    left: 100px;
+    top: 0;
+    bottom: 80px;
+    width: 4px;
+    background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 5%,
+        rgba(255, 255, 255, 0.5) 50%,
+        rgba(255, 255, 255, 0.3) 95%,
+        transparent 100%);
+    border-radius: 2px;
+    z-index: 5;
 }
 
-.game-card:first-child .game-card-title {
-    font-size: 3rem; /* Larger title */
-    margin-bottom: 1.5rem;
+/* Dashed route overlay */
+.islands-grid::after {
+    content: '';
+    position: absolute;
+    left: 101px;
+    top: 0;
+    bottom: 80px;
+    width: 2px;
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.6) 0px,
+        rgba(255, 255, 255, 0.6) 10px,
+        transparent 10px,
+        transparent 20px
+    );
+    z-index: 6;
 }
 
-.game-card:first-child .game-card-description {
-    font-size: 1.25rem;
-    max-width: 600px;
-}
-
-@media (max-width: 1023px) {
-    .game-card:first-child {
-        padding: 3rem 2.5rem; /* Normal on mobile */
+@media (min-width: 768px) {
+    .islands-grid {
+        gap: 8rem;
+        padding-left: 160px;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
-    .game-card:first-child .game-card-title {
-        font-size: 2rem;
+    .islands-grid::before {
+        left: 140px;
+    }
+
+    .islands-grid::after {
+        left: 141px;
     }
 }
 
-/* --- Game Card --- */
-.game-card {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(127, 183, 126, 0.2);
-    border-radius: 30px;
-    padding: 3rem 2.5rem;
+@media (min-width: 1200px) {
+    .islands-grid {
+        gap: 10rem;
+        padding-left: 180px;
+        max-width: 1000px;
+    }
+
+    .islands-grid::before {
+        left: 160px;
+    }
+
+    .islands-grid::after {
+        left: 161px;
+    }
+}
+
+/* ============================================
+   GAME CARD - ARCADE STYLE
+   ============================================ */
+[data-theme='arcade'] .game-card {
+    background: var(--card-bg);
+    border: 3px solid var(--neon-pink);
+    border-radius: 12px;
+    padding: 2.5rem 2rem;
     display: flex;
     flex-direction: column;
     text-align: left;
-    box-shadow:
-        0 8px 32px 0 rgba(127, 183, 126, 0.15),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
-    transition: transform 0.1s ease-out, box-shadow 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), border-color 0.4s ease;
-    opacity: 0;
-    /* 10. Animation Delays */
-    animation: card-fade-in 0.3s ease-out forwards;
-    backdrop-filter: blur(40px) saturate(150%);
     position: relative;
     overflow: hidden;
-    will-change: transform, box-shadow;
+    cursor: pointer;
+    opacity: 0;
+    animation: arcade-card-fade 0.4s ease-out forwards;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow:
+        0 0 15px var(--neon-pink),
+        0 0 30px rgba(255, 0, 255, 0.2),
+        inset 0 0 40px rgba(0, 255, 255, 0.05);
 }
 
+[data-theme='arcade'] .game-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan), var(--neon-yellow), var(--neon-pink));
+    background-size: 300% 100%;
+    animation: gradient-shift 3s ease infinite;
+}
+
+[data-theme='arcade'] .game-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+}
+
+[data-theme='arcade'] .game-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--neon-cyan);
+    box-shadow:
+        0 0 25px var(--neon-cyan),
+        0 0 50px rgba(0, 255, 255, 0.3),
+        0 20px 60px rgba(0, 255, 255, 0.2);
+}
+
+[data-theme='arcade'] .game-card:first-child {
+    padding: 3.5rem 3rem;
+}
+
+[data-theme='arcade'] .game-card-icon {
+    color: var(--neon-cyan);
+    filter: drop-shadow(0 0 15px var(--neon-cyan));
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+[data-theme='arcade'] .game-card:hover .game-card-icon {
+    animation: icon-bounce 0.6s ease;
+    filter: drop-shadow(0 0 25px var(--neon-pink));
+    color: var(--neon-pink);
+}
+
+[data-theme='arcade'] .game-card-title {
+    font-family: var(--font-body);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 1rem 0;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+[data-theme='arcade'] .game-card:first-child .game-card-title {
+    font-size: 1.8rem;
+}
+
+[data-theme='arcade'] .game-card-description {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--secondary-text);
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   GAME CARD - FLOATING ISLANDS STYLE
+   ============================================ */
+[data-theme='floating-islands'] .game-card {
+    background: var(--card-bg);
+    border: 2px solid rgba(124, 179, 66, 0.25);
+    border-radius: 28px;
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0;
+    animation: islands-card-fade 0.5s ease-out forwards, float-card 8s ease-in-out infinite;
+    animation-delay: calc(var(--animation-delay, 0s)), 0s;
+    transition: transform 0.3s ease, box-shadow 0.4s ease;
+    box-shadow:
+        0 15px 40px rgba(92, 138, 97, 0.15),
+        0 5px 15px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+/* Grass-like bottom decoration */
+[data-theme='floating-islands'] .game-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg,
+        var(--grass-green) 0%,
+        var(--leaf-green) 25%,
+        var(--grass-green) 50%,
+        var(--leaf-green) 75%,
+        var(--grass-green) 100%);
+    border-radius: 0 0 26px 26px;
+}
+
+[data-theme='floating-islands'] .game-card:hover {
+    transform: translateY(-15px);
+    box-shadow:
+        0 25px 60px rgba(92, 138, 97, 0.25),
+        0 10px 30px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    animation-play-state: paused;
+}
+
+[data-theme='floating-islands'] .game-card:first-child {
+    padding: 3.5rem 3rem;
+    border-radius: 32px;
+}
+
+[data-theme='floating-islands'] .game-card:nth-child(2) {
+    animation-delay: calc(var(--animation-delay, 0s)), 1s;
+}
+
+[data-theme='floating-islands'] .game-card:nth-child(3) {
+    animation-delay: calc(var(--animation-delay, 0s)), 2s;
+}
+
+[data-theme='floating-islands'] .game-card-icon {
+    color: var(--grass-green);
+    filter: drop-shadow(0 3px 6px rgba(124, 179, 66, 0.3));
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+[data-theme='floating-islands'] .game-card:hover .game-card-icon {
+    animation: icon-bounce 0.6s ease;
+    filter: drop-shadow(0 5px 12px rgba(124, 179, 66, 0.5));
+    transform: scale(1.1);
+}
+
+[data-theme='floating-islands'] .game-card-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--primary-text);
+    margin: 0 0 1rem 0;
+    letter-spacing: 0.5px;
+}
+
+[data-theme='floating-islands'] .game-card:first-child .game-card-title {
+    font-size: 2.2rem;
+}
+
+[data-theme='floating-islands'] .game-card-description {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--secondary-text);
+    line-height: 1.9;
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   CARD CANVAS BACKGROUND
+   ============================================ */
 .card-background-canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 30px;
-    opacity: 0.15;
+    border-radius: inherit;
+    opacity: 0.2;
     z-index: 0;
     pointer-events: none;
 }
 
-/* 4. Featured Card Style */
-.game-card[data-featured="true"] {
-    border: 2px solid rgba(127, 183, 126, 0.4);
-    box-shadow:
-        0 12px 48px 0 rgba(127, 183, 126, 0.25),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
-}
-
-
-/* 3. Visual Overload - Simplify hover */
-.game-card:hover,
-.game-card:focus-visible {
-    transform: translateY(-12px);
-    box-shadow: 0 20px 60px var(--card-hover-glow);
-    border-color: var(--accent-color);
-    outline: none;
-}
-
-.game-card:active {
-    transform: translateY(-8px) scale(0.98);
-    transition: all 0.1s ease;
-    box-shadow: 0 15px 45px var(--card-hover-glow);
-}
-
-.game-card:first-child:active {
-    transform: translateY(-8px) scale(0.99);
-}
-
-/* --- Game Card Content --- */
-.game-card-icon {
-    color: var(--accent-color);
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    transition: all 0.3s ease;
-    filter: drop-shadow(0 4px 10px var(--shadow-color));
-}
-
-/* Icon bounce on hover */
-.game-card:hover .game-card-icon {
-    animation: icon-bounce 0.6s ease;
-    transform: scale(1.15);
-    filter: drop-shadow(0 8px 20px var(--card-hover-glow));
-}
-
-@keyframes icon-bounce {
-    0%, 100% { transform: scale(1.15) translateY(0); }
-    25% { transform: scale(1.15) translateY(-10px); }
-    50% { transform: scale(1.15) translateY(-5px); }
-    75% { transform: scale(1.15) translateY(-8px); }
-}
-
-.game-card-title {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--primary-text-color);
-    margin: 0 0 1rem 0;
-    letter-spacing: -0.5px;
-    position: relative;
-    z-index: 1;
-}
-
-.game-card-description {
-    font-size: 1.15rem;
-    font-weight: 400;
-    color: var(--secondary-text-color);
-    flex-grow: 1;
-    line-height: 2.0;
-    margin-bottom: 1.5rem;
-    position: relative;
-    z-index: 1;
-}
-
-/* Parallax effect on card content */
-.game-card:hover .game-card-icon,
-.game-card:hover .game-card-title,
-.game-card:hover .game-card-description {
-    transform: translateZ(20px);
-}
-
-/* Image loading skeleton (future) */
-.card-image-skeleton {
-    width: 100%;
-    height: 200px;
-    background: linear-gradient(
-        90deg,
-        var(--border-color) 25%,
-        rgba(127, 183, 126, 0.5) 50%,
-        var(--border-color) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 15px;
-}
-
-@keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-/* --- Footer --- */
+/* ============================================
+   FOOTER STYLES
+   ============================================ */
 .homepage-footer {
-    margin-top: 6rem;
+    margin-top: 5rem;
     padding: 3rem 0 2rem;
-    text-align: left;
-    color: var(--secondary-text-color);
     position: relative;
-    border-top: 2px solid var(--border-color);
-}
-
-.homepage-footer::before {
-    display: none; /* Remove decorative line */
 }
 
 .footer-content {
@@ -703,25 +2025,22 @@ input:checked + .slider:before {
 }
 
 .footer-section h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--primary-text-color);
     margin: 0 0 1rem 0;
 }
 
 .footer-section p {
     margin: 0.5rem 0;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 .footer-section a {
     display: block;
-    color: var(--accent-color);
     text-decoration: none;
     font-weight: 600;
     margin: 0.5rem 0;
     position: relative;
     width: fit-content;
+    transition: all 0.3s ease;
 }
 
 .footer-section a::after {
@@ -731,7 +2050,6 @@ input:checked + .slider:before {
     left: 0;
     width: 0;
     height: 2px;
-    background: var(--accent-color);
     transition: width 0.3s ease;
 }
 
@@ -739,31 +2057,140 @@ input:checked + .slider:before {
     width: 100%;
 }
 
-/* --- Responsive Design --- */
+/* Footer Bottom */
+.footer-bottom {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-bottom p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Arcade Footer */
+.arcade-footer {
+    background: linear-gradient(180deg, transparent 0%, rgba(10, 14, 39, 0.8) 100%);
+    border-top: 3px solid var(--neon-pink);
+    color: var(--secondary-text);
+}
+
+.arcade-footer h3 {
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    color: var(--neon-cyan);
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.arcade-footer a {
+    color: var(--neon-pink);
+}
+
+.arcade-footer a:hover {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px var(--neon-yellow);
+}
+
+.arcade-footer a::after {
+    background: var(--neon-yellow);
+    box-shadow: 0 0 5px var(--neon-yellow);
+}
+
+.arcade-footer .footer-bottom {
+    border-top-color: rgba(255, 0, 255, 0.3);
+}
+
+.arcade-footer .footer-bottom p {
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    letter-spacing: 2px;
+    color: var(--neon-cyan);
+}
+
+/* Islands Footer (Ocean Theme) */
+.islands-footer {
+    background: linear-gradient(180deg, transparent 0%, rgba(30, 95, 138, 0.3) 100%);
+    border-top: 3px solid rgba(41, 128, 185, 0.4);
+    color: var(--primary-text);
+    position: relative;
+}
+
+.islands-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: -1;
+}
+
+.islands-footer h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ocean-deep);
+}
+
+.islands-footer a {
+    color: var(--accent-color);
+}
+
+.islands-footer a:hover {
+    color: var(--ocean-deep);
+}
+
+.islands-footer a::after {
+    background: var(--accent-color);
+}
+
+.islands-footer .footer-bottom {
+    border-top-color: rgba(41, 128, 185, 0.2);
+}
+
+.islands-footer .footer-bottom p {
+    color: var(--secondary-text);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
 @media (max-width: 1023px) {
     .homepage-container {
         padding: 1.5rem 1rem;
     }
 
-    .main-header {
+    .arcade-header,
+    .islands-header {
         padding: 1.5rem 1rem;
+    }
+
+    .arcade-title-main {
+        font-size: 1.8rem;
+    }
+
+    .islands-title-main {
+        font-size: 2rem;
+    }
+
+    .marquee-lights,
+    .floating-clouds {
+        display: none;
+    }
+
+    .panel-toggle-btn {
+        left: 1rem;
     }
 }
 
 @media (max-width: 768px) {
     .side-panel {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 260px;
-        z-index: 1000;
-        box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
-        padding: 2rem 1rem;
-    }
-
-    .side-panel:not(.open) {
-        transform: translateX(-100%);
+        width: 280px;
     }
 
     .panel-overlay {
@@ -773,57 +2200,70 @@ input:checked + .slider:before {
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
         z-index: 999;
         animation: fadeIn 0.3s;
     }
 
-    /* @keyframes fadeIn moved to top */
-
-    .main-content {
-        margin-left: 0;
-    }
-
-    .main-header {
+    .arcade-header,
+    .islands-header {
         padding: 1rem;
-        gap: 1rem;
     }
-    
-    .panel-toggle-btn.modern {
+
+    .arcade-title-main {
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+    }
+
+    .islands-title-main {
+        font-size: 1.5rem;
+    }
+
+    .arcade-subtitle {
+        font-size: 0.4rem;
+        letter-spacing: 2px;
+    }
+
+    .islands-subtitle {
+        font-size: 0.8rem;
+    }
+
+    .panel-toggle-btn {
         width: 48px;
         height: 48px;
-    }
-
-    .main-header h1 {
-        font-size: 2.5rem;
+        left: 0.75rem;
     }
 
     .homepage-container {
         padding: 1rem;
     }
 
-    .game-card {
-        padding: 1.5rem 1rem;
+    [data-theme='arcade'] .game-card,
+    [data-theme='floating-islands'] .game-card {
+        padding: 1.5rem 1.25rem;
     }
 
-    .game-filters {
-        padding: 0;
+    [data-theme='arcade'] .game-card:first-child,
+    [data-theme='floating-islands'] .game-card:first-child {
+        padding: 2rem 1.5rem;
+    }
+
+    [data-theme='arcade'] .game-card:first-child .game-card-title {
+        font-size: 1.3rem;
+    }
+
+    [data-theme='floating-islands'] .game-card:first-child .game-card-title {
+        font-size: 1.6rem;
+    }
+
+    .islands-grid .game-card:nth-child(2) {
+        margin-top: 0;
     }
 }
 
-@media (min-width: 768px) {
-    .game-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1024px) {
-    .game-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-/* --- Reduced Motion Support --- */
+/* ============================================
+   REDUCED MOTION & HIGH CONTRAST
+   ============================================ */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -834,14 +2274,10 @@ input:checked + .slider:before {
     }
 }
 
-/* --- High Contrast Mode Support --- */
 @media (prefers-contrast: high) {
-    :root {
-        --border-color: currentColor;
-        --shadow-color: transparent;
-    }
-    
-    .game-card {
-        border: 2px solid currentColor;
+    [data-theme='arcade'] .game-card,
+    [data-theme='floating-islands'] .game-card {
+        border-width: 3px;
+        border-color: currentColor;
     }
 }

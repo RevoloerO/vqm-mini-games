@@ -5,7 +5,7 @@ import { useCardTilt } from './useCardTilt';
 /**
  * GameCard Component - Displays a single game with interactive effects
  */
-const GameCard = ({ title, description, status, icon, onPlay, delay, featured = false }) => {
+const GameCard = ({ title, description, status, icon, onPlay, delay, featured = false, theme = 'arcade' }) => {
     const { tiltStyle, handleMouseMove, handleMouseLeave } = useCardTilt();
 
     const handleClick = useCallback(() => {
@@ -25,10 +25,12 @@ const GameCard = ({ title, description, status, icon, onPlay, delay, featured = 
             className="game-card"
             style={{
                 animationDelay: `${delay}s`,
+                '--animation-delay': `${delay}s`,
                 cursor: status === 'Ready' ? 'pointer' : 'default',
                 ...tiltStyle
             }}
             data-featured={featured}
+            data-theme={theme}
             tabIndex={status === 'Ready' ? 0 : -1}
             onClick={handleClick}
             onKeyPress={handleKeyPress}
@@ -37,7 +39,7 @@ const GameCard = ({ title, description, status, icon, onPlay, delay, featured = 
             role="button"
             aria-label={`Play ${title}`}
         >
-            <CardCanvas title={title} />
+            <CardCanvas title={title} theme={theme} />
             <div className="game-card-icon" aria-hidden="true">{icon}</div>
             <h3 className="game-card-title">{title}</h3>
             <p className="game-card-description">{description}</p>
