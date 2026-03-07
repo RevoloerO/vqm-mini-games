@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**A curated collection of interactive mini-games and experimental demos**
+**A collection of interactive mini-games and creative web experiments**
 
 [Live Demo](https://revoloero.github.io/vqm-mini-games/) • [Report Bug](https://github.com/revoloero/vqm-mini-games/issues) • [Request Feature](https://github.com/revoloero/vqm-mini-games/issues)
 
@@ -10,149 +10,143 @@
 
 ---
 
-## 🎮 About
+## About
 
-VQM's Playground is a showcase of interactive web experiences built with React, featuring everything from fully-playable puzzle games to experimental physics demos. Each project demonstrates different aspects of web development, from complex game logic to creative CSS animations.
+VQM's Playground is a personal showcase of interactive web experiences built with React 19. The homepage features a **4-theme skin system** that completely transforms the look and feel of the interface — from neon arcade to feudal Japan ink scroll — while each mini-game demonstrates a distinct area of web development: game logic, physics, procedural animation, and Canvas-based simulation.
 
-## ✨ Featured Projects
+---
+
+## Themes
+
+The homepage ships with four switchable visual themes, persisted via `localStorage`:
+
+| Theme | Name | Aesthetic |
+|-------|------|-----------|
+| 🕹️ | **Arcade** | Neon retro — scanlines, glowing grids, marquee lights |
+| 🏝️ | **Grand Line** | Sky-and-ocean — clean floating cards, wave decoration |
+| ⛩️ | **Edo** | Feudal Japan ink scroll — torii gates, koi fish, pagoda cards |
+| 🎡 | **Night Fair** | Carnival midway — string lights, ferris wheel, booth cards |
+
+Each theme has its own header, card layout, side panel, background, animations, and CSS variable set.
+
+---
+
+## Mini-Games
+
+### 🖱️ Mouse Stalker
+A quirky creature that follows your cursor. Demonstrates smooth cursor-tracking via `requestAnimationFrame`, easing functions, and playful sprite expressions that react to movement speed and direction.
 
 ### 🌸 Blooming Garden
-**A match-3 puzzle game with an isometric garden theme**
-
-- Match 5+ flowers to create cascading combos
-- Strategic power-ups: Undo moves, clear rows/columns, or detonate bombs
-- Progressive difficulty with milestone-based level system
-- Smooth SVG animations and particle effects
-
-### 🎯 Mouse Stalker
-**A minimalist physics experiment**
-
-- Smooth cursor-following animation using easing functions
-- Demonstrates requestAnimationFrame optimization
-- Clean, minimal design focused on motion
+A match-3 puzzle game with an isometric garden theme. Match 5+ flowers to trigger cascading combos, use power-ups (undo, row/column clear, bomb), and progress through milestone-based difficulty tiers with SVG particle effects.
 
 ### 🔮 3D Ball
-**Interactive 3D showcase with multiple themed skins**
+An interactive 3D sphere viewer with 8 themed skins spanning conceptual, natural, magical, and sci-fi categories. Features real-time mouse tracking, dynamic per-skin lighting, particle systems, and custom physics simulations (Genesis Sphere, Fireball Jutsu, and more).
 
-- **8 unique skins** spanning conceptual, normal, magical, and sci-fi themes
-- Real-time mouse tracking with dynamic lighting effects
-- Particle systems with optimized RAF loops
-- Custom physics simulations per skin (Genesis Sphere, Fireball Jutsu, etc.)
+### 🍄 Mycelium Network
+A Canvas-based organic simulation. Click to plant nodes and watch a bioluminescent fungal network grow in real time — tendrils seek targets, form connections, and pulse with living energy. Built with a custom `useMyceliumGame` hook.
 
-## 🛠️ Tech Stack
+### 🎆 Firework Festival
+A color-and-shape matching arcade game with 10 unique levels. Observe animated firework previews, load cannons with the right color and shape, then fire to match the quest. Features dual-cannon mechanics, memory mode (fading previews), quick-match speed bonuses, sequence chains, and a crowd cheering system. Includes a relaxed Chill Mode with no timer.
 
-- **Framework**: React 18 with Hooks
-- **Routing**: React Router v6
-- **Styling**: Modular CSS with custom properties
-- **Icons**: Lucide React
-- **Build Tool**: Create React App
-- **Deployment**: GitHub Pages
+---
 
-## 🏗️ Architecture Highlights
+## Tech Stack
 
-### Performance Optimizations
-- **Throttled event listeners** with requestAnimationFrame
-- **Particle system caps** to prevent memory leaks
-- **Conditional rendering** for canvas animations
-- **Memoized calculations** for expensive operations
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 with Hooks |
+| Routing | React Router v7 |
+| Styling | Modular CSS with custom properties |
+| Icons | Lucide React |
+| Build | Vite 6 |
+| Deployment | GitHub Pages (`gh-pages`) |
 
-### Code Organization
-- **Modular component structure** with single responsibility
-- **Custom hooks** for reusable logic (useCardTilt, useFireParticleSystem, useFertilizerSystem)
-- **Separated concerns**: UI components, business logic, and styling
-- **Consolidated CSS imports** for better maintainability
+---
 
-### Accessibility
-- **Keyboard navigation** support for all interactive elements
-- **ARIA labels** for screen readers
-- **Focus management** with visible focus indicators
-- **Reduced motion** support via prefers-reduced-motion
+## Getting Started
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 14+ and npm
-
-### Installation
+**Prerequisites:** Node.js 18+
 
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/revoloero/vqm-mini-games.git
-
-# Navigate to project directory
 cd vqm-mini-games
 
-# Install dependencies
+# Install
 npm install
 
-# Start development server
-npm start
+# Develop
+npm run dev       # Vite dev server at http://localhost:5173
+
+# Build & deploy
+npm run build     # Production build → dist/
+npm run deploy    # Build + publish to GitHub Pages
 ```
 
-The app will open at [http://localhost:3000](http://localhost:3000)
+---
 
-### Available Scripts
-
-```bash
-npm start       # Start development server
-npm test        # Run test suite
-npm run build   # Create production build
-npm run deploy  # Deploy to GitHub Pages
-```
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
 ├── components/
-│   └── GameCard/          # Reusable card component with tilt effects
+│   └── GameCard/              # Shared tilt-effect card (Arcade + Edo + Carnival themes)
 ├── mini-games/
-│   ├── BloomingGarden/    # Match-3 puzzle game
-│   ├── MouseStalker/      # Physics experiment
-│   └── 3DBall/
-│       ├── components/    # Ball skin UI components
-│       ├── hooks/         # Particle system hooks
-│       └── styles/        # Organized skin stylesheets
-├── HomePage.jsx           # Landing page with game grid
-└── App.jsx               # Main app with routing
+│   ├── MouseStalker/          # Cursor-tracking creature
+│   │   ├── MouseStalker.jsx
+│   │   ├── useDragonGame.js   # Animation & expression logic
+│   │   └── MouseStalker.css
+│   ├── BloomingGarden.jsx     # Match-3 puzzle game
+│   ├── BloomingGarden.css
+│   ├── 3DBall/                # 3D sphere viewer
+│   │   ├── 3DBall.jsx
+│   │   ├── components/        # Per-skin UI components
+│   │   ├── hooks/             # Particle system hooks
+│   │   └── styles/            # Per-skin stylesheets
+│   ├── MyceliumNetwork/       # Canvas fungal network sim
+│   │   ├── MyceliumNetwork.jsx
+│   │   ├── useMyceliumGame.js  # Simulation logic
+│   │   └── gameConfig.js
+│   └── FireworkFestival/      # Color-matching firework arcade
+│       ├── FireworkFestival.jsx
+│       ├── useFireworkGame.js  # Game loop, scoring, level logic
+│       ├── gameConfig.js       # 10 levels, colors, shapes
+│       └── FireworkFestival.css
+├── HomePage.jsx               # Landing page — theme system + game routing
+├── HomePage.css               # All theme styles (~3230 lines)
+└── App.jsx                    # Root with React Router
 ```
 
-## 🎨 Features
+---
 
-- **Theme System**: Light/Dark mode with persistent storage
-- **Responsive Design**: Optimized for mobile, tablet, and desktop
-- **Smooth Animations**: CSS animations with hardware acceleration
-- **Interactive Effects**: Tilt effects, particle systems, and dynamic backgrounds
-- **Progressive Enhancement**: Works without JavaScript for basic content
+## Architecture Notes
 
-## 🧪 Development Notes
+### Theme System
+- Themes are stored as `data-theme` on `:root`, toggled from a slide-in settings panel
+- Each theme defines a full set of CSS custom properties (`--primary-text`, `--card-bg`, `--accent-color`, etc.)
+- Per-theme card layouts: Arcade uses a `GameCard` grid, Grand Line uses `SeaCard` list, Edo uses `PagodaCard` + animated koi fish, Night Fair uses `BoothCard` carnival booths
 
-### State Management
-- **Refs vs State**: Uses refs for high-frequency updates (mouse position) and state for UI updates
-- **Effect Dependencies**: Carefully managed to prevent unnecessary re-renders
-- **Memoization**: Applied strategically to expensive calculations
+### Performance
+- High-frequency inputs (mouse position, animation loops) use `useRef` + `requestAnimationFrame`, not `useState`
+- Particle systems have capped counts to prevent memory growth
+- Canvas simulations are torn down on unmount via cleanup in `useEffect`
 
-### Performance Patterns
-- **Throttling**: Mouse events throttled via RAF
-- **Debouncing**: Window resize events debounced
-- **Lazy Loading**: Routes split for code splitting
-- **Animation Budgets**: Capped particle counts and limited concurrent animations
+### Accessibility
+- All interactive cards support keyboard navigation (`Enter`) via `onKeyDown`
+- `aria-label`, `aria-expanded`, and `role` attributes throughout
+- `prefers-reduced-motion` media query disables all animations
 
-## 📝 License
+---
 
-This project is open source and available under the [MIT License](LICENSE).
+## License
 
-## 👤 Author
+MIT — see [LICENSE](LICENSE).
+
+## Author
 
 **Vuong Quyen Mai**
 - GitHub: [@revoloero](https://github.com/revoloero)
 - Email: vuongquyenmai@gmail.com
-
-## 🙏 Acknowledgments
-
-- Built with Create React App
-- Icons by [Lucide](https://lucide.dev/)
-- Inspired by classic puzzle games and physics experiments
 
 ---
 

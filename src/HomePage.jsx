@@ -10,19 +10,24 @@ import {
     Volume2,
     VolumeX,
     Zap,
-    Cloud,
-    Leaf,
-    Sun,
     Anchor,
-    Ship
+    Ship,
+    Scroll,
+    Ticket,
+    Share2,
+    Sparkles
 } from 'lucide-react';
 import './HomePage.css';
 import GameCard from './components/GameCard/GameCard';
 
 // --- Theme Configuration ---
+const VALID_THEMES = ['arcade', 'floating-islands', 'edo-map', 'night-fair'];
+
 const THEMES = [
-    { id: 'arcade', icon: '🕹️', name: 'Arcade', description: 'Neon Retro' },
-    { id: 'floating-islands', icon: '🏝️', name: 'Islands', description: 'Grand Line' },
+    { id: 'arcade',           icon: '🕹️', name: 'Arcade',   description: 'Neon Retro' },
+    { id: 'floating-islands', icon: '🏝️', name: 'Islands',  description: 'Grand Line' },
+    { id: 'edo-map',          icon: '⛩️', name: 'Edo',      description: 'Ink Scroll' },
+    { id: 'night-fair',       icon: '🎡', name: 'Carnival', description: 'Night Fair' },
 ];
 
 // --- Arcade Header Component ---
@@ -70,19 +75,11 @@ const IslandsHeader = ({ isScrolled, togglePanel, isPanelOpen }) => (
             {isPanelOpen ? <X size={26} /> : <Settings size={26} />}
         </button>
         <div className="islands-header-content">
-            <div className="floating-clouds left" aria-hidden="true">
-                <Cloud size={24} className="cloud c1" />
-                <Cloud size={18} className="cloud c2" />
-            </div>
             <div className="header-title-container">
                 <span className="header-icon islands-icon" aria-hidden="true">
                     <Anchor size={44} />
                 </span>
                 <h1 className="islands-title-main">Grand Line</h1>
-            </div>
-            <div className="floating-clouds right" aria-hidden="true">
-                <Cloud size={20} className="cloud c3" />
-                <Cloud size={26} className="cloud c4" />
             </div>
         </div>
         <div className="header-subtitle islands-subtitle">
@@ -93,47 +90,223 @@ const IslandsHeader = ({ isScrolled, togglePanel, isPanelOpen }) => (
     </header>
 );
 
-// --- Sailing Boat Component (Vertical Navigation) ---
-const SailingBoat = ({ targetIsland, islandPositions }) => {
-    const [boatPosition, setBoatPosition] = useState({ y: 100 });
-    const [isMoving, setIsMoving] = useState(false);
-    const [goingDown, setGoingDown] = useState(true);
-    const prevYRef = useRef(100);
+// --- Edo Map Header Component ---
+const EdoHeader = ({ isScrolled, togglePanel, isPanelOpen }) => (
+    <header className={`main-header edo-header ${isScrolled ? 'scrolled' : ''}`}>
+        <button
+            onClick={togglePanel}
+            className="panel-toggle-btn edo-btn"
+            aria-label={isPanelOpen ? 'Close settings panel' : 'Open settings panel'}
+            aria-expanded={isPanelOpen}
+        >
+            {isPanelOpen ? <X size={26} /> : <Settings size={26} />}
+        </button>
+        <div className="edo-header-content">
+            <div className="edo-gate-marks" aria-hidden="true">
+                {[0, 1, 2].map(i => (
+                    <div key={i} className="torii-mark">
+                        <div className="torii-cap"></div>
+                        <div className="torii-lintel"></div>
+                        <div className="torii-posts">
+                            <div className="torii-post"></div>
+                            <div className="torii-post"></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="header-title-container">
+                <span className="header-icon edo-header-icon" aria-hidden="true">
+                    <Scroll size={44} />
+                </span>
+                <h1 className="edo-title-main">江戸の地図</h1>
+            </div>
+            <div className="edo-gate-marks" aria-hidden="true">
+                {[0, 1, 2].map(i => (
+                    <div key={i} className="torii-mark">
+                        <div className="torii-cap"></div>
+                        <div className="torii-lintel"></div>
+                        <div className="torii-posts">
+                            <div className="torii-post"></div>
+                            <div className="torii-post"></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+        <div className="header-subtitle edo-subtitle">
+            <span className="cherry-blossom" aria-hidden="true">🌸</span>
+            <span>Edo Map — Choose Your Destination</span>
+            <span className="cherry-blossom" aria-hidden="true">🌸</span>
+        </div>
+    </header>
+);
 
-    useEffect(() => {
-        if (targetIsland !== null && islandPositions[targetIsland]) {
-            const target = islandPositions[targetIsland];
-            setIsMoving(true);
-            setGoingDown(target.y > prevYRef.current);
-            prevYRef.current = target.y;
+// --- Carnival Header Component ---
+const CarnivalHeader = ({ isScrolled, togglePanel, isPanelOpen }) => (
+    <header className={`main-header carnival-header ${isScrolled ? 'scrolled' : ''}`}>
+        <button
+            onClick={togglePanel}
+            className="panel-toggle-btn carnival-btn"
+            aria-label={isPanelOpen ? 'Close settings panel' : 'Open settings panel'}
+            aria-expanded={isPanelOpen}
+        >
+            {isPanelOpen ? <X size={26} /> : <Settings size={26} />}
+        </button>
+        <div className="carnival-header-content">
+            <div className="bulb-string" aria-hidden="true">
+                {[0, 1, 2, 3, 4].map(i => (
+                    <div key={i} className="bulb"></div>
+                ))}
+            </div>
+            <div className="header-title-container">
+                <span className="header-icon carnival-header-icon" aria-hidden="true">
+                    <Ticket size={44} />
+                </span>
+                <h1 className="carnival-title-main">Night Fair</h1>
+            </div>
+            <div className="bulb-string" aria-hidden="true">
+                {[0, 1, 2, 3, 4].map(i => (
+                    <div key={i} className="bulb"></div>
+                ))}
+            </div>
+        </div>
+        <div className="header-subtitle carnival-subtitle">
+            <span aria-hidden="true">🎡</span>
+            <span>Step Right Up — Games Await!</span>
+            <span aria-hidden="true">🎪</span>
+        </div>
+    </header>
+);
 
-            // Smooth transition to target
-            setBoatPosition({ y: target.y });
-
-            // Reset moving state after animation
-            const timer = setTimeout(() => setIsMoving(false), 1000);
-            return () => clearTimeout(timer);
+// --- Sea Card Component (Floating Islands theme — clean design) ---
+const SeaCard = ({ game, onClick }) => {
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
         }
-    }, [targetIsland, islandPositions]);
+    };
 
     return (
         <div
-            className={`sailing-boat vertical ${isMoving ? 'moving' : ''} ${goingDown ? 'going-down' : 'going-up'}`}
-            style={{
-                '--boat-y': `${boatPosition.y}px`
-            }}
+            className="sea-card"
+            data-accent={game.islandTheme}
+            onClick={onClick}
+            onKeyDown={handleKeyDown}
+            role="button"
+            tabIndex={0}
+            aria-label={`Play ${game.title} on ${game.islandName}`}
         >
-            <div className="boat-body">
-                <div className="sail">
-                    <div className="sail-fabric"></div>
-                    <div className="mast"></div>
+            <div className="sea-card-accent" />
+            <div className="sea-card-body">
+                <div className="sea-card-icon">{game.icon}</div>
+                <div className="sea-card-info">
+                    <span className="sea-card-tag">
+                        {game.islandEmoji} {game.islandName}
+                    </span>
+                    <h3 className="sea-card-title">{game.title}</h3>
+                    <p className="sea-card-desc">{game.description}</p>
                 </div>
-                <div className="hull">
-                    <div className="hull-detail"></div>
-                </div>
-                <div className="flag">🏴‍☠️</div>
             </div>
-            <div className="boat-wake"></div>
+            <div className="sea-card-wave" />
+        </div>
+    );
+};
+
+// --- Ocean Waves (Fixed bottom decoration) ---
+const OceanWaves = () => (
+    <div className="islands-ocean" aria-hidden="true">
+        <div className="ocean-wave-line" />
+    </div>
+);
+
+// --- Koi Fish Component (Edo Map Navigation) ---
+const KoiFish = ({ targetPagoda, pagodaPositions }) => {
+    const [koiY, setKoiY] = useState(80);
+    const prevYRef = useRef(80);
+
+    useEffect(() => {
+        if (targetPagoda !== null && pagodaPositions[targetPagoda] !== undefined) {
+            const targetY = pagodaPositions[targetPagoda];
+            prevYRef.current = targetY;
+            setKoiY(targetY);
+        }
+    }, [targetPagoda, pagodaPositions]);
+
+    return (
+        <div
+            className="koi-fish"
+            style={{ '--koi-y': `${koiY}px` }}
+            aria-hidden="true"
+        >
+            <div className="koi-body">
+                <div className="koi-torso">
+                    <div className="koi-fin"></div>
+                    <div className="koi-eye"></div>
+                </div>
+                <div className="koi-tail"></div>
+            </div>
+        </div>
+    );
+};
+
+// --- Ferris Wheel Component (Night Fair Decoration) ---
+const FerrisWheel = () => (
+    <div className="ferris-wheel-container" aria-hidden="true">
+        <div className="ferris-frame">
+            <div className="ferris-rim">
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+                    <div
+                        key={angle}
+                        className="ferris-spoke"
+                        style={{ '--spoke-angle': `${angle}deg` }}
+                    ></div>
+                ))}
+                {[0, 90, 180, 270].map((angle) => (
+                    <div
+                        key={angle}
+                        className="ferris-gondola"
+                        style={{ transform: `rotate(${angle}deg) translateY(-132px) rotate(-${angle}deg)` }}
+                    ></div>
+                ))}
+            </div>
+            <div className="ferris-axle"></div>
+        </div>
+        <div className="ferris-legs">
+            <div className="ferris-leg"></div>
+            <div className="ferris-leg"></div>
+        </div>
+    </div>
+);
+
+// --- Crowd Silhouettes (Night Fair Background) ---
+const CarnivalCrowd = () => (
+    <div className="carnival-crowd" aria-hidden="true"></div>
+);
+
+// --- Sakura Petal Layer (Edo Map Background) ---
+const SakuraLayer = () => {
+    const petals = Array.from({ length: 14 }, (_, i) => ({
+        x: `${(i * 7.3 + 3) % 100}%`,
+        delay: `${(i * 0.61) % 9}s`,
+        dur: `${6 + (i * 0.7) % 5}s`,
+        sway: `${2.5 + (i * 0.4) % 3}s`,
+    }));
+
+    return (
+        <div className="sakura-layer" aria-hidden="true">
+            {petals.map((p, i) => (
+                <div
+                    key={i}
+                    className="sakura-petal"
+                    style={{
+                        '--petal-x': p.x,
+                        '--petal-delay': p.delay,
+                        '--petal-dur': p.dur,
+                        '--petal-sway': p.sway,
+                    }}
+                ></div>
+            ))}
         </div>
     );
 };
@@ -153,7 +326,61 @@ const SidePanel = ({ theme, onThemeChange, isOpen, togglePanel }) => {
         };
     }, [isOpen]);
 
-    const isArcade = theme === 'arcade';
+    const panelClass = {
+        'arcade':           'arcade-panel',
+        'floating-islands': 'islands-panel',
+        'edo-map':          'edo-panel',
+        'night-fair':       'carnival-panel',
+    }[theme] || 'arcade-panel';
+
+    const titleClass = {
+        'arcade':           'arcade-panel-title',
+        'floating-islands': 'islands-panel-title',
+        'edo-map':          'edo-panel-title',
+        'night-fair':       'carnival-panel-title',
+    }[theme] || 'arcade-panel-title';
+
+    const toggleClass = {
+        'arcade':           'arcade-toggle',
+        'floating-islands': 'islands-toggle',
+        'edo-map':          'edo-toggle',
+        'night-fair':       'carnival-toggle',
+    }[theme] || 'arcade-toggle';
+
+    const panelTitleContent = {
+        'arcade': (
+            <>
+                <Zap size={20} className="title-icon" />
+                OPTIONS
+                <Zap size={20} className="title-icon" />
+            </>
+        ),
+        'floating-islands': (
+            <>
+                <Anchor size={20} className="title-icon" />
+                Captain&apos;s Log
+                <Anchor size={20} className="title-icon" />
+            </>
+        ),
+        'edo-map': (
+            <>
+                <Scroll size={20} className="title-icon" />
+                巻物
+                <Scroll size={20} className="title-icon" />
+            </>
+        ),
+        'night-fair': (
+            <>
+                <Ticket size={20} className="title-icon" />
+                TICKETS
+                <Ticket size={20} className="title-icon" />
+            </>
+        ),
+    }[theme];
+
+    const soundLabel = theme === 'arcade' ? 'SOUND' : 'Sound';
+    const difficultyLabel = theme === 'arcade' ? 'DIFFICULTY' : 'Difficulty';
+    const comingSoonLabel = theme === 'arcade' ? 'COMING SOON' : 'Coming soon';
 
     return (
         <>
@@ -165,7 +392,7 @@ const SidePanel = ({ theme, onThemeChange, isOpen, togglePanel }) => {
                 />
             )}
             <aside
-                className={`side-panel ${isOpen ? 'open' : ''} ${isArcade ? 'arcade-panel' : 'islands-panel'}`}
+                className={`side-panel ${isOpen ? 'open' : ''} ${panelClass}`}
                 aria-label="Settings panel"
                 aria-hidden={!isOpen}
             >
@@ -178,20 +405,8 @@ const SidePanel = ({ theme, onThemeChange, isOpen, togglePanel }) => {
                 </button>
 
                 <div className="panel-content">
-                    <h2 className={`panel-title ${isArcade ? 'arcade-panel-title' : 'islands-panel-title'}`}>
-                        {isArcade ? (
-                            <>
-                                <Zap size={20} className="title-icon" />
-                                OPTIONS
-                                <Zap size={20} className="title-icon" />
-                            </>
-                        ) : (
-                            <>
-                                <Anchor size={20} className="title-icon" />
-                                Captain's Log
-                                <Anchor size={20} className="title-icon" />
-                            </>
-                        )}
+                    <h2 className={`panel-title ${titleClass}`}>
+                        {panelTitleContent}
                     </h2>
 
                     <div className="settings-section">
@@ -214,9 +429,9 @@ const SidePanel = ({ theme, onThemeChange, isOpen, togglePanel }) => {
                     </div>
 
                     <div className="settings-section">
-                        <h3>{isArcade ? 'SOUND' : 'Sound'}</h3>
+                        <h3>{soundLabel}</h3>
                         <button
-                            className={`toggle-btn ${isArcade ? 'arcade-toggle' : 'islands-toggle'} ${soundEnabled ? 'active' : ''}`}
+                            className={`toggle-btn ${toggleClass} ${soundEnabled ? 'active' : ''}`}
                             onClick={() => setSoundEnabled(!soundEnabled)}
                         >
                             {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
@@ -225,11 +440,11 @@ const SidePanel = ({ theme, onThemeChange, isOpen, togglePanel }) => {
                     </div>
 
                     <div className="settings-section settings-disabled">
-                        <h3>{isArcade ? 'DIFFICULTY' : 'Difficulty'}</h3>
-                        <p className="settings-placeholder">{isArcade ? 'COMING SOON' : 'Coming soon'}</p>
+                        <h3>{difficultyLabel}</h3>
+                        <p className="settings-placeholder">{comingSoonLabel}</p>
                     </div>
 
-                    {isArcade && (
+                    {theme === 'arcade' && (
                         <div className="arcade-credits">
                             <span className="credit-label">CREDITS</span>
                             <span className="credit-value">∞</span>
@@ -241,7 +456,7 @@ const SidePanel = ({ theme, onThemeChange, isOpen, togglePanel }) => {
     );
 };
 
-// --- Game Data with unique island themes ---
+// --- Game Data ---
 const GAMES = [
     {
         title: 'Mouse Stalker',
@@ -251,9 +466,18 @@ const GAMES = [
         icon: <MousePointer size={40} />,
         path: '/vqm-mini-games/mouse-stalker',
         featured: true,
+        // Islands theme
         islandName: 'Cheese Cove',
-        islandTheme: 'cheese', // Yellow cheese island with mouse holes
+        islandTheme: 'cheese',
         islandEmoji: '🧀',
+        // Edo Map theme
+        edoName: '鼠の城',
+        edoTheme: 'woodland',
+        edoEmoji: '🐭',
+        // Night Fair theme
+        boothName: 'Mouse Run',
+        boothTheme: 'chase',
+        boothEmoji: '🎯',
     },
     {
         title: 'Blooming Garden',
@@ -264,8 +488,14 @@ const GAMES = [
         path: '/vqm-mini-games/blooming-garden',
         featured: false,
         islandName: 'Flora Haven',
-        islandTheme: 'garden', // Green garden island with flowers
+        islandTheme: 'garden',
         islandEmoji: '🌸',
+        edoName: '花の庭',
+        edoTheme: 'sakura',
+        edoEmoji: '🌸',
+        boothName: 'Garden Toss',
+        boothTheme: 'garden',
+        boothEmoji: '🌻',
     },
     {
         title: '3D Ball',
@@ -276,123 +506,195 @@ const GAMES = [
         path: '/vqm-mini-games/3d-ball',
         featured: false,
         islandName: 'Crystal Peak',
-        islandTheme: 'crystal', // Purple crystal island with gems
+        islandTheme: 'crystal',
         islandEmoji: '💎',
+        edoName: '水晶の峰',
+        edoTheme: 'crystal',
+        edoEmoji: '🔮',
+        boothName: 'Crystal Ball',
+        boothTheme: 'mystic',
+        boothEmoji: '🎱',
+    },
+    {
+        title: 'Mycelium Network',
+        description:
+            'Plant nodes and watch a living network grow. Tendrils seek, connect, and pulse with bioluminescent energy.',
+        status: 'Ready',
+        icon: <Share2 size={40} />,
+        path: '/vqm-mini-games/mycelium-network',
+        featured: false,
+        islandName: 'Spore Reef',
+        islandTheme: 'mycelium',
+        islandEmoji: '🍄',
+        edoName: '菌糸の森',
+        edoTheme: 'fungi',
+        edoEmoji: '🌿',
+        boothName: 'Glow Web',
+        boothTheme: 'glow',
+        boothEmoji: '🕸️',
+    },
+    {
+        title: 'Firework Festival',
+        description:
+            'Match colors and shapes to light up the night sky! 10 unique levels of firework mastery with dual cannons and crowd cheering.',
+        status: 'Ready',
+        icon: <Sparkles size={40} />,
+        path: '/vqm-mini-games/firework-festival',
+        featured: false,
+        // Islands theme
+        islandName: 'Ember Isle',
+        islandTheme: 'firework',
+        islandEmoji: '🎆',
+        // Edo Map theme
+        edoName: '花火の祭',
+        edoTheme: 'hanabi',
+        edoEmoji: '🎇',
+        // Night Fair theme
+        boothName: 'Sky Blaster',
+        boothTheme: 'firework',
+        boothEmoji: '🎆',
     },
 ];
 
-// --- Island Card Component for Grand Line theme ---
-const IslandCard = ({ game, index, onHover, onLeave, onClick }) => {
+
+// --- Pagoda Card Component (Edo Map theme) ---
+const PagodaCard = ({ game, index, onHover, onLeave, onClick }) => {
     const cardRef = useRef(null);
-    const { islandTheme, islandEmoji } = game;
+    const { edoName, edoEmoji } = game;
 
     const handleMouseEnter = () => {
         if (cardRef.current) {
             const rect = cardRef.current.getBoundingClientRect();
-            const containerRect = cardRef.current.closest('.islands-container')?.getBoundingClientRect();
-            if (containerRect) {
-                // For vertical layout, calculate Y position relative to container
-                const yPosition = rect.top - containerRect.top + rect.height / 2;
-                onHover(index, { x: 50, y: yPosition });
+            const laneEl = cardRef.current.closest('.pagodas-lane');
+            const laneRect = laneEl ? laneEl.getBoundingClientRect() : null;
+            if (laneRect) {
+                const yPosition = rect.top - laneRect.top + rect.height / 2;
+                onHover(index, yPosition);
             }
         }
     };
 
-    // Theme-specific decorations
-    const renderDecorations = () => {
-        switch (islandTheme) {
-            case 'cheese':
-                return (
-                    <div className="island-decorations cheese-decorations">
-                        <div className="cheese-hole hole-1"></div>
-                        <div className="cheese-hole hole-2"></div>
-                        <div className="cheese-hole hole-3"></div>
-                        <div className="mouse-tail"></div>
-                    </div>
-                );
-            case 'garden':
-                return (
-                    <div className="island-decorations garden-decorations">
-                        <div className="flower flower-1">🌷</div>
-                        <div className="flower flower-2">🌻</div>
-                        <div className="flower flower-3">🌹</div>
-                        <div className="butterfly">🦋</div>
-                    </div>
-                );
-            case 'crystal':
-                return (
-                    <div className="island-decorations crystal-decorations">
-                        <div className="crystal crystal-1"></div>
-                        <div className="crystal crystal-2"></div>
-                        <div className="crystal crystal-3"></div>
-                        <div className="sparkle sparkle-1">✨</div>
-                        <div className="sparkle sparkle-2">✨</div>
-                    </div>
-                );
-            default:
-                return null;
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
         }
     };
 
     return (
         <div
             ref={cardRef}
-            className={`island-card island-${index} island-theme-${islandTheme}`}
+            className="pagoda-card"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={onLeave}
             onClick={onClick}
+            onKeyDown={handleKeyDown}
             role="button"
             tabIndex={0}
-            aria-label={`Sail to ${game.islandName}`}
+            aria-label={`Play ${game.title} — ${edoName}`}
+            style={{ animationDelay: `${index * 0.12}s` }}
         >
-            {/* Connecting route line to next island */}
-            {index < 2 && <div className="route-connector"></div>}
+            {/* Left scroll roller */}
+            <div className="scroll-roller"></div>
 
-            <div className="island-name-banner">
-                <span className="banner-emoji">{islandEmoji}</span>
-                {game.islandName}
-            </div>
-
-            <div className={`island-platform platform-${islandTheme}`}>
-                {renderDecorations()}
-
-                <div className="island-top-decoration">
-                    {islandTheme === 'cheese' && (
-                        <>
-                            <div className="cheese-wedge"></div>
-                        </>
-                    )}
-                    {islandTheme === 'garden' && (
-                        <div className="garden-grass">
-                            <span className="grass-tuft">🌿</span>
-                            <span className="grass-tuft">🌱</span>
-                            <span className="grass-tuft">🌿</span>
-                        </div>
-                    )}
-                    {islandTheme === 'crystal' && (
-                        <div className="crystal-crown">
-                            <span className="crown-gem">💠</span>
-                        </div>
-                    )}
+            {/* Main scroll body */}
+            <div className="pagoda-scroll">
+                <div className="pagoda-name-banner">
+                    <span aria-hidden="true">{edoEmoji}</span>
+                    {edoName}
                 </div>
 
-                <div className="island-content">
-                    <div className="island-icon">{game.icon}</div>
-                    <h3 className="island-title">{game.title}</h3>
-                    <p className="island-description">{game.description}</p>
-                </div>
+                <div className="scroll-inner-content">
+                    {/* CSS-only pagoda tower */}
+                    <div className="pagoda-tower" aria-hidden="true">
+                        <div className="pagoda-tier">
+                            <div className="pagoda-roof"></div>
+                            <div className="pagoda-floor"></div>
+                        </div>
+                        <div className="pagoda-tier">
+                            <div className="pagoda-roof"></div>
+                            <div className="pagoda-floor"></div>
+                        </div>
+                        <div className="pagoda-tier">
+                            <div className="pagoda-roof"></div>
+                            <div className="pagoda-floor"></div>
+                        </div>
+                        <div className="pagoda-base"></div>
+                    </div>
 
-                <div className={`island-base base-${islandTheme}`}>
-                    <div className="base-layer layer-1"></div>
-                    <div className="base-layer layer-2"></div>
-                    <div className="base-rocks">
-                        <span className="rock r1"></span>
-                        <span className="rock r2"></span>
+                    <div className="pagoda-icon">{game.icon}</div>
+
+                    <div className="pagoda-text">
+                        <h3 className="pagoda-title">{game.title}</h3>
+                        <p className="pagoda-description">{game.description}</p>
+                        <div className="pagoda-play-hint">⛩ Click to enter →</div>
                     </div>
                 </div>
             </div>
 
-            <div className="island-shadow"></div>
+            {/* Right scroll roller */}
+            <div className="scroll-roller"></div>
+        </div>
+    );
+};
+
+// --- Booth Card Component (Night Fair theme) ---
+const BoothCard = ({ game, index, onClick }) => {
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+        }
+    };
+
+    return (
+        <div
+            className="booth-card"
+            onClick={onClick}
+            onKeyDown={handleKeyDown}
+            role="button"
+            tabIndex={0}
+            aria-label={`Play ${game.title} — ${game.boothName}`}
+            style={{ animationDelay: `${index * 0.1}s` }}
+        >
+            {/* Curved tent awning */}
+            <div className="booth-awning">
+                <div className="awning-lights" aria-hidden="true">
+                    <span className="awning-light"></span>
+                    <span className="awning-light"></span>
+                    <span className="awning-light"></span>
+                    <span className="awning-light"></span>
+                    <span className="awning-light"></span>
+                </div>
+            </div>
+
+            {/* Main booth body */}
+            <div className="booth-body">
+                <div className="booth-window-trim">
+                    <div className="booth-bulb"></div>
+                    <div className="booth-bulb"></div>
+                    <div className="booth-bulb"></div>
+                </div>
+
+                <div className="booth-content">
+                    <div className="booth-name-tag">
+                        <span aria-hidden="true">{game.boothEmoji}</span>
+                        {game.boothName}
+                    </div>
+
+                    <div className="booth-icon">{game.icon}</div>
+
+                    <h3 className="booth-title">{game.title}</h3>
+                    <p className="booth-description">{game.description}</p>
+                    <div className="booth-play-hint">🎟 PLAY NOW</div>
+                </div>
+            </div>
+
+            {/* Side poles */}
+            <div className="booth-poles" aria-hidden="true">
+                <div className="booth-pole left"></div>
+                <div className="booth-pole right"></div>
+            </div>
         </div>
     );
 };
@@ -401,10 +703,7 @@ const IslandCard = ({ game, index, onHover, onLeave, onClick }) => {
 const HomePage = () => {
     const [theme, setTheme] = useState(() => {
         const savedTheme = localStorage.getItem('vqm-game-theme');
-        if (savedTheme === 'arcade' || savedTheme === 'floating-islands') {
-            return savedTheme;
-        }
-        return 'arcade';
+        return VALID_THEMES.includes(savedTheme) ? savedTheme : 'arcade';
     });
 
     const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -412,8 +711,10 @@ const HomePage = () => {
         return localStorage.getItem('vqm-seen-panel') === 'true';
     });
     const [isScrolled, setIsScrolled] = useState(false);
-    const [hoveredIsland, setHoveredIsland] = useState(null);
-    const [islandPositions, setIslandPositions] = useState({});
+
+    // Edo Map theme state
+    const [hoveredPagoda, setHoveredPagoda] = useState(null);
+    const [pagodaPositions, setPagodaPositions] = useState({});
 
     const navigate = useNavigate();
 
@@ -460,17 +761,54 @@ const HomePage = () => {
         navigate(path);
     };
 
-    const handleIslandHover = useCallback((index, position) => {
-        setIslandPositions(prev => ({ ...prev, [index]: position }));
-        setHoveredIsland(index);
+    const handlePagodaHover = useCallback((index, yPos) => {
+        setPagodaPositions(prev => ({ ...prev, [index]: yPos }));
+        setHoveredPagoda(index);
     }, []);
 
-    const handleIslandLeave = useCallback(() => {
-        // Keep the boat at last position, don't reset
+    const handlePagodaLeave = useCallback(() => {
+        // Intentional: keep koi at last pagoda
     }, []);
 
     const displayedGames = GAMES;
-    const isArcade = theme === 'arcade';
+
+    const isArcade   = theme === 'arcade';
+    const isIslands  = theme === 'floating-islands';
+    const isEdo      = theme === 'edo-map';
+    const isCarnival = theme === 'night-fair';
+
+    const mainContentClass = {
+        'arcade':           'arcade-content',
+        'floating-islands': 'islands-content',
+        'edo-map':          'edo-content',
+        'night-fair':       'carnival-content',
+    }[theme] || 'arcade-content';
+
+    const containerClass = {
+        'arcade':           'arcade-container',
+        'floating-islands': 'islands-container',
+        'edo-map':          'edo-container',
+        'night-fair':       'carnival-container',
+    }[theme] || 'arcade-container';
+
+    const footerClass = {
+        'arcade':           'arcade-footer',
+        'floating-islands': 'islands-footer',
+        'edo-map':          'edo-footer',
+        'night-fair':       'carnival-footer',
+    }[theme] || 'arcade-footer';
+
+    const footerAboutLabel = isArcade ? 'ABOUT' : isEdo ? '概要' : isCarnival ? 'ABOUT' : 'About';
+    const footerGamesLabel = isArcade ? 'GAMES' : isIslands ? 'Islands' : isEdo ? '目的地' : 'GAMES';
+    const footerTechLabel  = isArcade ? 'TECH STACK' : isEdo ? '技術' : isCarnival ? 'TECH STACK' : 'Tech Stack';
+    const footerConnectLabel = isArcade ? 'CONNECT' : isEdo ? '連絡' : isCarnival ? 'CONNECT' : 'Connect';
+    const footerCopyright = isArcade
+        ? '© 2025 VQM ARCADE • ALL RIGHTS RESERVED'
+        : isIslands
+            ? '© 2025 VQM Playground • Made for fun'
+            : isEdo
+                ? '© 2025 VQM 江戸地図 • 全権利保有'
+                : '© 2025 VQM Night Fair • Step Right Up';
 
     return (
         <div className={`app-layout ${isPanelOpen ? 'panel-open' : ''}`} data-theme={theme}>
@@ -481,48 +819,49 @@ const HomePage = () => {
                 togglePanel={togglePanel}
             />
 
-            <main className={`main-content ${isArcade ? 'arcade-content' : 'islands-content'}`}>
-                {isArcade ? (
+            <main className={`main-content ${mainContentClass}`}>
+                {/* Sakura petals overlay for Edo theme */}
+                {isEdo && <SakuraLayer />}
+
+                {/* Ferris wheel + crowd decorations for Carnival theme */}
+                {isCarnival && <FerrisWheel />}
+                {isCarnival && <CarnivalCrowd />}
+
+                {/* Theme-specific header */}
+                {isArcade && (
                     <ArcadeHeader
                         isScrolled={isScrolled}
                         togglePanel={togglePanel}
                         isPanelOpen={isPanelOpen}
                     />
-                ) : (
+                )}
+                {isIslands && (
                     <IslandsHeader
                         isScrolled={isScrolled}
                         togglePanel={togglePanel}
                         isPanelOpen={isPanelOpen}
                     />
                 )}
+                {isEdo && (
+                    <EdoHeader
+                        isScrolled={isScrolled}
+                        togglePanel={togglePanel}
+                        isPanelOpen={isPanelOpen}
+                    />
+                )}
+                {isCarnival && (
+                    <CarnivalHeader
+                        isScrolled={isScrolled}
+                        togglePanel={togglePanel}
+                        isPanelOpen={isPanelOpen}
+                    />
+                )}
 
-                <div className={`homepage-container ${isArcade ? 'arcade-container' : 'islands-container'}`}>
-                    {/* Ocean and Boat for Islands theme */}
-                    {!isArcade && (
-                        <div className="ocean-scene">
-                            <div className="ocean-waves">
-                                <div className="wave wave-1"></div>
-                                <div className="wave wave-2"></div>
-                                <div className="wave wave-3"></div>
-                            </div>
-                            <SailingBoat
-                                targetIsland={hoveredIsland}
-                                islandPositions={islandPositions}
-                            />
-                            <div className="sailing-route">
-                                <svg className="route-line" viewBox="0 0 100 10" preserveAspectRatio="none">
-                                    <path d="M0,5 Q25,2 50,5 T100,5" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" strokeDasharray="2,2"/>
-                                </svg>
-                            </div>
-                        </div>
-                    )}
-
-                    <section
-                        className={`game-grid ${isArcade ? 'arcade-grid' : 'islands-grid'}`}
-                        aria-label="Available games"
-                    >
-                        {isArcade ? (
-                            displayedGames.map((game, idx) => (
+                <div className={`homepage-container ${containerClass}`}>
+                    {/* Arcade: game card grid */}
+                    {isArcade && (
+                        <section className="game-grid arcade-grid" aria-label="Available games">
+                            {displayedGames.map((game, idx) => (
                                 <GameCard
                                     key={game.title}
                                     {...game}
@@ -530,43 +869,95 @@ const HomePage = () => {
                                     onPlay={() => handlePlay(game.path)}
                                     delay={idx * 0.1}
                                 />
-                            ))
-                        ) : (
-                            displayedGames.map((game, idx) => (
-                                <IslandCard
+                            ))}
+                        </section>
+                    )}
+
+                    {/* Floating Islands: clean sea cards */}
+                    {isIslands && (
+                        <>
+                            <section className="islands-sea" aria-label="Islands — choose a game">
+                                {displayedGames.map((game) => (
+                                    <SeaCard
+                                        key={game.title}
+                                        game={game}
+                                        onClick={() => handlePlay(game.path)}
+                                    />
+                                ))}
+                            </section>
+                            <OceanWaves />
+                        </>
+                    )}
+
+                    {/* Edo Map: koi lane + pagoda scroll cards */}
+                    {isEdo && (
+                        <div className="edo-world">
+                            <div className="koi-lane">
+                                <div className="koi-route">
+                                    <div className="koi-ripple"></div>
+                                    <div className="koi-ripple"></div>
+                                    <div className="koi-ripple"></div>
+                                </div>
+                                <KoiFish
+                                    targetPagoda={hoveredPagoda}
+                                    pagodaPositions={pagodaPositions}
+                                />
+                            </div>
+                            <section
+                                className="pagodas-lane"
+                                aria-label="Destinations — choose a game"
+                            >
+                                {displayedGames.map((game, idx) => (
+                                    <PagodaCard
+                                        key={game.title}
+                                        game={game}
+                                        index={idx}
+                                        onHover={handlePagodaHover}
+                                        onLeave={handlePagodaLeave}
+                                        onClick={() => handlePlay(game.path)}
+                                    />
+                                ))}
+                            </section>
+                        </div>
+                    )}
+
+                    {/* Night Fair: winding carnival midway */}
+                    {isCarnival && (
+                        <section className="carnival-midway" aria-label="Carnival booths">
+                            {displayedGames.map((game, idx) => (
+                                <BoothCard
                                     key={game.title}
                                     game={game}
                                     index={idx}
-                                    theme={theme}
-                                    onHover={handleIslandHover}
-                                    onLeave={handleIslandLeave}
                                     onClick={() => handlePlay(game.path)}
                                 />
-                            ))
-                        )}
-                    </section>
+                            ))}
+                        </section>
+                    )}
 
-                    <footer className={`homepage-footer ${isArcade ? 'arcade-footer' : 'islands-footer'}`}>
+                    <footer className={`homepage-footer ${footerClass}`}>
                         <div className="footer-content">
                             <div className="footer-section">
-                                <h3>{isArcade ? 'ABOUT' : 'About'}</h3>
+                                <h3>{footerAboutLabel}</h3>
                                 <p>A collection of fun mini-games built with React.</p>
                                 <p>Created with love for learning and creativity.</p>
                             </div>
                             <div className="footer-section">
-                                <h3>{isArcade ? 'GAMES' : 'Islands'}</h3>
+                                <h3>{footerGamesLabel}</h3>
                                 <p>Mouse Stalker</p>
                                 <p>Blooming Garden</p>
                                 <p>3D Ball</p>
+                                <p>Mycelium Network</p>
+                                <p>Firework Festival</p>
                             </div>
                             <div className="footer-section">
-                                <h3>{isArcade ? 'TECH STACK' : 'Tech Stack'}</h3>
+                                <h3>{footerTechLabel}</h3>
                                 <p>React + Vite</p>
                                 <p>CSS Animations</p>
                                 <p>Canvas API</p>
                             </div>
                             <div className="footer-section">
-                                <h3>{isArcade ? 'CONNECT' : 'Connect'}</h3>
+                                <h3>{footerConnectLabel}</h3>
                                 <a
                                     href="https://github.com/quyen-hoang"
                                     target="_blank"
@@ -577,7 +968,7 @@ const HomePage = () => {
                             </div>
                         </div>
                         <div className="footer-bottom">
-                            <p>{isArcade ? '© 2024 VQM ARCADE • ALL RIGHTS RESERVED' : '© 2024 VQM Playground • Made for fun'}</p>
+                            <p>{footerCopyright}</p>
                         </div>
                     </footer>
                 </div>

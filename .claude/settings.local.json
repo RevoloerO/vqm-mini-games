@@ -4,7 +4,20 @@
       "Bash(npm run lint)",
       "Bash(npm run build:*)",
       "Bash(tree:*)",
-      "Bash(timeout 5 npm run dev:*)"
+      "Bash(timeout 5 npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(npx eslint:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(xargs wc -l)",
+      "Bash(wc -l /c/Users/quyen/Documents/GitHub/vqm-mini-games/src/mini-games/MouseStalker/*.jsx /c/Users/quyen/Documents/GitHub/vqm-mini-games/src/mini-games/MouseStalker/*.js)",
+      "Bash(wc -l /c/Users/quyen/Documents/GitHub/vqm-mini-games/src/mini-games/MyceliumNetwork/*.jsx /c/Users/quyen/Documents/GitHub/vqm-mini-games/src/mini-games/MyceliumNetwork/*.js)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx vite build)",
+      "Bash(npx vite --port 5173)",
+      "Bash(timeout 5)",
+      "Bash(ping -n 4 127.0.0.)",
+      "Bash(ls \"C:\\\\Users\\\\quyen\\\\Documents\\\\GitHub\\\\vqm-mini-games\\\\README\"*)"
     ]
   }
 }

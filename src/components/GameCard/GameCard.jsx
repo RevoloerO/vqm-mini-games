@@ -12,7 +12,7 @@ const GameCard = ({ title, description, status, icon, onPlay, delay, featured = 
         if (status === 'Ready') onPlay();
     }, [status, onPlay]);
 
-    const handleKeyPress = useCallback((e) => {
+    const handleKeyDown = useCallback((e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             if (status === 'Ready') onPlay();
@@ -33,7 +33,7 @@ const GameCard = ({ title, description, status, icon, onPlay, delay, featured = 
             data-theme={theme}
             tabIndex={status === 'Ready' ? 0 : -1}
             onClick={handleClick}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             onMouseMove={(e) => handleMouseMove(e, status === 'Ready')}
             onMouseLeave={handleMouseLeave}
             role="button"

@@ -1,0 +1,700 @@
+/* ============================================
+   MYCELIUM NETWORK — Styles
+   ============================================ */
+
+/* --- Container & Canvas --- */
+.mycelium-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #080d08;
+    cursor: crosshair;
+    user-select: none;
+}
+
+.mycelium-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none; /* prevent scroll on touch */
+}
+
+/* ============================================
+   TOP BAR — Back, Title, Reset
+   ============================================ */
+.mycelium-top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(180deg,
+        rgba(8, 13, 8, 0.85) 0%,
+        rgba(8, 13, 8, 0) 100%);
+    pointer-events: none; /* let clicks pass through gap areas */
+}
+
+.mycelium-top-bar > * {
+    pointer-events: auto;
+}
+
+.top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-bar-center {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-bar-icon {
+    font-size: 1rem;
+}
+
+.top-bar-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(61, 220, 132, 0.65);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* --- Shared icon button base --- */
+.mycelium-back-btn,
+.mycelium-help-btn,
+.mycelium-reset-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: rgba(8, 13, 8, 0.75);
+    border: 1px solid rgba(61, 220, 132, 0.25);
+    border-radius: 8px;
+    color: rgba(61, 220, 132, 0.75);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    transition: all 0.25s ease;
+    text-decoration: none;
+    padding: 0;
+    font-size: 0;
+    line-height: 1;
+}
+
+.mycelium-back-btn:hover,
+.mycelium-help-btn:hover,
+.mycelium-reset-btn:hover {
+    background: rgba(61, 220, 132, 0.12);
+    border-color: rgba(61, 220, 132, 0.5);
+    color: #3ddc84;
+    box-shadow: 0 0 14px rgba(61, 220, 132, 0.2);
+}
+
+.mycelium-reset-btn {
+    border-color: rgba(229, 57, 53, 0.25);
+    color: rgba(229, 57, 53, 0.65);
+}
+
+.mycelium-reset-btn:hover {
+    background: rgba(229, 57, 53, 0.12);
+    border-color: rgba(229, 57, 53, 0.5);
+    color: #e53935;
+    box-shadow: 0 0 14px rgba(229, 57, 53, 0.2);
+}
+
+/* ============================================
+   TITLE OVERLAY (fades out on first load)
+   ============================================ */
+.mycelium-title-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    text-align: center;
+    pointer-events: none;
+    animation: mycelium-title-fade 4s ease-out forwards;
+}
+
+.mycelium-title-overlay h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 300;
+    color: rgba(61, 220, 132, 0.85);
+    text-shadow: 0 0 30px rgba(61, 220, 132, 0.4);
+    margin: 0 0 0.5rem;
+    letter-spacing: 4px;
+}
+
+.mycelium-title-overlay p {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+@keyframes mycelium-title-fade {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+    15%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.02); }
+}
+
+/* ============================================
+   STATS PANEL (glassmorphism)
+   ============================================ */
+.mycelium-stats-panel {
+    position: fixed;
+    top: 4rem;
+    right: 1.25rem;
+    z-index: 20;
+    min-width: 170px;
+    padding: 1.1rem 1.3rem;
+    background: rgba(8, 13, 8, 0.7);
+    border: 1px solid rgba(61, 220, 132, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(16px);
+    color: rgba(255, 255, 255, 0.75);
+    font-family: 'Nunito', sans-serif;
+}
+
+.stats-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(61, 220, 132, 0.55);
+    margin: 0 0 0.65rem;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    font-size: 0.82rem;
+}
+
+.stat-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.stat-value {
+    font-weight: 700;
+    color: rgba(61, 220, 132, 0.9);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   MILESTONE TRACKER (bottom bar)
+   ============================================ */
+.mycelium-milestone-tracker {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0.55rem 1.2rem;
+    background: rgba(8, 13, 8, 0.65);
+    border: 1px solid rgba(61, 220, 132, 0.15);
+    border-radius: 30px;
+    backdrop-filter: blur(12px);
+}
+
+.milestone-dot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    position: relative;
+}
+
+.milestone-icon-wrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.4s ease;
+}
+
+.milestone-dot.achieved .milestone-icon-wrap {
+    border-color: rgba(61, 220, 132, 0.6);
+    background: rgba(61, 220, 132, 0.12);
+    box-shadow: 0 0 12px rgba(61, 220, 132, 0.35);
+    animation: milestone-pop 0.4s ease-out;
+}
+
+@keyframes milestone-pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+.milestone-label {
+    font-size: 0.52rem;
+    color: rgba(255, 255, 255, 0.22);
+    letter-spacing: 0.5px;
+    font-family: 'Nunito', sans-serif;
+    white-space: nowrap;
+    transition: color 0.3s;
+}
+
+.milestone-dot.achieved .milestone-label {
+    color: rgba(61, 220, 132, 0.65);
+}
+
+/* Connector between milestones */
+.milestone-connector {
+    width: 26px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    position: relative;
+    margin: 0 0.2rem;
+    border-radius: 1px;
+    align-self: center;
+    margin-bottom: 12px;
+}
+
+.milestone-connector-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(61, 220, 132, 0.5);
+    border-radius: 1px;
+    transition: width 0.5s ease;
+}
+
+/* ============================================
+   MILESTONE FLASH OVERLAY
+   ============================================ */
+.milestone-flash-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    animation: milestone-pulse 1.8s ease-out forwards;
+}
+
+@keyframes milestone-pulse {
+    0%   { background: rgba(61, 220, 132, 0.15); }
+    30%  { background: rgba(61, 220, 132, 0.06); }
+    100% { background: transparent; }
+}
+
+.milestone-flash-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    animation: flash-label-pop 1.8s ease-out forwards;
+}
+
+.milestone-flash-label .flash-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.milestone-flash-label .flash-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: rgba(61, 220, 132, 0.9);
+    text-shadow: 0 0 20px rgba(61, 220, 132, 0.5);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+@keyframes flash-label-pop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+    20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+    60%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* ============================================
+   HOW TO PLAY PANEL
+   ============================================ */
+.htp-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    animation: htp-fade-in 0.25s ease-out;
+}
+
+@keyframes htp-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.htp-panel {
+    width: 90%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: rgba(12, 20, 12, 0.96);
+    border: 1px solid rgba(61, 220, 132, 0.25);
+    border-radius: 16px;
+    box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.6),
+        0 0 40px rgba(61, 220, 132, 0.08);
+    animation: htp-slide-up 0.3s ease-out;
+}
+
+@keyframes htp-slide-up {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.htp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(61, 220, 132, 0.12);
+}
+
+.htp-header h2 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: rgba(61, 220, 132, 0.9);
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.htp-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.htp-close:hover {
+    background: rgba(229, 57, 53, 0.15);
+    border-color: rgba(229, 57, 53, 0.4);
+    color: #e53935;
+}
+
+.htp-body {
+    padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.htp-section {
+    margin-bottom: 1.25rem;
+}
+
+.htp-section h3 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: rgba(61, 220, 132, 0.8);
+    letter-spacing: 1px;
+    margin: 0 0 0.6rem;
+}
+
+.htp-section p {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.7;
+    margin: 0 0 0.4rem;
+}
+
+/* Controls list */
+.htp-controls-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.htp-controls-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.82rem;
+}
+
+.htp-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    padding: 0.25rem 0.6rem;
+    background: rgba(61, 220, 132, 0.08);
+    border: 1px solid rgba(61, 220, 132, 0.2);
+    border-radius: 5px;
+    color: rgba(61, 220, 132, 0.85);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.htp-desc {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Features list */
+.htp-features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.htp-features-list li {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+    padding-left: 1rem;
+    position: relative;
+}
+
+.htp-features-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: rgba(61, 220, 132, 0.5);
+}
+
+/* Milestones list inside panel */
+.htp-milestones {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.htp-milestone-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.8rem;
+}
+
+.htp-milestone-icon {
+    font-size: 1rem;
+    width: 24px;
+    text-align: center;
+}
+
+.htp-milestone-label {
+    color: rgba(255, 255, 255, 0.6);
+    flex: 1;
+}
+
+.htp-milestone-req {
+    color: rgba(61, 220, 132, 0.6);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Tip */
+.htp-tip {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(61, 220, 132, 0.05);
+    border: 1px solid rgba(61, 220, 132, 0.12);
+    border-radius: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78rem;
+    color: rgba(61, 220, 132, 0.7);
+    line-height: 1.5;
+}
+
+/* ============================================
+   RESET CONFIRMATION DIALOG
+   ============================================ */
+.reset-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    animation: htp-fade-in 0.2s ease-out;
+}
+
+.reset-dialog {
+    background: rgba(12, 20, 12, 0.96);
+    border: 1px solid rgba(229, 57, 53, 0.25);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    max-width: 320px;
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.5);
+    animation: htp-slide-up 0.25s ease-out;
+}
+
+.reset-dialog p {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 1.25rem;
+    line-height: 1.5;
+}
+
+.reset-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.reset-cancel,
+.reset-confirm {
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.reset-cancel {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.reset-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.reset-confirm {
+    background: rgba(229, 57, 53, 0.15);
+    border-color: rgba(229, 57, 53, 0.4);
+    color: #e53935;
+}
+
+.reset-confirm:hover {
+    background: rgba(229, 57, 53, 0.25);
+    box-shadow: 0 0 12px rgba(229, 57, 53, 0.2);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 640px) {
+    .mycelium-stats-panel {
+        top: auto;
+        bottom: 5rem;
+        right: 0.75rem;
+        min-width: 130px;
+        padding: 0.8rem 0.9rem;
+        font-size: 0.75rem;
+    }
+
+    .mycelium-title-overlay h1 {
+        font-size: 1.5rem;
+    }
+
+    .mycelium-milestone-tracker {
+        padding: 0.35rem 0.65rem;
+        bottom: 0.6rem;
+    }
+
+    .milestone-icon-wrap {
+        width: 26px;
+        height: 26px;
+        font-size: 0.8rem;
+    }
+
+    .milestone-connector {
+        width: 14px;
+    }
+
+    .milestone-label {
+        display: none;
+    }
+
+    .top-bar-title {
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+    }
+
+    .top-bar-icon {
+        display: none;
+    }
+
+    .mycelium-back-btn,
+    .mycelium-help-btn,
+    .mycelium-reset-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .htp-panel {
+        width: 95%;
+        max-height: 90vh;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mycelium-title-overlay,
+    .milestone-flash-overlay,
+    .milestone-flash-label,
+    .htp-overlay,
+    .htp-panel,
+    .reset-dialog {
+        animation-duration: 0.01ms !important;
+    }
+
+    .milestone-dot.achieved .milestone-icon-wrap {
+        animation: none;
+    }
+}

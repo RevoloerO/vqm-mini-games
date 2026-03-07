@@ -20,6 +20,24 @@ const THEME_COLORS = {
         cloudWhite: 'rgba(255, 255, 255, 0.8)',
         skyBlue: 'rgba(135, 206, 235, 0.6)',
     },
+    'edo-map': {
+        primary: 'rgba(192, 57, 43, 0.45)',
+        secondary: 'rgba(201, 168, 76, 0.5)',
+        accent: 'rgba(74, 127, 181, 0.4)',
+        torii: '#C0392B',
+        gold: '#C9A84C',
+        water: 'rgba(74, 127, 181, 0.6)',
+    },
+    'night-fair': {
+        primary: 'rgba(255, 179, 0, 0.5)',
+        secondary: 'rgba(156, 39, 176, 0.5)',
+        accent: 'rgba(233, 30, 99, 0.6)',
+        tertiary: 'rgba(0, 188, 212, 0.5)',
+        amber: '#FFB300',
+        purple: '#9C27B0',
+        magenta: '#E91E63',
+        cyan: '#00BCD4',
+    },
 };
 
 /**
@@ -314,6 +332,289 @@ const CardCanvas = ({ title, theme = 'arcade' }) => {
             return () => {
                 cancelAnimationFrame(animationId);
             };
+        }
+
+        // Mycelium Network — organic tendril + node preview
+        if (title === 'Mycelium Network') {
+            let time = 0;
+            const nodes = Array.from({ length: 5 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 3 + 4,
+                phase: Math.random() * Math.PI * 2,
+            }));
+            // pre-computed bezier tendrils between some nodes
+            const tendrils = [];
+            for (let i = 0; i < nodes.length - 1; i++) {
+                tendrils.push({
+                    a: nodes[i],
+                    b: nodes[i + 1],
+                    cx: (nodes[i].x + nodes[i + 1].x) / 2 + (Math.random() - 0.5) * 40,
+                    cy: (nodes[i].y + nodes[i + 1].y) / 2 + (Math.random() - 0.5) * 40,
+                });
+            }
+
+            const animate = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                time += 0.016;
+
+                // draw tendrils
+                tendrils.forEach(t => {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(61, 220, 132, 0.18)';
+                    ctx.lineWidth = 1.5;
+                    ctx.shadowColor = 'rgba(61, 220, 132, 0.15)';
+                    ctx.shadowBlur = 6;
+                    ctx.beginPath();
+                    ctx.moveTo(t.a.x, t.a.y);
+                    ctx.quadraticCurveTo(t.cx + Math.sin(time * 0.5) * 4, t.cy + Math.cos(time * 0.4) * 4, t.b.x, t.b.y);
+                    ctx.stroke();
+                    ctx.restore();
+                });
+
+                // draw nodes
+                nodes.forEach(n => {
+                    const glow = 1 + Math.sin(time * 1.5 + n.phase) * 0.35;
+                    const r = n.r * glow;
+                    const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r * 2.5);
+                    grad.addColorStop(0, 'rgba(61, 220, 132, 0.25)');
+                    grad.addColorStop(1, 'rgba(61, 220, 132, 0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, r * 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(61, 220, 132, 0.35)';
+                    ctx.fill();
+                });
+
+                animationId = requestAnimationFrame(animate);
+            };
+
+            animate();
+            return () => cancelAnimationFrame(animationId);
+        }
+
+        if (title === 'Firework Festival') {
+            let time = 0;
+            const fwColors = ['#ff3b3b', '#3b8bff', '#ffe03b', '#3bff6e', '#b23bff', '#ff8c3b'];
+            const shapeTypes = ['circle', 'square', 'triangle'];
+
+            const createMiniFirework = () => ({
+                x: Math.random() * canvas.width,
+                y: canvas.height * 0.85,
+                targetY: Math.random() * canvas.height * 0.4 + canvas.height * 0.1,
+                color: fwColors[Math.floor(Math.random() * fwColors.length)],
+                shape: shapeTypes[Math.floor(Math.random() * shapeTypes.length)],
+                phase: 'launch',
+                age: 0,
+                speed: 1.5 + Math.random() * 1.5,
+                particles: [],
+            });
+
+            const fireworks = [createMiniFirework()];
+            let spawnTimer = 0;
+
+            const animate = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                time += 0.016;
+                spawnTimer += 0.016;
+
+                if (spawnTimer > 1.2 + Math.random() * 0.8 && fireworks.length < 3) {
+                    fireworks.push(createMiniFirework());
+                    spawnTimer = 0;
+                }
+
+                fireworks.forEach((fw, idx) => {
+                    fw.age += 0.016;
+
+                    if (fw.phase === 'launch') {
+                        fw.y -= fw.speed;
+                        // Trail
+                        ctx.beginPath();
+                        ctx.arc(fw.x, fw.y, 1.5, 0, Math.PI * 2);
+                        ctx.fillStyle = fw.color;
+                        ctx.shadowBlur = 6;
+                        ctx.shadowColor = fw.color;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+
+                        if (fw.y <= fw.targetY) {
+                            fw.phase = 'explode';
+                            fw.age = 0;
+                            const count = 16;
+                            for (let p = 0; p < count; p++) {
+                                let angle, r;
+                                if (fw.shape === 'circle') {
+                                    angle = (Math.PI * 2 * p) / count;
+                                    r = 1;
+                                } else if (fw.shape === 'square') {
+                                    const side = Math.floor(p / 4);
+                                    const t = (p % 4) / 4;
+                                    const pts = [[-1,-1,2,0],[1,-1,0,2],[1,1,-2,0],[-1,1,0,-2]];
+                                    const s = pts[side] || pts[0];
+                                    const sx = s[0] + s[2] * t, sy = s[1] + s[3] * t;
+                                    angle = Math.atan2(sy, sx);
+                                    r = Math.sqrt(sx*sx + sy*sy);
+                                } else {
+                                    const verts = [[0,-1.2],[-1.1,0.9],[1.1,0.9]];
+                                    const edge = p % 3;
+                                    const t = Math.floor(p / 3) / Math.ceil(count / 3);
+                                    const a = verts[edge], b = verts[(edge+1)%3];
+                                    const sx = a[0]+(b[0]-a[0])*t, sy = a[1]+(b[1]-a[1])*t;
+                                    angle = Math.atan2(sy, sx);
+                                    r = Math.sqrt(sx*sx + sy*sy);
+                                }
+                                fw.particles.push({
+                                    angle,
+                                    speed: r * (1.2 + Math.random() * 0.5),
+                                    size: 1.5 + Math.random(),
+                                });
+                            }
+                        }
+                    }
+
+                    if (fw.phase === 'explode') {
+                        const progress = fw.age / 1.8;
+                        if (progress > 1) {
+                            fireworks[idx] = createMiniFirework();
+                            return;
+                        }
+                        const fadeOut = Math.max(0, 1 - progress * 1.1);
+                        fw.particles.forEach(p => {
+                            const dist = p.speed * fw.age * 20;
+                            const px = fw.x + Math.cos(p.angle) * dist;
+                            const py = fw.y + Math.sin(p.angle) * dist + fw.age * fw.age * 8;
+                            if (fadeOut <= 0) return;
+                            ctx.beginPath();
+                            ctx.arc(px, py, p.size * (1 - progress * 0.4), 0, Math.PI * 2);
+                            ctx.fillStyle = fw.color;
+                            ctx.globalAlpha = fadeOut * 0.7;
+                            ctx.shadowBlur = 5;
+                            ctx.shadowColor = fw.color;
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                            ctx.globalAlpha = 1;
+                        });
+                    }
+                });
+
+                animationId = requestAnimationFrame(animate);
+            };
+
+            animate();
+            return () => cancelAnimationFrame(animationId);
+        }
+
+        // For Edo Map and Night Fair themes with any title: add a soft ink/light ambient animation
+        if (theme === 'edo-map') {
+            let time = 0;
+            const inkDots = Array.from({ length: 6 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 18 + 8,
+                speed: Math.random() * 0.004 + 0.002,
+                offset: Math.random() * Math.PI * 2,
+            }));
+
+            const animate = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                time += 0.016;
+
+                inkDots.forEach(dot => {
+                    const alpha = 0.03 + Math.sin(time * dot.speed * 100 + dot.offset) * 0.02;
+                    ctx.beginPath();
+                    ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(192, 57, 43, ${alpha})`;
+                    ctx.fill();
+                });
+
+                // Subtle brushstroke horizontal lines
+                for (let i = 0; i < 3; i++) {
+                    const y = canvas.height * (0.25 + i * 0.25);
+                    const alpha = 0.025 + Math.sin(time * 0.5 + i) * 0.015;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y + Math.sin(time * 0.3 + i) * 3);
+                    ctx.strokeStyle = `rgba(44, 31, 20, ${alpha})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+
+                animationId = requestAnimationFrame(animate);
+            };
+
+            animate();
+            return () => cancelAnimationFrame(animationId);
+        }
+
+        if (theme === 'night-fair') {
+            const sparkColors = [
+                colors.primary,
+                colors.secondary,
+                colors.accent,
+                colors.tertiary || 'rgba(0, 188, 212, 0.5)',
+            ];
+
+            const createFirework = () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height * 0.7,
+                particles: Array.from({ length: 12 }, () => ({
+                    angle: Math.random() * Math.PI * 2,
+                    speed: Math.random() * 2 + 1,
+                    size: Math.random() * 3 + 1.5,
+                    colorIdx: Math.floor(Math.random() * 4),
+                })),
+                age: 0,
+                maxAge: 1.5 + Math.random(),
+            });
+
+            const fireworks = Array.from({ length: 3 }, () => {
+                const fw = createFirework();
+                fw.age = Math.random() * fw.maxAge;
+                return fw;
+            });
+
+            const animate = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                fireworks.forEach((fw, fwIdx) => {
+                    fw.age += 0.016;
+
+                    if (fw.age > fw.maxAge) {
+                        fireworks[fwIdx] = createFirework();
+                        return;
+                    }
+
+                    const progress = fw.age / fw.maxAge;
+                    const fadeOut = Math.max(0, 1 - progress * 1.2);
+
+                    fw.particles.forEach(p => {
+                        const dist = p.speed * fw.age * 30;
+                        const px = fw.x + Math.cos(p.angle) * dist;
+                        const py = fw.y + Math.sin(p.angle) * dist + (fw.age * fw.age * 15);
+
+                        const alpha = fadeOut * 0.6;
+                        if (alpha <= 0) return;
+
+                        const color = sparkColors[p.colorIdx];
+                        ctx.beginPath();
+                        ctx.arc(px, py, p.size * (1 - progress * 0.5), 0, Math.PI * 2);
+                        ctx.fillStyle = color.replace(/[\d.]+\)$/, `${alpha})`);
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = color;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    });
+                });
+
+                animationId = requestAnimationFrame(animate);
+            };
+
+            animate();
+            return () => cancelAnimationFrame(animationId);
         }
 
         // Default: No animation for unknown titles
