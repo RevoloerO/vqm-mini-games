@@ -1,16 +1,16 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, HelpCircle, Circle, Square, Triangle, Play, RotateCcw, Home, Flame, Coffee, Zap } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Circle, Square, Triangle, Play, RotateCcw, Home, Flame, Coffee, Zap, ArrowUp } from 'lucide-react';
 import { useFireworkGame, getShapePoints } from './useFireworkGame';
-import { COLORS, SHAPE_ORDER, LEVELS, GAME_PHASES, QUEST_TYPES } from './gameConfig';
+import { COLORS, ANGLES, ANGLE_ORDER, SHAPE_ORDER, LEVELS, GAME_PHASES, QUEST_TYPES } from './gameConfig';
 import './FireworkFestival.css';
 
 /* ────────────────────────────────────────────
    QuestPreviewCanvas — animated mini firework
    Shows a looping explosion so the player must
-   observe and identify the color + shape.
+   observe and identify the color + shape + position.
    ──────────────────────────────────────────── */
-const QuestPreviewCanvas = ({ color, shape, size = 110, matched = false, memoryMode = false, memoryFadeMs = 3000 }) => {
+const QuestPreviewCanvas = ({ color, shape, angle = null, size = 110, matched = false, memoryMode = false, memoryFadeMs = 3000 }) => {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const stateRef = useRef(null);
@@ -22,11 +22,21 @@ const QuestPreviewCanvas = ({ color, shape, size = 110, matched = false, memoryM
     setFaded(false);
     const timer = setTimeout(() => setFaded(true), memoryFadeMs);
     return () => clearTimeout(timer);
-  }, [memoryMode, memoryFadeMs, color, shape, matched]);
+  }, [memoryMode, memoryFadeMs, color, shape, angle, matched]);
+
+  // Offset explosion center based on angle
+  const angleOffsets = {
+    farLeft:  { x: -0.32, y: 0.12 },
+    left:     { x: -0.16, y: 0.04 },
+    center:   { x: 0,     y: 0 },
+    right:    { x: 0.16,  y: 0.04 },
+    farRight: { x: 0.32,  y: 0.12 },
+  };
+  const offset = angle ? (angleOffsets[angle] || { x: 0, y: 0 }) : { x: 0, y: 0 };
+  const cx = size / 2 + offset.x * size;
+  const cy = size / 2 + offset.y * size;
 
   const initExplosion = useCallback(() => {
-    const cx = size / 2;
-    const cy = size / 2;
     const colorData = COLORS[color] || COLORS.red;
     const points = getShapePoints(shape, 50);
     const particles = points.map(p => {
@@ -44,12 +54,12 @@ const QuestPreviewCanvas = ({ color, shape, size = 110, matched = false, memoryM
     });
     // Add some inner sparkles for extra beauty
     for (let i = 0; i < 12; i++) {
-      const angle = Math.random() * Math.PI * 2;
+      const a = Math.random() * Math.PI * 2;
       const speed = 0.5 + Math.random() * 1.2;
       particles.push({
         x: cx, y: cy,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed,
         life: 50 * (0.6 + Math.random() * 0.4),
         maxLife: 50,
         size: 1 + Math.random() * 1.5,
@@ -58,7 +68,7 @@ const QuestPreviewCanvas = ({ color, shape, size = 110, matched = false, memoryM
       });
     }
     return { particles, age: 0, phase: 'exploding' };
-  }, [color, shape, size]);
+  }, [color, shape, cx, cy]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -142,7 +152,7 @@ const QuestPreviewCanvas = ({ color, shape, size = 110, matched = false, memoryM
 
     animRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animRef.current);
-  }, [color, shape, size, initExplosion]);
+  }, [color, shape, angle, size, initExplosion]);
 
   return (
     <div className={`quest-preview-wrap ${faded ? 'memory-faded' : ''}`}>
@@ -167,6 +177,14 @@ const ShapeBtnIcon = ({ shape }) => {
   }
 };
 
+/* ────────────────────────────────────────────
+   Angle button icon (rotated arrow)
+   ──────────────────────────────────────────── */
+const AngleBtnIcon = ({ angleKey, size = 16 }) => {
+  const deg = ANGLES[angleKey]?.degrees || 0;
+  return <ArrowUp size={size} style={{ transform: `rotate(${deg}deg)`, transition: 'transform 0.2s' }} />;
+};
+
 /* ════════════════════════════════════════════
    Main Component
    ════════════════════════════════════════════ */
@@ -176,11 +194,11 @@ const FireworkFestival = () => {
     gamePhase, currentLevel, score, questsCompleted, timeRemaining,
     currentQuest, cannonSelections, lastMatchResult,
     showHowToPlay, setShowHowToPlay, crowdMood, levelSummary,
-    unlockedColor, unlockedCannon,
+    unlockedColor, unlockedCannon, unlockedAngle,
     chillMode, toggleChillMode,
     quickMatch, questStartTime, levelIntro,
     levelConfig, totalLevels,
-    startGame, fireCannon, selectColor, selectShape,
+    startGame, fireCannon, fireAllCannons, selectColor, selectShape, selectAngle,
     advanceLevel, restartLevel, restartGame,
   } = useFireworkGame();
 
@@ -204,17 +222,19 @@ const FireworkFestival = () => {
       {isPlaying && (
         <>
           <div className="firework-top-bar">
-            <Link to="/vqm-mini-games/" className="firework-back-btn">
-              <ArrowLeft size={16} />
-              <span>Back</span>
-            </Link>
+            <div className="top-bar-left">
+              <Link to="/vqm-mini-games/" className="firework-back-btn">
+                <ArrowLeft size={16} />
+              </Link>
+              <button className="firework-help-btn" onClick={() => setShowHowToPlay(true)}>
+                <HelpCircle size={16} />
+              </button>
+            </div>
             <span className="firework-title">
               Firework Festival
               {chillMode && <span className="chill-badge">☕ Chill</span>}
             </span>
-            <button className="firework-help-btn" onClick={() => setShowHowToPlay(true)}>
-              <HelpCircle size={16} />
-            </button>
+            <div className="top-bar-right" />
           </div>
 
           {/* ── Timer Bar (hidden in chill mode) ── */}
@@ -257,10 +277,19 @@ const FireworkFestival = () => {
           {currentQuest && (
             <div className="firework-quest" key={`q-${questsCompleted}-${currentQuest.type}`}>
               <span className="quest-label">
-                {currentQuest.type === QUEST_TYPES.SINGLE && 'Recreate this firework'}
-                {currentQuest.type === QUEST_TYPES.DUAL && 'Both cannons must match'}
+                {currentQuest.type === QUEST_TYPES.SINGLE && (
+                  levelConfig.cannonCount > 1
+                    ? '1 firework — match with either cannon'
+                    : 'Recreate this firework'
+                )}
+                {currentQuest.type === QUEST_TYPES.DUAL && '2 fireworks — match both cannons'}
                 {currentQuest.type === QUEST_TYPES.SEQUENCE && `Sequence ${(currentQuest.sequenceIndex || 0) + 1} of ${currentQuest.requirements.length}`}
               </span>
+              {levelConfig.cannonCount > 1 && currentQuest.type !== QUEST_TYPES.SEQUENCE && (
+                <span className={`quest-count-badge ${currentQuest.type === QUEST_TYPES.DUAL ? 'dual' : 'single'}`}>
+                  {currentQuest.type === QUEST_TYPES.DUAL ? '×2' : '×1'}
+                </span>
+              )}
               <div className="quest-previews">
                 {currentQuest.type === QUEST_TYPES.SEQUENCE ? (
                   currentQuest.requirements.map((req, i) => (
@@ -271,11 +300,17 @@ const FireworkFestival = () => {
                         <QuestPreviewCanvas
                           color={req.color}
                           shape={req.shape}
+                          angle={req.angle}
                           size={80}
                           matched={currentQuest.matched[i]}
                           memoryMode={levelConfig.memoryMode}
                           memoryFadeMs={levelConfig.memoryFadeMs}
                         />
+                        {req.angle && (
+                          <span className="quest-angle-indicator">
+                            <AngleBtnIcon angleKey={req.angle} size={12} />
+                          </span>
+                        )}
                       </div>
                     </React.Fragment>
                   ))
@@ -288,11 +323,17 @@ const FireworkFestival = () => {
                       <QuestPreviewCanvas
                         color={req.color}
                         shape={req.shape}
+                        angle={req.angle}
                         size={currentQuest.type === QUEST_TYPES.DUAL ? 95 : 110}
                         matched={currentQuest.matched[i]}
                         memoryMode={levelConfig.memoryMode}
                         memoryFadeMs={levelConfig.memoryFadeMs}
                       />
+                      {req.angle && (
+                        <span className="quest-angle-indicator">
+                          <AngleBtnIcon angleKey={req.angle} size={14} />
+                        </span>
+                      )}
                     </div>
                   ))
                 )}
@@ -301,102 +342,129 @@ const FireworkFestival = () => {
           )}
 
           {/* ── Cannon Controls ──────────── */}
-          <div className="firework-controls-wrap">
-            {cannonSelections.map((sel) => {
-              const colorData = COLORS[sel.color] || COLORS.red;
-              return (
-                <div key={sel.id} className="cannon-control-group">
-                  {levelConfig.cannonCount > 1 && (
-                    <span className="cannon-label">
-                      {sel.id === 0 ? 'Left' : 'Right'}
-                    </span>
-                  )}
-
-                  {/* Cannon Visual — shows loaded color + shape */}
-                  <div className="cannon-visual">
-                    <div className="cannon-muzzle-ring" />
-                    <div
-                      className="cannon-barrel"
-                      style={{
-                        backgroundColor: colorData.hex,
-                        '--cannon-glow': colorData.glow,
-                      }}
-                    >
-                      <div className="cannon-shell" key={`${sel.id}-${sel.color}-${sel.shape}`}>
-                        <ShapeBtnIcon shape={sel.shape} />
+          <div className={`firework-controls-wrap ${levelConfig.cannonCount > 1 ? 'dual' : ''}`}>
+            <div className="cannons-panel">
+              {cannonSelections.map((sel) => {
+                const colorData = COLORS[sel.color] || COLORS.red;
+                const angleDeg = levelConfig.angleMode ? (ANGLES[sel.angle]?.degrees || 0) : 0;
+                return (
+                  <div key={sel.id} className="cannon-control-group">
+                    {/* Cannon Visual — compact */}
+                    <div className="cannon-visual">
+                      <div className="cannon-muzzle-ring" />
+                      <div
+                        className="cannon-barrel"
+                        style={{
+                          backgroundColor: colorData.hex,
+                          '--cannon-glow': colorData.glow,
+                          transform: `rotate(${angleDeg}deg)`,
+                          transformOrigin: 'bottom center',
+                          transition: 'transform 0.3s ease',
+                        }}
+                      >
+                        <div className="cannon-shell" key={`${sel.id}-${sel.color}-${sel.shape}`}>
+                          <ShapeBtnIcon shape={sel.shape} />
+                        </div>
+                      </div>
+                      <div className="cannon-base">
+                        <div className="cannon-wheel" />
+                        <div className="cannon-wheel" />
                       </div>
                     </div>
-                    <div className="cannon-base">
-                      <div className="cannon-wheel" />
-                      <div className="cannon-wheel" />
+
+                    {/* Angle selector — only when angleMode is active */}
+                    {levelConfig.angleMode && (
+                      <div className="selector-row angle-row">
+                        {levelConfig.availableAngles.map(angleKey => (
+                          <button
+                            key={angleKey}
+                            className={`angle-btn ${sel.angle === angleKey ? 'active' : ''}`}
+                            onClick={() => selectAngle(sel.id, angleKey)}
+                            title={ANGLES[angleKey]?.name}
+                            aria-label={`Select ${ANGLES[angleKey]?.name} angle`}
+                          >
+                            <AngleBtnIcon angleKey={angleKey} size={14} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Color selector */}
+                    <div className="selector-row">
+                      {levelConfig.availableColors.map(colorKey => {
+                        const c = COLORS[colorKey];
+                        return (
+                          <button
+                            key={colorKey}
+                            className={`color-btn ${sel.color === colorKey ? 'active' : ''}`}
+                            style={{
+                              backgroundColor: c.hex,
+                              '--btn-glow': c.glow,
+                            }}
+                            onClick={() => selectColor(sel.id, colorKey)}
+                            title={c.name}
+                            aria-label={`Select ${c.name}`}
+                          />
+                        );
+                      })}
                     </div>
-                  </div>
 
-                  {/* Color selector — only unlocked colors */}
-                  <div className="selector-row">
-                    {levelConfig.availableColors.map(colorKey => {
-                      const c = COLORS[colorKey];
-                      return (
+                    {/* Shape selector */}
+                    <div className="selector-row">
+                      {SHAPE_ORDER.map(shapeKey => (
                         <button
-                          key={colorKey}
-                          className={`color-btn ${sel.color === colorKey ? 'active' : ''}`}
-                          style={{
-                            backgroundColor: c.hex,
-                            '--btn-glow': c.glow,
-                          }}
-                          onClick={() => selectColor(sel.id, colorKey)}
-                          title={c.name}
-                          aria-label={`Select ${c.name}`}
-                        />
-                      );
-                    })}
-                  </div>
+                          key={shapeKey}
+                          className={`shape-btn ${sel.shape === shapeKey ? 'active' : ''}`}
+                          onClick={() => selectShape(sel.id, shapeKey)}
+                          title={shapeKey.charAt(0).toUpperCase() + shapeKey.slice(1)}
+                          aria-label={`Select ${shapeKey}`}
+                        >
+                          <ShapeBtnIcon shape={shapeKey} />
+                        </button>
+                      ))}
+                    </div>
 
-                  {/* Shape selector */}
-                  <div className="selector-row">
-                    {SHAPE_ORDER.map(shapeKey => (
+                    {/* Fire button — only for single cannon mode */}
+                    {levelConfig.cannonCount === 1 && (
                       <button
-                        key={shapeKey}
-                        className={`shape-btn ${sel.shape === shapeKey ? 'active' : ''}`}
-                        onClick={() => selectShape(sel.id, shapeKey)}
-                        title={shapeKey.charAt(0).toUpperCase() + shapeKey.slice(1)}
-                        aria-label={`Select ${shapeKey}`}
+                        className="fire-btn"
+                        onClick={() => fireCannon(sel.id)}
+                        aria-label="Fire cannon"
                       >
-                        <ShapeBtnIcon shape={shapeKey} />
+                        <Flame size={18} />
                       </button>
-                    ))}
+                    )}
                   </div>
+                );
+              })}
+            </div>
 
-                  {/* Fire button */}
-                  <button
-                    className="fire-btn"
-                    onClick={() => fireCannon(sel.id)}
-                    aria-label={`Fire ${levelConfig.cannonCount > 1 ? (sel.id === 0 ? 'left' : 'right') + ' cannon' : 'cannon'}`}
-                  >
-                    <Flame size={20} />
-                  </button>
-                </div>
-              );
-            })}
+            {/* Single fire button for dual cannons */}
+            {levelConfig.cannonCount > 1 && (
+              <button
+                className="fire-btn fire-btn-dual"
+                onClick={fireAllCannons}
+                aria-label="Fire both cannons"
+              >
+                <Flame size={22} />
+              </button>
+            )}
           </div>
 
-          {/* ── Match Feedback ────────────── */}
-          {lastMatchResult && (
-            <div className={`match-feedback ${lastMatchResult}`}>
-              {lastMatchResult === 'correct' ? 'MATCH!' : 'MISS!'}
+          {/* ── Feedback Toast ────────────── */}
+          {(lastMatchResult || quickMatch) && (
+            <div className={`feedback-toast ${lastMatchResult || ''} ${quickMatch ? 'quick' : ''}`}>
+              {lastMatchResult === 'correct' && '✓ MATCH'}
+              {lastMatchResult === 'wrong' && '✗ MISS'}
+              {quickMatch && <span className="toast-quick">⚡ QUICK!</span>}
             </div>
           )}
 
           {/* ── Crowd Mood ───────────────── */}
           {crowdMood !== 'neutral' && (
             <div className={`crowd-indicator ${crowdMood}`}>
-              {crowdMood === 'cheer' ? '👏 The crowd cheers!' : '😮 Aww...'}
+              {crowdMood === 'cheer' ? '👏' : '😮'}
             </div>
-          )}
-
-          {/* ── Quick-Match Flash ─────────── */}
-          {quickMatch && (
-            <div className="quick-match-feedback">⚡ QUICK!</div>
           )}
 
           {/* ── Level Intro ──────────────── */}
@@ -436,6 +504,13 @@ const FireworkFestival = () => {
         </div>
       )}
 
+      {unlockedAngle && (
+        <div className="unlock-notification">
+          📐 Cannon Aiming Unlocked!
+          <div className="unlock-sub">Select the angle to match the target position</div>
+        </div>
+      )}
+
       {/* ══ MENU ═════════════════════════════ */}
       {gamePhase === GAME_PHASES.MENU && (
         <div className="firework-overlay">
@@ -443,7 +518,7 @@ const FireworkFestival = () => {
             <div className="modal-emoji">🎆</div>
             <h2>Firework Festival</h2>
             <p className="modal-sub">
-              Observe the firework and recreate its color and shape!
+              Observe the firework and recreate its color, shape, and position!
             </p>
 
             {/* Chill mode toggle */}
@@ -470,7 +545,7 @@ const FireworkFestival = () => {
             </p>
 
             <div className="menu-level-info">
-              10 levels · 7 colors · 3 shapes · Crowd cheering
+              10 levels · 7 colors · 3 shapes · 5 angles · Crowd cheering
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
               <button className="modal-btn modal-btn-primary" onClick={startGame}>
@@ -593,12 +668,13 @@ const FireworkFestival = () => {
             <div className="htp-content">
               <h3>🎯 Goal</h3>
               <p>
-                Watch the firework preview closely — observe the explosion's color and shape,
-                then recreate it by selecting the right combination on your cannon and firing!
+                Watch the firework preview closely — observe the explosion's color, shape,
+                and position, then recreate it by selecting the right combination on your cannon and firing!
               </p>
 
               <h3>🕹️ Controls</h3>
               <ul>
+                <li><strong>Angle buttons</strong> — Aim the cannon (Left, Straight, Right, etc.)</li>
                 <li><strong>Color buttons</strong> — Pick the firework color</li>
                 <li><strong>Shape buttons</strong> — Pick the explosion shape (Circle, Square, Triangle)</li>
                 <li><strong>Fire button</strong> — Launch the firework!</li>
@@ -609,12 +685,12 @@ const FireworkFestival = () => {
                 <li><strong>L1 "First Spark"</strong> — Tutorial: 1 cannon, 3 colors</li>
                 <li><strong>L2 "Quick Match"</strong> — ⚡ Quick-match bonus for fast matches!</li>
                 <li><strong>L3 "Double Trouble"</strong> — 🎯 Second cannon unlocks!</li>
-                <li><strong>L4 "Color Splash"</strong> — 🎨 Green & Purple join the palette</li>
-                <li><strong>L5 "Fading Lights"</strong> — 🧠 Memory mode: previews fade!</li>
-                <li><strong>L6 "Rapid Fire"</strong> — 🔥 Orange + blitz pacing</li>
-                <li><strong>L7 "Full Spectrum"</strong> — 🌈 All 7 colors unlocked</li>
-                <li><strong>L8 "Chain Reaction"</strong> — 🔗 Sequence quests: fire in order</li>
-                <li><strong>L9 "Crowd Pleaser"</strong> — 😤 Memory + speed combined!</li>
+                <li><strong>L4 "Color Splash"</strong> — 🎨 Green joins the palette</li>
+                <li><strong>L5 "Dual Mastery"</strong> — 🎨 Purple + more dual quests</li>
+                <li><strong>L6 "Aim High"</strong> — 📐 Cannon aiming: match the position!</li>
+                <li><strong>L7 "Fading Lights"</strong> — 🧠 Memory mode: previews fade!</li>
+                <li><strong>L8 "Full Arsenal"</strong> — 🌈 All 7 colors + all 5 angles</li>
+                <li><strong>L9 "Chain Reaction"</strong> — 🔗 Sequences + memory combined!</li>
                 <li><strong>L10 "Grand Finale"</strong> — 🏆 Everything at once, 4× score!</li>
               </ul>
 
@@ -627,6 +703,7 @@ const FireworkFestival = () => {
 
               <h3>⚡ Special Mechanics</h3>
               <ul>
+                <li><strong>Angle aiming:</strong> Match the firework's position by selecting the correct cannon angle</li>
                 <li><strong>Quick-match bonus:</strong> Match within the time window for +50 pts</li>
                 <li><strong>Memory mode:</strong> Quest preview fades — remember what you saw!</li>
                 <li><strong>Sequences:</strong> Fire 2–3 fireworks in exact order</li>

@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import {
-  COLORS, COLOR_ORDER, SHAPES, SHAPE_ORDER,
+  COLORS, COLOR_ORDER, SHAPES, SHAPE_ORDER, ANGLES, ANGLE_ORDER,
   LEVELS, CANNON_CONFIG, FIREWORK_CONFIG, STAR_CONFIG,
   GAME_PHASES, QUEST_TYPES, CROWD_CONFIG, SCORE_CONFIG,
 } from './gameConfig';
@@ -163,6 +163,7 @@ export function useFireworkGame() {
   const [levelSummary, setLevelSummary] = useState(null);
   const [unlockedColor, setUnlockedColor] = useState(null);
   const [unlockedCannon, setUnlockedCannon] = useState(false);
+  const [unlockedAngle, setUnlockedAngle] = useState(false);
   const [chillMode, setChillMode] = useState(false);
   const chillModeRef = useRef(false);
   const [quickMatch, setQuickMatch] = useState(null);       // 'quick' flash or null
@@ -180,14 +181,27 @@ export function useFireworkGame() {
     }));
   }, []);
 
+  /* ── Sync cannon selections to React state ── */
+  const syncCannonSelections = useCallback(() => {
+    setCannonSelections(cannonsRef.current.map(c => ({
+      id: c.id,
+      color: c.selectedColor,
+      shape: c.selectedShape,
+      angle: c.selectedAngle || 'center',
+    })));
+  }, []);
+
   /* ── Quest generation ──────────────────── */
   const generateQuest = useCallback((levelCfg) => {
-    const { availableColors, availableShapes, dualQuests, dualQuestChance,
+    const { availableColors, availableShapes, availableAngles, angleMode,
+            dualQuests, dualQuestChance,
             sequenceQuests, sequenceQuestChance, sequenceLength, cannonCount } = levelCfg;
 
     const now = performance.now();
     questStartTimeRef.current = now;
     setQuestStartTime(now);
+
+    const pickAngle = () => angleMode ? pick(availableAngles) : null;
 
     // Sequence quest
     if (sequenceQuests && Math.random() < (sequenceQuestChance || 0)) {
@@ -195,6 +209,7 @@ export function useFireworkGame() {
       const requirements = Array.from({ length: len }, () => ({
         color: pick(availableColors),
         shape: pick(availableShapes),
+        angle: pickAngle(),
         cannonId: null,
       }));
       const quest = {
@@ -212,8 +227,8 @@ export function useFireworkGame() {
     // Dual quest
     if (dualQuests && cannonCount >= 2 && Math.random() < dualQuestChance) {
       const requirements = [
-        { color: pick(availableColors), shape: pick(availableShapes), cannonId: 0 },
-        { color: pick(availableColors), shape: pick(availableShapes), cannonId: 1 },
+        { color: pick(availableColors), shape: pick(availableShapes), angle: pickAngle(), cannonId: 0 },
+        { color: pick(availableColors), shape: pick(availableShapes), angle: pickAngle(), cannonId: 1 },
       ];
       const quest = {
         type: QUEST_TYPES.DUAL,
@@ -228,7 +243,12 @@ export function useFireworkGame() {
     // Single quest
     const quest = {
       type: QUEST_TYPES.SINGLE,
-      requirements: [{ color: pick(availableColors), shape: pick(availableShapes), cannonId: null }],
+      requirements: [{
+        color: pick(availableColors),
+        shape: pick(availableShapes),
+        angle: pickAngle(),
+        cannonId: null,
+      }],
       matched: [false],
     };
     currentQuestRef.current = quest;
@@ -246,8 +266,8 @@ export function useFireworkGame() {
 
     // Check if unlocking a new color compared to previous level
     if (levelIndex > 0) {
-      const prevColors = LEVELS[levelIndex - 1].availableColors;
-      const newColor = cfg.availableColors.find(c => !prevColors.includes(c));
+      const prevCfg = LEVELS[levelIndex - 1];
+      const newColor = cfg.availableColors.find(c => !prevCfg.availableColors.includes(c));
       if (newColor) {
         setUnlockedColor(newColor);
         setTimeout(() => setUnlockedColor(null), 2500);
@@ -256,15 +276,29 @@ export function useFireworkGame() {
       }
 
       // Check if unlocking second cannon
-      if (LEVELS[levelIndex - 1].cannonCount < cfg.cannonCount) {
+      if (prevCfg.cannonCount < cfg.cannonCount) {
         setUnlockedCannon(true);
         setTimeout(() => setUnlockedCannon(false), 2500);
       } else {
         setUnlockedCannon(false);
       }
+
+      // Check if unlocking angle mode
+      if (!prevCfg.angleMode && cfg.angleMode) {
+        setUnlockedAngle(true);
+        setTimeout(() => setUnlockedAngle(false), 2500);
+      } else if (prevCfg.angleMode && cfg.angleMode &&
+                 cfg.availableAngles.length > prevCfg.availableAngles.length) {
+        // More angles unlocked
+        setUnlockedAngle(true);
+        setTimeout(() => setUnlockedAngle(false), 2500);
+      } else {
+        setUnlockedAngle(false);
+      }
     } else {
       setUnlockedColor(null);
       setUnlockedCannon(false);
+      setUnlockedAngle(false);
     }
 
     const canvas = canvasRef.current;
@@ -275,11 +309,13 @@ export function useFireworkGame() {
     const centerX = W / 2;
     const baseY = H - CANNON_CONFIG.baseYOffset;
     const cannons = [];
+    const defaultAngle = cfg.angleMode ? cfg.availableAngles[Math.floor(cfg.availableAngles.length / 2)] : 'center';
     if (cfg.cannonCount === 1) {
       cannons.push({
         id: 0, x: centerX, y: baseY,
         selectedColor: cfg.availableColors[0],
         selectedShape: cfg.availableShapes[0],
+        selectedAngle: defaultAngle,
       });
     } else {
       const half = CANNON_CONFIG.spacing / 2;
@@ -287,15 +323,17 @@ export function useFireworkGame() {
         id: 0, x: centerX - half, y: baseY,
         selectedColor: cfg.availableColors[0],
         selectedShape: cfg.availableShapes[0],
+        selectedAngle: defaultAngle,
       });
       cannons.push({
         id: 1, x: centerX + half, y: baseY,
         selectedColor: cfg.availableColors[1 % cfg.availableColors.length],
         selectedShape: cfg.availableShapes[1 % cfg.availableShapes.length],
+        selectedAngle: defaultAngle,
       });
     }
     cannonsRef.current = cannons;
-    setCannonSelections(cannons.map(c => ({ id: c.id, color: c.selectedColor, shape: c.selectedShape })));
+    syncCannonSelections();
 
     // Reset state
     fireworksRef.current = [];
@@ -332,24 +370,32 @@ export function useFireworkGame() {
 
     phaseRef.current = GAME_PHASES.PLAYING;
     setGamePhase(GAME_PHASES.PLAYING);
-  }, [generateQuest]);
+  }, [generateQuest, syncCannonSelections]);
 
   /* ── Cannon selection handlers ─────────── */
   const selectColor = useCallback((cannonId, colorKey) => {
     const cannon = cannonsRef.current.find(c => c.id === cannonId);
     if (cannon) {
       cannon.selectedColor = colorKey;
-      setCannonSelections(cannonsRef.current.map(c => ({ id: c.id, color: c.selectedColor, shape: c.selectedShape })));
+      syncCannonSelections();
     }
-  }, []);
+  }, [syncCannonSelections]);
 
   const selectShape = useCallback((cannonId, shapeKey) => {
     const cannon = cannonsRef.current.find(c => c.id === cannonId);
     if (cannon) {
       cannon.selectedShape = shapeKey;
-      setCannonSelections(cannonsRef.current.map(c => ({ id: c.id, color: c.selectedColor, shape: c.selectedShape })));
+      syncCannonSelections();
     }
-  }, []);
+  }, [syncCannonSelections]);
+
+  const selectAngle = useCallback((cannonId, angleKey) => {
+    const cannon = cannonsRef.current.find(c => c.id === cannonId);
+    if (cannon) {
+      cannon.selectedAngle = angleKey;
+      syncCannonSelections();
+    }
+  }, [syncCannonSelections]);
 
   /* ── Spawn celebration particles ───────── */
   const spawnCelebration = useCallback((x, y, colorHex, count = 40) => {
@@ -402,15 +448,25 @@ export function useFireworkGame() {
     const cannon = cannonsRef.current.find(c => c.id === cannonId);
     if (!cannon) return;
 
+    const levelCfg = LEVELS[levelIdxRef.current];
+
+    // Compute launch direction from angle
+    const angleDeg = levelCfg?.angleMode
+      ? (ANGLES[cannon.selectedAngle]?.degrees || 0)
+      : 0;
+    const angleRad = angleDeg * Math.PI / 180;
+    const launchDir = -Math.PI / 2 + angleRad; // -90° (straight up) + offset
+
     const fw = {
       id: uid(),
       cannonId,
       x: cannon.x,
       y: cannon.y - CANNON_CONFIG.barrelLength,
-      vx: 0,
-      vy: -FIREWORK_CONFIG.launchSpeed,
+      vx: Math.cos(launchDir) * FIREWORK_CONFIG.launchSpeed,
+      vy: Math.sin(launchDir) * FIREWORK_CONFIG.launchSpeed,
       color: cannon.selectedColor,
       shape: cannon.selectedShape,
+      angle: cannon.selectedAngle || 'center',
       phase: 'launching',
       trail: [],
       explosionParticles: [],
@@ -426,18 +482,22 @@ export function useFireworkGame() {
     if (!quest) return;
     const levelCfg = LEVELS[levelIdxRef.current];
 
+    // Angle match helper — ignore angle if requirement has no angle
+    const angleOk = (fwAngle, reqAngle) => !reqAngle || fwAngle === reqAngle;
+
     let matched = false;
 
     if (quest.type === QUEST_TYPES.SINGLE) {
       const req = quest.requirements[0];
-      if (firework.color === req.color && firework.shape === req.shape) {
+      if (firework.color === req.color && firework.shape === req.shape && angleOk(firework.angle, req.angle)) {
         quest.matched[0] = true;
         matched = true;
       }
     } else if (quest.type === QUEST_TYPES.DUAL) {
       const reqIdx = quest.requirements.findIndex(
         (req, i) => !quest.matched[i] && req.cannonId === firework.cannonId &&
-                     req.color === firework.color && req.shape === firework.shape
+                     req.color === firework.color && req.shape === firework.shape &&
+                     angleOk(firework.angle, req.angle)
       );
       if (reqIdx >= 0) {
         quest.matched[reqIdx] = true;
@@ -453,7 +513,7 @@ export function useFireworkGame() {
     } else if (quest.type === QUEST_TYPES.SEQUENCE) {
       const idx = sequenceIdxRef.current;
       const req = quest.requirements[idx];
-      if (firework.color === req.color && firework.shape === req.shape) {
+      if (firework.color === req.color && firework.shape === req.shape && angleOk(firework.angle, req.angle)) {
         quest.matched[idx] = true;
         sequenceIdxRef.current = idx + 1;
         if (idx + 1 < quest.requirements.length) {
@@ -572,20 +632,34 @@ export function useFireworkGame() {
     const colorHex = COLORS[cannon.selectedColor]?.hex || '#fff';
     const glowColor = COLORS[cannon.selectedColor]?.glow || 'rgba(255,255,255,0.5)';
 
-    // Glow behind cannon
+    // Get barrel rotation angle
+    const angleDeg = levelCfg.angleMode
+      ? (ANGLES[cannon.selectedAngle]?.degrees || 0)
+      : 0;
+    const rotation = angleDeg * Math.PI / 180;
+
     ctx.save();
     ctx.shadowBlur = 20;
     ctx.shadowColor = glowColor;
 
-    // Barrel (straight up)
+    // Barrel — rotated around pivot at top of base body
+    const pivotY = y - height / 2;
+    ctx.save();
+    ctx.translate(x, pivotY);
+    ctx.rotate(rotation);
+
+    // Barrel body (relative to pivot)
     ctx.fillStyle = '#555';
-    ctx.fillRect(x - barrelWidth / 2, y - barrelLength, barrelWidth, barrelLength);
+    const barrelTop = -(barrelLength - height / 2);
+    ctx.fillRect(-barrelWidth / 2, barrelTop, barrelWidth, barrelLength - height / 2);
 
     // Barrel tip ring
     ctx.fillStyle = colorHex;
-    ctx.fillRect(x - barrelWidth / 2 - 2, y - barrelLength - 4, barrelWidth + 4, 6);
+    ctx.fillRect(-barrelWidth / 2 - 2, barrelTop - 4, barrelWidth + 4, 6);
 
-    // Base body
+    ctx.restore(); // end barrel rotation
+
+    // Base body (NOT rotated — stays on ground)
     const grad = ctx.createLinearGradient(x - width / 2, y, x + width / 2, y);
     grad.addColorStop(0, '#444');
     grad.addColorStop(0.5, '#666');
@@ -693,10 +767,13 @@ export function useFireworkGame() {
       // ─ Update & draw fireworks
       fireworksRef.current.forEach(fw => {
         if (fw.phase === 'launching') {
-          // Move upward
+          // Move with velocity
           fw.vy += FIREWORK_CONFIG.launchDeceleration;
+          fw.vx *= (FIREWORK_CONFIG.horizontalDrag || 1);  // subtle drag on horizontal
           fw.y += fw.vy;
           fw.x += fw.vx;
+          // Clamp to canvas bounds
+          fw.x = Math.max(40, Math.min(W - 40, fw.x));
 
           // Trail particles
           for (let i = 0; i < FIREWORK_CONFIG.trailParticlesPerFrame; i++) {
@@ -907,6 +984,7 @@ export function useFireworkGame() {
     levelSummary,
     unlockedColor,
     unlockedCannon,
+    unlockedAngle,
     chillMode,
     toggleChillMode,
     quickMatch,
@@ -918,8 +996,12 @@ export function useFireworkGame() {
     // Actions
     startGame,
     fireCannon,
+    fireAllCannons: useCallback(() => {
+      cannonsRef.current.forEach(c => fireCannon(c.id));
+    }, [fireCannon]),
     selectColor,
     selectShape,
+    selectAngle,
     advanceLevel,
     restartLevel,
     restartGame,

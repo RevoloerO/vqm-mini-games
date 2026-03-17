@@ -15,7 +15,8 @@ import {
     Scroll,
     Ticket,
     Share2,
-    Sparkles
+    Sparkles,
+    Navigation
 } from 'lucide-react';
 import './HomePage.css';
 import GameCard from './components/GameCard/GameCard';
@@ -554,6 +555,24 @@ const GAMES = [
         boothTheme: 'firework',
         boothEmoji: '🎆',
     },
+    {
+        title: 'Flock Commander',
+        description:
+            'Place beacons to guide your flock through obstacles, predators, and portals. 10 levels of evolving strategy!',
+        status: 'Ready',
+        icon: <Navigation size={40} />,
+        path: '/vqm-mini-games/flock-commander',
+        featured: false,
+        islandName: 'Gale Roost',
+        islandTheme: 'flock',
+        islandEmoji: '🐦',
+        edoName: '鳥の道',
+        edoTheme: 'birds',
+        edoEmoji: '🦅',
+        boothName: 'Bird Guide',
+        boothTheme: 'flock',
+        boothEmoji: '🐦',
+    },
 ];
 
 
@@ -949,6 +968,7 @@ const HomePage = () => {
                                 <p>3D Ball</p>
                                 <p>Mycelium Network</p>
                                 <p>Firework Festival</p>
+                                <p>Flock Commander</p>
                             </div>
                             <div className="footer-section">
                                 <h3>{footerTechLabel}</h3>

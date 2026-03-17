@@ -20,6 +20,17 @@ export const SHAPES = {
 
 export const SHAPE_ORDER = ['circle', 'square', 'triangle'];
 
+// ─── Angles ─────────────────────────────────────────────────
+export const ANGLES = {
+  farLeft:  { key: 'farLeft',  name: 'Far Left',  degrees: -40 },
+  left:     { key: 'left',     name: 'Left',       degrees: -20 },
+  center:   { key: 'center',   name: 'Straight',   degrees: 0 },
+  right:    { key: 'right',    name: 'Right',       degrees: 20 },
+  farRight: { key: 'farRight', name: 'Far Right',   degrees: 40 },
+};
+
+export const ANGLE_ORDER = ['farLeft', 'left', 'center', 'right', 'farRight'];
+
 // ─── Levels ─────────────────────────────────────────────────
 // Each level introduces ONE new twist to keep the player engaged.
 // Difficulty follows a wave pattern (tension → breather → higher tension).
@@ -32,6 +43,8 @@ export const LEVELS = [
     cannonCount: 1,
     availableColors: ['red', 'blue', 'yellow'],
     availableShapes: ['circle', 'square', 'triangle'],
+    angleMode: false,
+    availableAngles: ['center'],
     questCount: 3,
     timeLimit: 60,
     dualQuests: false,
@@ -51,6 +64,8 @@ export const LEVELS = [
     cannonCount: 1,
     availableColors: ['red', 'blue', 'yellow'],
     availableShapes: ['circle', 'square', 'triangle'],
+    angleMode: false,
+    availableAngles: ['center'],
     questCount: 6,
     timeLimit: 50,
     dualQuests: false,
@@ -70,6 +85,8 @@ export const LEVELS = [
     cannonCount: 2,
     availableColors: ['red', 'blue', 'yellow'],
     availableShapes: ['circle', 'square', 'triangle'],
+    angleMode: false,
+    availableAngles: ['center'],
     questCount: 5,
     timeLimit: 55,
     dualQuests: true,
@@ -83,16 +100,18 @@ export const LEVELS = [
     newMechanic: '🎯 Second cannon!',
   },
 
-  // ── Act 2: Expansion ────────────────────────
-  // Level 4 — "Color Splash" (+Green, +Purple)
+  // ── Act 2: Dual-Cannon Practice ─────────────
+  // Level 4 — "Color Splash" (+Green, practice dual)
   {
     level: 4,
     title: 'Color Splash',
     cannonCount: 2,
-    availableColors: ['red', 'blue', 'yellow', 'green', 'purple'],
+    availableColors: ['red', 'blue', 'yellow', 'green'],
     availableShapes: ['circle', 'square', 'triangle'],
-    questCount: 7,
-    timeLimit: 50,
+    angleMode: false,
+    availableAngles: ['center'],
+    questCount: 6,
+    timeLimit: 55,
     dualQuests: true,
     dualQuestChance: 0.35,
     sequenceQuests: false,
@@ -100,58 +119,87 @@ export const LEVELS = [
     memoryMode: false,
     memoryFadeMs: 0,
     scoreMultiplier: 1.8,
-    description: 'Green & Purple join the palette!',
-    newMechanic: '🎨 Two new colors!',
+    description: 'Green joins — juggle both cannons!',
+    newMechanic: '🎨 New color!',
   },
-  // Level 5 — "Fading Lights" (Memory challenge)
+  // Level 5 — "Dual Mastery" (+Purple, more dual quests)
   {
     level: 5,
-    title: 'Fading Lights',
+    title: 'Dual Mastery',
     cannonCount: 2,
     availableColors: ['red', 'blue', 'yellow', 'green', 'purple'],
     availableShapes: ['circle', 'square', 'triangle'],
+    angleMode: false,
+    availableAngles: ['center'],
+    questCount: 7,
+    timeLimit: 50,
+    dualQuests: true,
+    dualQuestChance: 0.5,
+    sequenceQuests: false,
+    questTimeBonus: 4,
+    memoryMode: false,
+    memoryFadeMs: 0,
+    scoreMultiplier: 2.0,
+    description: 'Purple arrives — dual quests ramp up!',
+    newMechanic: '🎨 Purple unlocked!',
+  },
+
+  // ── Act 3: Angles & Complexity ─────────────
+  // Level 6 — "Aim High" (Angle introduced!)
+  {
+    level: 6,
+    title: 'Aim High',
+    cannonCount: 2,
+    availableColors: ['red', 'blue', 'yellow', 'green', 'purple'],
+    availableShapes: ['circle', 'square', 'triangle'],
+    angleMode: true,
+    availableAngles: ['left', 'center', 'right'],
     questCount: 6,
     timeLimit: 60,
     dualQuests: true,
     dualQuestChance: 0.3,
     sequenceQuests: false,
-    questTimeBonus: 0,
-    memoryMode: true,
-    memoryFadeMs: 3000,
-    scoreMultiplier: 2.0,
-    description: 'Watch closely — the firework fades!',
-    newMechanic: '🧠 Memory mode!',
-  },
-  // Level 6 — "Rapid Fire" (Blitz + Orange)
-  {
-    level: 6,
-    title: 'Rapid Fire',
-    cannonCount: 2,
-    availableColors: ['red', 'blue', 'yellow', 'green', 'purple', 'orange'],
-    availableShapes: ['circle', 'square', 'triangle'],
-    questCount: 10,
-    timeLimit: 45,
-    dualQuests: true,
-    dualQuestChance: 0.4,
-    sequenceQuests: false,
-    questTimeBonus: 3,
+    questTimeBonus: 4,
     memoryMode: false,
     memoryFadeMs: 0,
     scoreMultiplier: 2.2,
-    description: 'Orange joins — rapid fire!',
-    newMechanic: '🔥 Blitz pace!',
+    description: 'Aim your cannon — position matters!',
+    newMechanic: '📐 Cannon aiming!',
   },
-
-  // ── Act 3: Mastery ──────────────────────────
-  // Level 7 — "Full Spectrum" (+White, all 7)
+  // Level 7 — "Fading Lights" (Memory challenge)
   {
     level: 7,
-    title: 'Full Spectrum',
+    title: 'Fading Lights',
+    cannonCount: 2,
+    availableColors: ['red', 'blue', 'yellow', 'green', 'purple'],
+    availableShapes: ['circle', 'square', 'triangle'],
+    angleMode: true,
+    availableAngles: ['left', 'center', 'right'],
+    questCount: 6,
+    timeLimit: 60,
+    dualQuests: true,
+    dualQuestChance: 0.35,
+    sequenceQuests: false,
+    questTimeBonus: 0,
+    memoryMode: true,
+    memoryFadeMs: 3000,
+    scoreMultiplier: 2.5,
+    description: 'Watch closely — the firework fades!',
+    newMechanic: '🧠 Memory mode!',
+  },
+
+  // ── Act 4: Mastery ──────────────────────────
+  // Level 8 — "Full Arsenal" (All angles + all colors)
+  {
+    level: 8,
+    title: 'Full Arsenal',
     cannonCount: 2,
     availableColors: ['red', 'blue', 'yellow', 'green', 'purple', 'orange', 'white'],
     availableShapes: ['circle', 'square', 'triangle'],
+    angleMode: true,
+    availableAngles: ['farLeft', 'left', 'center', 'right', 'farRight'],
     questCount: 8,
-    timeLimit: 45,
+    timeLimit: 50,
     dualQuests: true,
     dualQuestChance: 0.45,
     sequenceQuests: false,
@@ -159,53 +207,34 @@ export const LEVELS = [
     memoryMode: false,
     memoryFadeMs: 0,
     scoreMultiplier: 2.8,
-    description: 'All 7 colors — full spectrum!',
-    newMechanic: '🌈 Full palette!',
+    description: 'All 7 colors & full aim range!',
+    newMechanic: '🌈 Full arsenal!',
   },
-  // Level 8 — "Chain Reaction" (Sequences)
+  // Level 9 — "Chain Reaction" (Sequences + Memory)
   {
-    level: 8,
+    level: 9,
     title: 'Chain Reaction',
     cannonCount: 2,
     availableColors: ['red', 'blue', 'yellow', 'green', 'purple', 'orange', 'white'],
     availableShapes: ['circle', 'square', 'triangle'],
-    questCount: 7,
-    timeLimit: 50,
+    angleMode: true,
+    availableAngles: ['farLeft', 'left', 'center', 'right', 'farRight'],
+    questCount: 8,
+    timeLimit: 45,
     dualQuests: true,
-    dualQuestChance: 0.3,
+    dualQuestChance: 0.4,
     sequenceQuests: true,
     sequenceQuestChance: 0.35,
-    sequenceLength: 2,
-    questTimeBonus: 4,
-    memoryMode: false,
-    memoryFadeMs: 0,
-    scoreMultiplier: 3.0,
-    description: 'Fire in sequence — chain reaction!',
-    newMechanic: '🔗 Sequence quests!',
-  },
-
-  // ── Act 4: Grand Finale ─────────────────────
-  // Level 9 — "Crowd Pleaser" (Memory + Speed)
-  {
-    level: 9,
-    title: 'Crowd Pleaser',
-    cannonCount: 2,
-    availableColors: ['red', 'blue', 'yellow', 'green', 'purple', 'orange', 'white'],
-    availableShapes: ['circle', 'square', 'triangle'],
-    questCount: 8,
-    timeLimit: 40,
-    dualQuests: true,
-    dualQuestChance: 0.5,
-    sequenceQuests: true,
-    sequenceQuestChance: 0.2,
     sequenceLength: 2,
     questTimeBonus: 3,
     memoryMode: true,
     memoryFadeMs: 2500,
-    scoreMultiplier: 3.5,
-    description: 'Memory returns — faster and harder!',
-    newMechanic: '😤 The crucible!',
+    scoreMultiplier: 3.2,
+    description: 'Sequences & memory — stay sharp!',
+    newMechanic: '🔗 Sequence quests!',
   },
+
+  // ── Grand Finale ──────────────────────────
   // Level 10 — "Grand Finale" (Everything)
   {
     level: 10,
@@ -213,6 +242,8 @@ export const LEVELS = [
     cannonCount: 2,
     availableColors: ['red', 'blue', 'yellow', 'green', 'purple', 'orange', 'white'],
     availableShapes: ['circle', 'square', 'triangle'],
+    angleMode: true,
+    availableAngles: ['farLeft', 'left', 'center', 'right', 'farRight'],
     questCount: 12,
     timeLimit: 35,
     dualQuests: true,
@@ -243,6 +274,7 @@ export const CANNON_CONFIG = {
 export const FIREWORK_CONFIG = {
   launchSpeed: 10,
   launchDeceleration: 0.18,
+  horizontalDrag: 0.985,    // subtle drag on vx to limit horizontal spread
   trailParticlesPerFrame: 3,
   trailParticleLife: 35,
   trailParticleSize: 3,

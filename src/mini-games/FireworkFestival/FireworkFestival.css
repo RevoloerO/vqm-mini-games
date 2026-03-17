@@ -38,12 +38,22 @@
   pointer-events: auto;
 }
 
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.top-bar-right {
+  width: 80px; /* balance the left side for center title */
+}
+
 .firework-back-btn,
 .firework-help-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 10px;
   background: rgba(255,255,255,0.08);
@@ -145,6 +155,27 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   font-weight: 500;
+}
+
+.quest-count-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.quest-count-badge.single {
+  background: rgba(255,224,59,0.15);
+  color: #ffe03b;
+  border: 1px solid rgba(255,224,59,0.25);
+}
+
+.quest-count-badge.dual {
+  background: rgba(59,139,255,0.15);
+  color: #3b8bff;
+  border: 1px solid rgba(59,139,255,0.25);
 }
 
 .quest-previews {
@@ -288,66 +319,64 @@
   font-style: italic;
 }
 
-/* ── Cannon Controls ─────────────────────── */
+/* ── Cannon Controls — Horizontal Layout ── */
 .firework-controls-wrap {
   position: fixed;
-  bottom: 16px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 40px;
+  align-items: center;
+  gap: 12px;
   z-index: 10;
+}
+
+.cannons-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  background: rgba(10,10,40,0.75);
+  backdrop-filter: blur(14px);
 }
 
 .cannon-control-group {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px 14px;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px;
-  background: rgba(10,10,40,0.75);
-  backdrop-filter: blur(14px);
-  min-width: 180px;
+  gap: 10px;
 }
 
-.cannon-label {
-  font-size: 11px;
-  color: rgba(255,255,255,0.4);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 2px;
-}
-
-/* ── Cannon Visual ──────────────────────── */
+/* ── Cannon Visual — Compact ─────────────── */
 .cannon-visual {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 6px;
+  flex-shrink: 0;
 }
 
 .cannon-muzzle-ring {
-  width: 36px;
-  height: 6px;
+  width: 24px;
+  height: 4px;
   background: linear-gradient(to bottom, rgba(255,255,255,0.22), rgba(255,255,255,0.06));
-  border-radius: 4px 4px 0 0;
+  border-radius: 3px 3px 0 0;
   border: 1px solid rgba(255,255,255,0.18);
   border-bottom: none;
 }
 
 .cannon-barrel {
-  width: 26px;
-  height: 46px;
+  width: 18px;
+  height: 30px;
   border-radius: 2px;
   position: relative;
   overflow: hidden;
   transition: background-color 0.35s ease, box-shadow 0.35s ease;
   box-shadow:
-    inset 3px 0 8px rgba(0,0,0,0.35),
-    inset -3px 0 8px rgba(0,0,0,0.35),
-    0 0 18px var(--cannon-glow, rgba(255,255,255,0.15));
+    inset 2px 0 6px rgba(0,0,0,0.35),
+    inset -2px 0 6px rgba(0,0,0,0.35),
+    0 0 12px var(--cannon-glow, rgba(255,255,255,0.15));
 }
 
 /* Metallic sheen */
@@ -371,55 +400,55 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: rgba(255,255,255,0.95);
-  filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
   animation: shell-load 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 1;
 }
 
 .cannon-shell svg {
-  width: 18px;
-  height: 18px;
+  width: 13px;
+  height: 13px;
 }
 
 .cannon-base {
-  width: 40px;
-  height: 10px;
+  width: 28px;
+  height: 7px;
   background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
-  border-radius: 0 0 5px 5px;
+  border-radius: 0 0 4px 4px;
   border: 1px solid rgba(255,255,255,0.1);
   border-top: 1px solid rgba(255,255,255,0.15);
   position: relative;
 }
 
 .cannon-wheel {
-  width: 11px;
-  height: 11px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.15);
   background: rgba(255,255,255,0.03);
   position: absolute;
-  bottom: -5px;
+  bottom: -4px;
 }
 
 .cannon-wheel:first-child {
-  left: 3px;
+  left: 2px;
 }
 
 .cannon-wheel:last-child {
-  right: 3px;
+  right: 2px;
 }
 
 .selector-row {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 /* Color buttons */
 .color-btn {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.15);
   cursor: pointer;
@@ -434,15 +463,15 @@
 
 .color-btn.active {
   border-color: #fff;
-  box-shadow: 0 0 12px var(--btn-glow, rgba(255,255,255,0.5));
+  box-shadow: 0 0 10px var(--btn-glow, rgba(255,255,255,0.5));
   transform: scale(1.1);
 }
 
 /* Shape buttons */
 .shape-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
   border: 1px solid rgba(255,255,255,0.15);
   background: rgba(255,255,255,0.05);
   cursor: pointer;
@@ -466,14 +495,66 @@
 }
 
 .shape-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
+}
+
+/* Angle buttons */
+.angle-row {
+  gap: 3px !important;
+}
+
+.angle-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(178,59,255,0.2);
+  background: rgba(178,59,255,0.05);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(178,59,255,0.5);
+}
+
+.angle-btn:hover {
+  background: rgba(178,59,255,0.12);
+  border-color: rgba(178,59,255,0.4);
+  color: rgba(178,59,255,0.8);
+}
+
+.angle-btn.active {
+  background: rgba(178,59,255,0.2);
+  border-color: rgba(178,59,255,0.6);
+  color: #b23bff;
+  box-shadow: 0 0 8px rgba(178,59,255,0.25);
+}
+
+.angle-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Quest angle indicator */
+.quest-angle-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(178,59,255,0.7);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.quest-angle-indicator svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Fire button */
 .fire-btn {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2px solid rgba(255,140,59,0.5);
   background: linear-gradient(135deg, #ff6b3b, #ff3b3b);
@@ -482,13 +563,17 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   box-shadow: 0 0 20px rgba(255,80,50,0.3);
   animation: fire-pulse 2s ease-in-out infinite;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.fire-btn-dual {
+  width: 52px;
+  height: 52px;
 }
 
 .fire-btn:hover {
@@ -507,53 +592,84 @@
   transform: none;
 }
 
-/* ── Match Feedback ──────────────────────── */
-.match-feedback {
+/* ── Feedback Toast ─────────────────────── */
+.feedback-toast {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 48px;
-  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 22px;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  letter-spacing: 4px;
   z-index: 20;
   pointer-events: none;
-  animation: match-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: toast-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-.match-feedback.correct {
+.feedback-toast.correct {
   color: #3bff6e;
-  text-shadow: 0 0 40px rgba(59,255,110,0.6), 0 0 80px rgba(59,255,110,0.3);
+  text-shadow: 0 0 20px rgba(59,255,110,0.6);
+  background: rgba(59,255,110,0.1);
+  border: 1px solid rgba(59,255,110,0.3);
 }
 
-.match-feedback.wrong {
+.feedback-toast.wrong {
   color: #ff3b3b;
-  text-shadow: 0 0 40px rgba(255,59,59,0.6);
-  animation: match-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, wrong-shake 0.4s ease;
+  text-shadow: 0 0 20px rgba(255,59,59,0.6);
+  background: rgba(255,59,59,0.1);
+  border: 1px solid rgba(255,59,59,0.3);
+  animation: toast-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, toast-shake 0.4s ease;
+}
+
+.toast-quick {
+  color: #ffe03b;
+  text-shadow: 0 0 12px rgba(255,224,59,0.6);
+  font-size: 16px;
+}
+
+@keyframes toast-pop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  40%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes toast-shake {
+  0%, 100% { transform: translate(-50%, -50%); }
+  20%      { transform: translate(calc(-50% + 6px), -50%); }
+  40%      { transform: translate(calc(-50% - 6px), -50%); }
+  60%      { transform: translate(calc(-50% + 4px), -50%); }
+  80%      { transform: translate(calc(-50% - 2px), -50%); }
 }
 
 /* ── Crowd Indicator ─────────────────────── */
 .crowd-indicator {
   position: fixed;
-  bottom: 140px;
+  bottom: 90px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 14px;
-  color: rgba(255,255,255,0.5);
+  font-size: 24px;
   z-index: 10;
   pointer-events: none;
-  transition: opacity 0.3s;
-  text-align: center;
+  animation: crowd-float 0.8s ease forwards;
 }
 
 .crowd-indicator.cheer {
-  color: #ffe03b;
-  text-shadow: 0 0 10px rgba(255,224,59,0.5);
+  filter: drop-shadow(0 0 8px rgba(255,224,59,0.5));
 }
 
 .crowd-indicator.boo {
-  color: #ff8c8c;
+  filter: drop-shadow(0 0 8px rgba(255,140,140,0.5));
+}
+
+@keyframes crowd-float {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
 }
 
 /* ── Unlock Notification ─────────────────── */
@@ -749,21 +865,6 @@
   to   { opacity: 1; transform: translateX(-50%) scale(1); }
 }
 
-@keyframes match-pop {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
-  60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); }
-}
-
-@keyframes wrong-shake {
-  0%, 100% { transform: translate(-50%, -50%); }
-  15%      { transform: translate(calc(-50% + 8px), -50%); }
-  30%      { transform: translate(calc(-50% - 8px), -50%); }
-  45%      { transform: translate(calc(-50% + 6px), -50%); }
-  60%      { transform: translate(calc(-50% - 4px), -50%); }
-  75%      { transform: translate(calc(-50% + 2px), -50%); }
-}
-
 @keyframes fire-pulse {
   0%, 100% { box-shadow: 0 0 20px rgba(255,80,50,0.3); }
   50%      { box-shadow: 0 0 30px rgba(255,80,50,0.5); }
@@ -797,28 +898,6 @@
 
 .quest-preview-wrap.memory-faded {
   opacity: 0.12;
-}
-
-/* ── Quick-Match Feedback ────────────────── */
-.quick-match-feedback {
-  position: fixed;
-  top: 42%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 36px;
-  font-weight: 900;
-  color: #ffe03b;
-  text-shadow: 0 0 30px rgba(255,224,59,0.7), 0 0 60px rgba(255,224,59,0.3);
-  z-index: 20;
-  pointer-events: none;
-  animation: quick-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  letter-spacing: 3px;
-}
-
-@keyframes quick-pop {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
-  50%  { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-  100% { opacity: 0; transform: translate(-50%, -60%) scale(1); }
 }
 
 /* ── Level Intro Overlay ─────────────────── */
@@ -890,55 +969,78 @@
 /* ── Responsive ──────────────────────────── */
 @media (max-width: 700px) {
   .firework-controls-wrap {
-    flex-direction: column;
-    gap: 12px;
-    width: 92%;
+    width: 96%;
+  }
+
+  .cannons-panel {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
   }
 
   .cannon-control-group {
-    min-width: unset;
-    padding: 10px 12px 12px;
+    gap: 6px;
   }
 
   .fire-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .fire-btn-dual {
     width: 44px;
     height: 44px;
-    font-size: 10px;
   }
 
   .color-btn {
+    width: 20px;
+    height: 20px;
+  }
+
+  .shape-btn {
     width: 26px;
     height: 26px;
   }
 
-  .shape-btn {
-    width: 30px;
-    height: 30px;
+  .shape-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .angle-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .angle-btn svg {
+    width: 12px;
+    height: 12px;
   }
 
   .cannon-barrel {
-    width: 20px;
-    height: 34px;
+    width: 14px;
+    height: 22px;
   }
 
   .cannon-muzzle-ring {
-    width: 28px;
-    height: 4px;
+    width: 18px;
+    height: 3px;
   }
 
   .cannon-base {
-    width: 32px;
-    height: 8px;
+    width: 22px;
+    height: 6px;
   }
 
   .cannon-wheel {
-    width: 9px;
-    height: 9px;
+    width: 6px;
+    height: 6px;
+    bottom: -3px;
   }
 
   .cannon-shell svg {
-    width: 14px;
-    height: 14px;
+    width: 10px;
+    height: 10px;
   }
 
   .firework-stats {
@@ -964,12 +1066,9 @@
     gap: 8px;
   }
 
-  .match-feedback {
-    font-size: 32px;
-  }
-
-  .quick-match-feedback {
-    font-size: 28px;
+  .feedback-toast {
+    font-size: 16px;
+    padding: 6px 16px;
   }
 
   .level-intro-title {
@@ -996,7 +1095,7 @@
 
 @media (max-width: 400px) {
   .firework-controls-wrap {
-    bottom: 8px;
+    bottom: 6px;
   }
 
   .firework-stats {
@@ -1023,5 +1122,24 @@
   .quest-preview-canvas {
     width: 70px !important;
     height: 70px !important;
+  }
+
+  .selector-row {
+    gap: 3px;
+  }
+
+  .angle-btn {
+    width: 22px;
+    height: 22px;
+  }
+
+  .angle-btn svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .quest-angle-indicator svg {
+    width: 10px;
+    height: 10px;
   }
 }
