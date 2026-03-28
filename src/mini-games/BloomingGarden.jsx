@@ -57,6 +57,30 @@ const POWER_UP_WEIGHTS = {
 // --- Milestone Constants ---
 const MILESTONES = [100, 250, 500, 1000, 2000, 5000, 10000];
 
+// --- Season Constants ---
+const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
+const SEASON_SCORE_INTERVAL = 100;
+const SEASON_CONFIG = {
+  spring: { emoji: '🌸', label: 'Spring', accent: '#27ae60' },
+  summer: { emoji: '☀️', label: 'Summer', accent: '#e67e22' },
+  autumn: { emoji: '🍂', label: 'Autumn', accent: '#d35400' },
+  winter: { emoji: '❄️', label: 'Winter', accent: '#2980b9' },
+};
+
+// --- Growth Evolution Constants ---
+const GROWTH_STAGES = {
+  BUD:        { minAge: 0, key: 'bud',   label: 'Bud',        scale: 0.7,  pointMult: 1.0 },
+  BLOOM:      { minAge: 1, key: 'bloom', label: 'Bloom',      scale: 0.85, pointMult: 1.0 },
+  FULL_BLOOM: { minAge: 2, key: 'full',  label: 'Full Bloom', scale: 1.0,  pointMult: 1.5 },
+  GOLDEN:     { minAge: 3, key: 'golden',label: 'Golden',     scale: 1.05, pointMult: 2.0 },
+};
+const getGrowthStage = (age) => {
+  if (age >= 3) return GROWTH_STAGES.GOLDEN;
+  if (age >= 2) return GROWTH_STAGES.FULL_BLOOM;
+  if (age >= 1) return GROWTH_STAGES.BLOOM;
+  return GROWTH_STAGES.BUD;
+};
+
 
 // --- Helper Functions ---
 const createEmptyBoard = () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
@@ -203,10 +227,11 @@ const checkForMatches = (board) => {
 };
 
 // --- Flower Component with SVG Shapes ---
-const Flower = ({ type, isSelected, isBursting, isSpawning, isInvalid }) => {
+const Flower = ({ type, growthStage, isSelected, isBursting, isSpawning, isInvalid }) => {
     const powerUpType = isPowerUp(type) ? type : null;
     const baseType = powerUpType ? getPowerUpBaseType(powerUpType) : type;
-    const classNames = `flower flower-${baseType} ${powerUpType ? 'power-up' : ''} ${isSelected ? 'selected' : ''} ${isBursting ? 'burst' : ''} ${isSpawning ? 'spawn' : ''} ${isInvalid ? 'invalid' : ''}`;
+    const growthKey = growthStage ? `growth-${growthStage.key}` : '';
+    const classNames = `flower flower-${baseType} ${growthKey} ${powerUpType ? 'power-up' : ''} ${isSelected ? 'selected' : ''} ${isBursting ? 'burst' : ''} ${isSpawning ? 'spawn' : ''} ${isInvalid ? 'invalid' : ''}`;
 
     // SVG paths for different flower shapes
     const shapes = {
@@ -329,6 +354,7 @@ const BloomingGarden = () => {
 
   // --- State ---
   const [board, setBoard] = useState(createEmptyBoard);
+  const [flowerAges, setFlowerAges] = useState(createEmptyBoard);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
@@ -361,6 +387,15 @@ const BloomingGarden = () => {
   const [showMilestoneCelebration, setShowMilestoneCelebration] = useState(false);
   const [celebrationMilestone, setCelebrationMilestone] = useState(0);
 
+  // --- Season (derived from score) ---
+  const currentSeason = SEASONS[Math.floor(score / SEASON_SCORE_INTERVAL) % SEASONS.length];
+  const seasonConfig = SEASON_CONFIG[currentSeason];
+  const [seasonTransition, setSeasonTransition] = useState(null);
+
+  const triggerSeasonTransition = useCallback((season) => {
+    setSeasonTransition(season);
+    setTimeout(() => setSeasonTransition(null), 2200);
+  }, []);
 
   // --- Initial Game Setup ---
   useEffect(() => {
@@ -471,9 +506,10 @@ const BloomingGarden = () => {
   }, [currentMilestoneIndex]);
 
   // --- Undo Functions ---
-  const saveUndoHistory = useCallback((currentBoard, currentScore, currentNextFlowers, selectedPosition) => {
+  const saveUndoHistory = useCallback((currentBoard, currentScore, currentNextFlowers, selectedPosition, currentAges) => {
     setUndoHistory({
       board: currentBoard.map(row => [...row]),
+      flowerAges: currentAges.map(row => [...row]),
       score: currentScore,
       nextFlowers: [...currentNextFlowers],
       selected: selectedPosition ? { ...selectedPosition } : null,
@@ -487,6 +523,7 @@ const BloomingGarden = () => {
 
     // Restore previous state
     setBoard(undoHistory.board.map(row => [...row]));
+    setFlowerAges(undoHistory.flowerAges.map(row => [...row]));
     setScore(undoHistory.score);
     setNextFlowers([...undoHistory.nextFlowers]);
     setSelected(null);
@@ -615,8 +652,12 @@ const BloomingGarden = () => {
         const powerUpResult = activatePowerUps(matches, boardWithMatches);
         const allClearedTiles = [...matches, ...powerUpResult.additionalTiles];
 
-        // Calculate base points (including bonus tiles from power-ups)
-        const basePoints = allClearedTiles.length * 10 + (matches.length - FLOWERS_TO_MATCH) * 5;
+        // Calculate base points with growth bonus
+        let basePoints = (matches.length - FLOWERS_TO_MATCH) * 5;
+        allClearedTiles.forEach(({ r, c }) => {
+            const stage = getGrowthStage(flowerAges[r][c]);
+            basePoints += Math.floor(10 * stage.pointMult);
+        });
 
         // Apply combo multiplier (minimum 1x) and power-up multiplier
         const comboMultiplier = Math.max(1, newCombo);
@@ -647,23 +688,34 @@ const BloomingGarden = () => {
         setScorePulse(true);
         setTimeout(() => setScorePulse(false), 300);
 
-        // Update score and check for milestones
+        // Update score and check for milestones + season transition
         const newScore = score + pointsEarned;
+        const oldSeason = SEASONS[Math.floor(score / SEASON_SCORE_INTERVAL) % SEASONS.length];
+        const newSeason = SEASONS[Math.floor(newScore / SEASON_SCORE_INTERVAL) % SEASONS.length];
         setScore(newScore);
         checkMilestone(newScore);
+        if (oldSeason !== newSeason) {
+            triggerSeasonTransition(newSeason);
+        }
         setBurstingCells(allClearedTiles);
 
         await new Promise(res => setTimeout(res, 250));
 
         let clearedBoard = boardWithMatches.map(row => [...row]);
-        allClearedTiles.forEach(({ r, c }) => clearedBoard[r][c] = 0);
+        // Clear ages for matched/cleared tiles
+        const clearedAges = flowerAges.map(row => [...row]);
+        allClearedTiles.forEach(({ r, c }) => {
+            clearedBoard[r][c] = 0;
+            clearedAges[r][c] = 0;
+        });
+        setFlowerAges(clearedAges);
 
         setBoard(clearedBoard);
         setBurstingCells([]);
 
         // Recursive call to handle chain reactions
         await processMatches(clearedBoard, true, newCombo);
-    }, [nextFlowers, generateNextFlowers, spawnFlowers, activatePowerUps, score, checkMilestone]);
+    }, [nextFlowers, generateNextFlowers, spawnFlowers, activatePowerUps, score, checkMilestone, flowerAges, triggerSeasonTransition]);
 
 
   // --- Tile Hover Handler ---
@@ -710,7 +762,20 @@ const BloomingGarden = () => {
 
       if (path) {
         // Save undo history BEFORE making the move
-        saveUndoHistory(board, score, nextFlowers, startPos);
+        saveUndoHistory(board, score, nextFlowers, startPos, flowerAges);
+
+        // Increment ages of all unmoved flowers, reset moved flower
+        const newAges = flowerAges.map(row => [...row]);
+        for (let ri = 0; ri < GRID_SIZE; ri++) {
+          for (let ci = 0; ci < GRID_SIZE; ci++) {
+            if (board[ri][ci] > 0) {
+              newAges[ri][ci] += 1;
+            }
+          }
+        }
+        newAges[startPos.r][startPos.c] = 0; // old position cleared
+        newAges[endPos.r][endPos.c] = 0;     // moved flower resets
+        setFlowerAges(newAges);
 
         // Move flower instantly
         let tempBoard = board.map(row => [...row]);
@@ -748,6 +813,7 @@ const BloomingGarden = () => {
         }
 
         setScore(0);
+        setFlowerAges(createEmptyBoard());
         setSelected(null);
         setIsGameOver(false);
         setIsProcessing(false);
@@ -758,11 +824,12 @@ const BloomingGarden = () => {
         setUndoAvailable(false);
         setCurrentMilestoneIndex(0);
         setMilestonesReached(0);
+        setSeasonTransition(null);
     }, [spawnFlowers, generateNextFlowers, score, highScore]); 
 
   // --- Render ---
   return (
-    <div className="blooming-garden-container">
+    <div className={`blooming-garden-container season-${currentSeason}`}>
       {/* Back Button */}
       <Link to="/vqm-mini-games" className="back-button-simple">
         ← Back
@@ -771,6 +838,17 @@ const BloomingGarden = () => {
       {/* Animated Background Elements */}
       <div className="cloud cloud-1"></div>
       <div className="cloud cloud-2"></div>
+
+      {/* Season Atmospheric Particles */}
+      <div className={`season-particles season-particles-${currentSeason}`}>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="season-particle" style={{
+            left: `${(i * 8.3 + 4) % 100}%`,
+            animationDelay: `${i * 0.7}s`,
+            animationDuration: `${6 + (i % 4) * 2}s`,
+          }} />
+        ))}
+      </div>
 
       {/* Main Game Content */}
       <div className="game-content">
@@ -794,8 +872,12 @@ const BloomingGarden = () => {
                 {highScore > 0 && (
                     <div className="session-best">Best: {highScore}</div>
                 )}
+                <div className="season-badge">
+                    <span className="season-emoji">{seasonConfig.emoji}</span>
+                    <span className="season-label">{seasonConfig.label}</span>
+                </div>
                 <div className="score-label">SCORE</div>
-                <div className={`score-value ${scorePulse ? 'pulse' : ''}`}>{score}</div>
+                <div className={`score-value ${scorePulse ? 'pulse' : ''}`} style={{ color: seasonConfig.accent }}>{score}</div>
 
                 {/* Progress Bar to Next Milestone - Inside Score Box */}
                 {(() => {
@@ -838,6 +920,7 @@ const BloomingGarden = () => {
                             {cellValue > 0 && (
                                 <Flower
                                     type={cellValue}
+                                    growthStage={getGrowthStage(flowerAges[r][c])}
                                     isSelected={selected && selected.r === r && selected.c === c}
                                     isBursting={burstingCells.some(cell => cell.r === r && cell.c === c)}
                                     isSpawning={spawningCells.some(cell => cell.r === r && cell.c === c)}
@@ -941,6 +1024,17 @@ const BloomingGarden = () => {
           </div>
       )}
 
+      {/* Season Transition Overlay */}
+      {seasonTransition && (
+          <div className="season-transition-overlay">
+              <div className="season-transition-content">
+                  <div className="season-transition-icon">{SEASON_CONFIG[seasonTransition].emoji}</div>
+                  <div className="season-transition-label">{SEASON_CONFIG[seasonTransition].label}</div>
+                  <div className="season-transition-sub">Season Changed!</div>
+              </div>
+          </div>
+      )}
+
       {/* Get Ready Overlay */}
       {showGetReady && (
           <div className="get-ready-overlay">
@@ -1039,6 +1133,18 @@ const BloomingGarden = () => {
                           </div>
                       </div>
                   </div>
+
+                  <h3>🌱 Flower Growth</h3>
+                  <p style={{fontSize: '0.9rem'}}>Flowers grow if left unmoved. Mature flowers earn more points!</p>
+                  <div className="growth-legend">
+                      <div className="growth-legend-item"><span className="growth-dot growth-bud-dot"></span><strong>Bud</strong> — just placed (1×)</div>
+                      <div className="growth-legend-item"><span className="growth-dot growth-bloom-dot"></span><strong>Bloom</strong> — 1 turn (1×)</div>
+                      <div className="growth-legend-item"><span className="growth-dot growth-full-dot"></span><strong>Full Bloom</strong> — 2 turns (1.5×)</div>
+                      <div className="growth-legend-item"><span className="growth-dot growth-golden-dot"></span><strong>Golden</strong> — 3+ turns (2×!)</div>
+                  </div>
+
+                  <h3>🌸 Seasons</h3>
+                  <p style={{fontSize: '0.9rem'}}>Every 100 points advances the season: Spring → Summer → Autumn → Winter → and repeat!</p>
 
                   <button onClick={() => setIsInfoModalOpen(false)}>Got it!</button>
               </div>

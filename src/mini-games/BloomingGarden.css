@@ -1170,3 +1170,310 @@
         margin-top: 0.2rem;
     }
 }
+
+
+/* ============================== */
+/* === SEASONAL THEME SYSTEM === */
+/* ============================== */
+
+.blooming-garden-container {
+    transition: background 1.2s ease;
+}
+
+/* Spring (default) */
+.blooming-garden-container.season-spring {
+    background: linear-gradient(to bottom, #87CEEB 0%, #a8e063 100%);
+}
+.season-spring .garden-tile {
+    background-color: #a1d48c;
+    background-image: linear-gradient(45deg, #b2e1a0 25%, transparent 25%),
+                      linear-gradient(-45deg, #b2e1a0 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #b2e1a0 75%),
+                      linear-gradient(-45deg, transparent 75%, #b2e1a0 75%);
+}
+.season-spring .garden-tile:hover { background-color: #b2e1a0; }
+
+/* Summer */
+.blooming-garden-container.season-summer {
+    background: linear-gradient(to bottom, #4facfe 0%, #f9d423 100%);
+}
+.season-summer .garden-tile {
+    background-color: #c8e06e;
+    background-image: linear-gradient(45deg, #d4ea85 25%, transparent 25%),
+                      linear-gradient(-45deg, #d4ea85 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #d4ea85 75%),
+                      linear-gradient(-45deg, transparent 75%, #d4ea85 75%);
+}
+.season-summer .garden-tile:hover { background-color: #d4ea85; }
+.season-summer .cloud { opacity: 0.2; }
+/* Summer flower overrides — warmer, more saturated */
+.season-summer .flower-1 .gradient-start { stop-color: #ff4757; }
+.season-summer .flower-1 .gradient-end { stop-color: #c0392b; }
+.season-summer .flower-2 .gradient-start { stop-color: #ffe066; }
+.season-summer .flower-2 .gradient-end { stop-color: #f0a500; }
+.season-summer .flower-3 .gradient-start { stop-color: #54a0ff; }
+.season-summer .flower-3 .gradient-end { stop-color: #0652DD; }
+.season-summer .flower-5 .gradient-start { stop-color: #00d2d3; }
+.season-summer .flower-5 .gradient-end { stop-color: #01a3a4; }
+
+/* Autumn */
+.blooming-garden-container.season-autumn {
+    background: linear-gradient(to bottom, #e08040 0%, #f2c94c 100%);
+}
+.season-autumn .garden-tile {
+    background-color: #c89c5c;
+    background-image: linear-gradient(45deg, #d4aa6e 25%, transparent 25%),
+                      linear-gradient(-45deg, #d4aa6e 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #d4aa6e 75%),
+                      linear-gradient(-45deg, transparent 75%, #d4aa6e 75%);
+}
+.season-autumn .garden-tile:hover { background-color: #d4aa6e; }
+.season-autumn .cloud { opacity: 0.25; background: #e8d4b5; }
+.season-autumn .cloud:before, .season-autumn .cloud:after { background: #e8d4b5; }
+/* Autumn flower overrides — warm, muted tones */
+.season-autumn .flower-1 .gradient-start { stop-color: #e17055; }
+.season-autumn .flower-1 .gradient-end { stop-color: #d63031; }
+.season-autumn .flower-2 .gradient-start { stop-color: #f0932b; }
+.season-autumn .flower-2 .gradient-end { stop-color: #d35400; }
+.season-autumn .flower-3 .gradient-start { stop-color: #82589F; }
+.season-autumn .flower-3 .gradient-end { stop-color: #6c3483; }
+.season-autumn .flower-5 .gradient-start { stop-color: #badc58; }
+.season-autumn .flower-5 .gradient-end { stop-color: #6ab04c; }
+.season-autumn .flower-6 .gradient-start { stop-color: #e77f67; }
+.season-autumn .flower-6 .gradient-end { stop-color: #cf6a87; }
+
+/* Winter */
+.blooming-garden-container.season-winter {
+    background: linear-gradient(to bottom, #a8c0ff 0%, #dfe6ed 100%);
+}
+.season-winter .garden-tile {
+    background-color: #b8c9d9;
+    background-image: linear-gradient(45deg, #cdd8e4 25%, transparent 25%),
+                      linear-gradient(-45deg, #cdd8e4 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #cdd8e4 75%),
+                      linear-gradient(-45deg, transparent 75%, #cdd8e4 75%);
+}
+.season-winter .garden-tile:hover { background-color: #cdd8e4; }
+.season-winter .cloud { opacity: 0.5; }
+/* Winter flower overrides — cool, icy tones */
+.season-winter .flower-1 .gradient-start { stop-color: #ff7979; }
+.season-winter .flower-1 .gradient-end { stop-color: #b33939; }
+.season-winter .flower-2 .gradient-start { stop-color: #f8e7a0; }
+.season-winter .flower-2 .gradient-end { stop-color: #b5a642; }
+.season-winter .flower-3 .gradient-start { stop-color: #a4c4f4; }
+.season-winter .flower-3 .gradient-end { stop-color: #6a89cc; }
+.season-winter .flower-4 .gradient-start { stop-color: #c8b6e2; }
+.season-winter .flower-4 .gradient-end { stop-color: #8e7bb0; }
+.season-winter .flower-5 .gradient-start { stop-color: #b2e0d8; }
+.season-winter .flower-5 .gradient-end { stop-color: #6ab0a3; }
+.season-winter .flower-6 .gradient-start { stop-color: #d4c5a0; }
+.season-winter .flower-6 .gradient-end { stop-color: #a89060; }
+.season-winter .back-button-simple:hover { color: #2980b9; }
+
+/* Season Badge in Score Box */
+.season-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    opacity: 0.8;
+    margin-bottom: 2px;
+}
+.season-emoji { font-size: 0.9rem; }
+.season-label { text-transform: uppercase; letter-spacing: 1px; color: #555; }
+
+
+/* ================================= */
+/* === SEASON ATMOSPHERIC PARTICLES === */
+/* ================================= */
+
+.season-particles {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.season-particle {
+    position: absolute;
+    top: -20px;
+    animation: season-particle-fall linear infinite;
+}
+
+/* Spring — cherry blossom petals */
+.season-particles-spring .season-particle {
+    width: 10px; height: 10px;
+    background: radial-gradient(ellipse, #ffb7c5 30%, #ff8faa 100%);
+    border-radius: 50% 0 50% 0;
+    opacity: 0.6;
+}
+@keyframes season-particle-fall {
+    0% { transform: translateY(-20px) rotate(0deg) translateX(0); opacity: 0; }
+    10% { opacity: 0.7; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(105vh) rotate(360deg) translateX(40px); opacity: 0; }
+}
+
+/* Summer — sun rays / sparkles */
+.season-particles-summer .season-particle {
+    width: 4px; height: 4px;
+    background: #ffd93d;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #ffd93d, 0 0 12px rgba(255,217,61,0.4);
+    opacity: 0.5;
+}
+
+/* Autumn — falling leaves */
+.season-particles-autumn .season-particle {
+    width: 12px; height: 8px;
+    background: linear-gradient(135deg, #e17055 0%, #f0932b 50%, #d35400 100%);
+    border-radius: 40% 60% 50% 50%;
+    opacity: 0.7;
+}
+
+/* Winter — snowflakes */
+.season-particles-winter .season-particle {
+    width: 6px; height: 6px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(255,255,255,0.8);
+    opacity: 0.7;
+}
+
+
+/* ============================== */
+/* === SEASON TRANSITION OVERLAY === */
+/* ============================== */
+
+.season-transition-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 120;
+    pointer-events: none;
+    animation: season-overlay-fade 2.2s ease-out forwards;
+}
+
+@keyframes season-overlay-fade {
+    0% { opacity: 0; }
+    15% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.season-transition-content {
+    text-align: center;
+    animation: season-content-pop 2.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes season-content-pop {
+    0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+    20% { transform: scale(1.15) rotate(3deg); opacity: 1; }
+    35% { transform: scale(1) rotate(0); }
+    70% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0; }
+}
+
+.season-transition-icon {
+    font-size: 4rem;
+    margin-bottom: 0.5rem;
+}
+
+.season-transition-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    color: white;
+    text-shadow: 0 0 30px rgba(0,0,0,0.4), 3px 3px 6px rgba(0,0,0,0.5);
+}
+
+.season-transition-sub {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.85);
+    font-weight: 700;
+    margin-top: 0.3rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+
+/* ============================== */
+/* === GROWTH EVOLUTION STAGES === */
+/* ============================== */
+
+/* Bud — small, translucent */
+.flower.growth-bud {
+    transform: scale(0.7);
+    opacity: 0.75;
+}
+.flower.growth-bud .flower-svg {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+}
+
+/* Bloom — slightly bigger */
+.flower.growth-bloom {
+    transform: scale(0.85);
+    opacity: 0.9;
+}
+.flower.growth-bloom .flower-svg {
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.2));
+}
+
+/* Full Bloom — normal size + soft glow */
+.flower.growth-full {
+    transform: scale(1.0);
+}
+.flower.growth-full .flower-svg {
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+/* Golden — slightly oversized + golden shimmer */
+.flower.growth-golden {
+    transform: scale(1.08);
+}
+.flower.growth-golden .flower-svg {
+    animation: golden-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes golden-shimmer {
+    0%, 100% {
+        filter: drop-shadow(0 0 6px rgba(255,215,0,0.5)) drop-shadow(0 0 12px rgba(255,180,0,0.3)) saturate(1.3);
+    }
+    50% {
+        filter: drop-shadow(0 0 12px rgba(255,215,0,0.9)) drop-shadow(0 0 20px rgba(255,180,0,0.5)) saturate(1.5);
+    }
+}
+
+/* Override growth scale during selected animation to prevent conflict */
+.flower.growth-bud.selected { animation: flower-select 0.8s ease-in-out infinite; transform: scale(0.7); }
+.flower.growth-bloom.selected { animation: flower-select 0.8s ease-in-out infinite; transform: scale(0.85); }
+.flower.growth-full.selected { animation: flower-select 0.8s ease-in-out infinite; }
+.flower.growth-golden.selected { animation: flower-select 0.8s ease-in-out infinite; transform: scale(1.08); }
+
+/* Growth legend in info modal */
+.growth-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0.5rem 0;
+    font-size: 0.85rem;
+}
+.growth-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.growth-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.growth-bud-dot { background: #ccc; opacity: 0.6; width: 8px; height: 8px; }
+.growth-bloom-dot { background: #aad4aa; width: 10px; height: 10px; }
+.growth-full-dot { background: #6bcf7f; box-shadow: 0 0 4px rgba(255,255,255,0.5); }
+.growth-golden-dot { background: #ffd700; box-shadow: 0 0 6px rgba(255,215,0,0.7); }

@@ -576,163 +576,663 @@ export const SKINS = {
     // eslint-disable-next-line no-unused-vars
     snake: (ctx, segments, targetPos, timestamp, isWandering) => {
         if (segments.length < 2) return;
+        const len = segments.length;
+
+        // --- Body: tapering with diamond scales ---
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        for (let i = 1; i < segments.length; i++) {
-            const segment = segments[i];
-            const prevSegment = segments[i - 1];
-            const gradient = ctx.createLinearGradient(prevSegment.x, prevSegment.y, segment.x, segment.y);
-            gradient.addColorStop(0, '#38a3a5');
-            gradient.addColorStop(1, '#80ed99');
+
+        // Draw body as smooth tapering path with belly gradient
+        for (let i = len - 1; i > 0; i--) {
+            const seg = segments[i];
+            const prev = segments[i - 1];
+            const t = 1 - i / len; // 0 at tail, 1 at head
+            const bodyWidth = seg.size * (0.4 + t * 1.4); // taper: thin tail → thick near head
+
+            // Undulation offset for organic movement
+            const undulate = Math.sin(timestamp / 200 + i * 0.6) * 2 * (1 - t);
+            const angle = Math.atan2(seg.y - prev.y, seg.x - prev.x);
+            const perpX = Math.cos(angle + Math.PI / 2) * undulate;
+            const perpY = Math.sin(angle + Math.PI / 2) * undulate;
+
+            // Dorsal (top) color — rich emerald to olive
+            const hue = 130 + t * 20;
+            const lightness = 28 + t * 12;
+            const gradient = ctx.createLinearGradient(
+                prev.x + perpX, prev.y + perpY, seg.x + perpX, seg.y + perpY
+            );
+            gradient.addColorStop(0, `hsl(${hue}, 70%, ${lightness}%)`);
+            gradient.addColorStop(1, `hsl(${hue - 10}, 65%, ${lightness + 5}%)`);
             ctx.strokeStyle = gradient;
-            ctx.lineWidth = segment.size * 2;
+            ctx.lineWidth = bodyWidth;
             ctx.beginPath();
-            ctx.moveTo(prevSegment.x, prevSegment.y);
-            ctx.lineTo(segment.x, segment.y);
+            ctx.moveTo(prev.x + perpX, prev.y + perpY);
+            ctx.lineTo(seg.x + perpX, seg.y + perpY);
             ctx.stroke();
+
+            // Ventral (belly) highlight stripe
+            ctx.strokeStyle = `hsla(60, 50%, 75%, ${0.15 + t * 0.1})`;
+            ctx.lineWidth = bodyWidth * 0.3;
+            ctx.beginPath();
+            ctx.moveTo(prev.x + perpX, prev.y + perpY);
+            ctx.lineTo(seg.x + perpX, seg.y + perpY);
+            ctx.stroke();
+
+            // Diamond scale pattern (every 2nd segment)
+            if (i % 2 === 0 && bodyWidth > 3) {
+                const mx = (seg.x + prev.x) / 2 + perpX;
+                const my = (seg.y + prev.y) / 2 + perpY;
+                const scaleSize = bodyWidth * 0.35;
+                const scaleAngle = angle;
+                ctx.save();
+                ctx.translate(mx, my);
+                ctx.rotate(scaleAngle);
+                ctx.fillStyle = `hsla(${hue + 15}, 60%, ${lightness + 15}%, 0.4)`;
+                ctx.beginPath();
+                ctx.moveTo(0, -scaleSize);
+                ctx.lineTo(scaleSize * 0.6, 0);
+                ctx.lineTo(0, scaleSize);
+                ctx.lineTo(-scaleSize * 0.6, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
         }
+
+        // --- Head: wedge-shaped viper head ---
         const head = segments[0];
-        const next_seg = segments[1];
-        ctx.fillStyle = '#38a3a5';
-        ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
-        ctx.fill();
-        const angle = Math.atan2(next_seg.y - head.y, next_seg.x - head.x);
+        const neck = segments[Math.min(2, len - 1)];
+        const headAngle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
+        const headScale = head.size / 8;
+
         ctx.save();
         ctx.translate(head.x, head.y);
-        ctx.rotate(angle + Math.PI);
-        const eyeOffsetX = head.size * 0.5;
-        const eyeOffsetY = head.size * 0.5;
-        const eyeRadius = head.size * 0.2;
-        ctx.fillStyle = 'white';
+        ctx.rotate(headAngle);
+        ctx.scale(headScale, headScale);
+
+        // Wedge shape — wider than neck, triangular
+        const headGrad = ctx.createLinearGradient(-12, 0, 22, 0);
+        headGrad.addColorStop(0, 'hsl(130, 55%, 30%)');
+        headGrad.addColorStop(0.5, 'hsl(135, 65%, 25%)');
+        headGrad.addColorStop(1, 'hsl(140, 60%, 22%)');
+        ctx.fillStyle = headGrad;
         ctx.beginPath();
-        ctx.arc(eyeOffsetX, -eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+        ctx.moveTo(22, 0);           // snout tip
+        ctx.lineTo(5, -12);          // upper jaw corner
+        ctx.quadraticCurveTo(-8, -14, -12, -8); // brow ridge
+        ctx.lineTo(-12, 8);          // neck bottom
+        ctx.quadraticCurveTo(-8, 14, 5, 12);    // lower jaw corner
+        ctx.closePath();
+        ctx.fill();
+
+        // Head dorsal pattern — darker V marking
+        ctx.fillStyle = 'hsla(120, 40%, 18%, 0.5)';
+        ctx.beginPath();
+        ctx.moveTo(-8, 0);
+        ctx.lineTo(0, -6);
+        ctx.lineTo(10, 0);
+        ctx.lineTo(0, 6);
+        ctx.closePath();
+        ctx.fill();
+
+        // Heat pits (small dark marks between eye and nostril)
+        ctx.fillStyle = 'hsl(130, 30%, 15%)';
+        ctx.beginPath();
+        ctx.ellipse(14, -4, 1.5, 1, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(eyeOffsetX, eyeOffsetY, eyeRadius, 0, Math.PI * 2);
+        ctx.ellipse(14, 4, 1.5, 1, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = 'black';
+
+        // Eyes — amber with vertical slit pupils
+        const eyeX = 6, eyeYOffset = 7, eyeR = 3.5;
+        // Eye glow
+        ctx.shadowColor = 'hsl(45, 100%, 50%)';
+        ctx.shadowBlur = 8 / headScale;
+        // Eyeball
+        ctx.fillStyle = 'hsl(45, 90%, 55%)';
         ctx.beginPath();
-        ctx.arc(eyeOffsetX + eyeRadius * 0.2, -eyeOffsetY, eyeRadius * 0.5, 0, Math.PI * 2);
+        ctx.ellipse(eyeX, -eyeYOffset, eyeR, eyeR * 0.85, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(eyeOffsetX + eyeRadius * 0.2, eyeOffsetY, eyeRadius * 0.5, 0, Math.PI * 2);
+        ctx.ellipse(eyeX, eyeYOffset, eyeR, eyeR * 0.85, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.shadowBlur = 0;
+        // Vertical slit pupil
+        ctx.fillStyle = 'hsl(0, 0%, 5%)';
+        ctx.beginPath();
+        ctx.ellipse(eyeX + 0.5, -eyeYOffset, 1, eyeR * 0.75, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(eyeX + 0.5, eyeYOffset, 1, eyeR * 0.75, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Forked tongue — flicks periodically
+        const tonguePhase = (timestamp % 2000) / 2000;
+        if (tonguePhase < 0.3) {
+            const flick = Math.sin(tonguePhase / 0.3 * Math.PI);
+            const tongueLen = 12 + flick * 8;
+            const forkSpread = 3 + flick * 4;
+            ctx.strokeStyle = 'hsl(350, 70%, 45%)';
+            ctx.lineWidth = 1.2 / headScale;
+            ctx.lineCap = 'round';
+            // Tongue base
+            ctx.beginPath();
+            ctx.moveTo(22, 0);
+            ctx.lineTo(22 + tongueLen, 0);
+            ctx.stroke();
+            // Fork
+            ctx.beginPath();
+            ctx.moveTo(22 + tongueLen, 0);
+            ctx.lineTo(22 + tongueLen + 4, -forkSpread);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(22 + tongueLen, 0);
+            ctx.lineTo(22 + tongueLen + 4, forkSpread);
+            ctx.stroke();
+        }
+
         ctx.restore();
     },
     // eslint-disable-next-line no-unused-vars
     ghost: (ctx, segments, targetPos, timestamp, isWandering) => {
         if (segments.length < 2) return;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        for (let i = segments.length - 1; i > 0; i--) {
-            const segment = segments[i];
-            const prevSegment = segments[i - 1];
-            const wispOpacity = Math.max(0, 0.3 + Math.sin(timestamp / 300 + i * 0.5) * 0.3);
-            ctx.strokeStyle = `rgba(100, 80, 150, ${wispOpacity})`;
-            ctx.lineWidth = Math.random() * segment.size * 0.5;
+        const len = segments.length;
+        const time = timestamp / 1000;
+
+        // --- Spectral aura — eerie glow along the whole body path ---
+        for (let i = 0; i < len; i += 3) {
+            const seg = segments[i];
+            const t = 1 - i / len;
+            const auraR = seg.size * (1.6 + Math.sin(time + i * 0.5) * 0.4);
+            const auraAlpha = (0.03 + t * 0.03) * (0.8 + Math.sin(time * 1.5 + i * 0.7) * 0.2);
+            const grad = ctx.createRadialGradient(seg.x, seg.y, 0, seg.x, seg.y, auraR);
+            grad.addColorStop(0, `hsla(190, 50%, 70%, ${auraAlpha * 1.5})`);
+            grad.addColorStop(0.4, `hsla(260, 30%, 60%, ${auraAlpha})`);
+            grad.addColorStop(1, `hsla(280, 20%, 40%, 0)`);
+            ctx.fillStyle = grad;
             ctx.beginPath();
-            ctx.moveTo(prevSegment.x + (Math.random() - 0.5) * 20, prevSegment.y + (Math.random() - 0.5) * 20);
-            ctx.quadraticCurveTo(
-                (segment.x + prevSegment.x) / 2 + (Math.random() - 0.5) * 30,
-                (segment.y + prevSegment.y) / 2 + (Math.random() - 0.5) * 30,
-                segment.x + (Math.random() - 0.5) * 20,
-                segment.y + (Math.random() - 0.5) * 20
-            );
+            ctx.arc(seg.x, seg.y, auraR, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // --- Spine glow — neon energy running through the backbone ---
+        const spineGlowPulse = Math.sin(time * 3) * 0.15 + 0.85;
+        for (let i = len - 1; i > 0; i--) {
+            const seg = segments[i];
+            const prev = segments[i - 1];
+            const t = 1 - i / len;
+            // Outer glow
+            ctx.shadowColor = 'hsl(190, 100%, 60%)';
+            ctx.shadowBlur = 6 + t * 4;
+            ctx.strokeStyle = `hsla(190, 80%, 65%, ${(0.08 + t * 0.12) * spineGlowPulse})`;
+            ctx.lineWidth = 4 + t * 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(prev.x, prev.y);
+            ctx.lineTo(seg.x, seg.y);
             ctx.stroke();
-            const angle = Math.atan2(prevSegment.y - segment.y, prevSegment.x - segment.x);
-            ctx.save();
-            ctx.translate(segment.x, segment.y);
-            ctx.rotate(angle);
-            const boneLength = segment.size * 1.8;
-            const boneWidth = segment.size * 0.9;
-            const gradient = ctx.createLinearGradient(-boneLength / 2, 0, boneLength / 2, 0);
-            gradient.addColorStop(0, 'rgba(210, 200, 255, 0)');
-            gradient.addColorStop(0.3, 'rgba(230, 230, 255, 0.6)');
-            gradient.addColorStop(0.7, 'rgba(230, 230, 255, 0.6)');
-            gradient.addColorStop(1, 'rgba(210, 200, 255, 0)');
-            ctx.fillStyle = gradient;
+        }
+        ctx.shadowBlur = 0;
+
+        // --- Spine bone — solid white-bone line ---
+        for (let i = len - 1; i > 0; i--) {
+            const seg = segments[i];
+            const prev = segments[i - 1];
+            const t = 1 - i / len;
+            ctx.strokeStyle = `hsla(40, 14%, 85%, ${0.55 + t * 0.35})`;
+            ctx.lineWidth = 2 + t * 1.5;
+            ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.arc(-boneLength / 2, 0, boneWidth / 2, Math.PI * 0.5, Math.PI * 1.5);
-            ctx.arc(boneLength / 2, 0, boneWidth / 2, Math.PI * 1.5, Math.PI * 0.5);
+            ctx.moveTo(prev.x, prev.y);
+            ctx.lineTo(seg.x, seg.y);
+            ctx.stroke();
+        }
+
+        // --- Vertebrae + dorsal spines + ribs ---
+        for (let i = len - 1; i > 0; i--) {
+            const seg = segments[i];
+            const prev = segments[i - 1];
+            const t = 1 - i / len;
+            const angle = Math.atan2(seg.y - prev.y, seg.x - prev.x);
+            const mx = (seg.x + prev.x) / 2;
+            const my = (seg.y + prev.y) / 2;
+            const boneAlpha = 0.5 + t * 0.4;
+
+            // Vertebra knob — 3D shaded circle
+            const knobSize = 2 + t * 1.8;
+            const knobGrad = ctx.createRadialGradient(
+                mx - knobSize * 0.3, my - knobSize * 0.3, 0,
+                mx, my, knobSize
+            );
+            knobGrad.addColorStop(0, `hsla(45, 18%, 95%, ${boneAlpha})`);
+            knobGrad.addColorStop(0.6, `hsla(40, 14%, 82%, ${boneAlpha})`);
+            knobGrad.addColorStop(1, `hsla(35, 10%, 65%, ${boneAlpha * 0.6})`);
+            ctx.fillStyle = knobGrad;
+            ctx.beginPath();
+            ctx.arc(mx, my, knobSize, 0, Math.PI * 2);
+            ctx.fill();
+            // Knob outline
+            ctx.strokeStyle = `hsla(35, 10%, 60%, ${boneAlpha * 0.4})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+
+            // Dorsal spine process — sharp pointed triangle
+            const dorsalLen = knobSize * 2;
+            const dorsalAngle = angle + Math.PI / 2;
+            const dorsalGrad = ctx.createLinearGradient(
+                mx, my,
+                mx + Math.cos(dorsalAngle) * dorsalLen,
+                my + Math.sin(dorsalAngle) * dorsalLen
+            );
+            dorsalGrad.addColorStop(0, `hsla(40, 12%, 85%, ${boneAlpha * 0.8})`);
+            dorsalGrad.addColorStop(1, `hsla(40, 10%, 75%, ${boneAlpha * 0.3})`);
+            ctx.fillStyle = dorsalGrad;
+            ctx.beginPath();
+            ctx.moveTo(
+                mx - Math.cos(angle) * knobSize * 0.3,
+                my - Math.sin(angle) * knobSize * 0.3
+            );
+            ctx.lineTo(
+                mx + Math.cos(dorsalAngle) * dorsalLen,
+                my + Math.sin(dorsalAngle) * dorsalLen
+            );
+            ctx.lineTo(
+                mx + Math.cos(angle) * knobSize * 0.3,
+                my + Math.sin(angle) * knobSize * 0.3
+            );
             ctx.closePath();
             ctx.fill();
-            ctx.strokeStyle = `rgba(230, 230, 255, 0.4)`;
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(-boneLength / 2, 0);
-            ctx.lineTo(boneLength / 2, 0);
+            ctx.strokeStyle = `hsla(35, 8%, 68%, ${boneAlpha * 0.3})`;
+            ctx.lineWidth = 0.4;
             ctx.stroke();
-            const veinCount = Math.floor(segment.size / 4);
-            ctx.strokeStyle = `rgba(180, 160, 255, 0.5)`;
-            ctx.lineWidth = 1 + Math.random();
-            ctx.lineCap = 'butt';
-            for (let j = 0; j < veinCount; j++) {
+
+            // --- Ribs: 3D curved bones with shading ---
+            if (i < len - 2) {
+                const ribScale = 0.3 + t * 0.7;
+                const ribLen = seg.size * (0.9 + t * 1.3) * ribScale;
+                const ribAlpha = 0.4 + t * 0.35;
+                const breathe = Math.sin(time * 0.7 + i * 0.4) * 0.08;
+                const ribWidth = 0.9 + t * 0.7;
+
+                // Left rib
+                const lStart = Math.PI / 2 + breathe;
+                const lMid = Math.PI / 2 + 0.3 + breathe;
+                const lEnd = Math.PI / 2 + 0.55 + breathe;
+
+                // Rib shadow (wider, darker, offset)
+                ctx.strokeStyle = `hsla(30, 8%, 50%, ${ribAlpha * 0.25})`;
+                ctx.lineWidth = ribWidth + 1;
+                ctx.lineCap = 'round';
                 ctx.beginPath();
-                const startX = -boneLength / 2;
-                const endX = boneLength / 2;
-                const yOffset = (Math.random() - 0.5) * (boneWidth * 0.7);
-                ctx.moveTo(startX, yOffset);
-                ctx.quadraticCurveTo(0, yOffset + (Math.random() - 0.5) * boneWidth, endX, yOffset);
+                ctx.moveTo(mx, my);
+                ctx.bezierCurveTo(
+                    mx + Math.cos(angle + lStart) * ribLen * 0.4,
+                    my + Math.sin(angle + lStart) * ribLen * 0.4,
+                    mx + Math.cos(angle + lMid) * ribLen * 0.8,
+                    my + Math.sin(angle + lMid) * ribLen * 0.8,
+                    mx + Math.cos(angle + lEnd) * ribLen,
+                    my + Math.sin(angle + lEnd) * ribLen
+                );
                 ctx.stroke();
+
+                // Rib bone (lighter)
+                ctx.strokeStyle = `hsla(42, 14%, 87%, ${ribAlpha})`;
+                ctx.lineWidth = ribWidth;
+                ctx.beginPath();
+                ctx.moveTo(mx, my);
+                ctx.bezierCurveTo(
+                    mx + Math.cos(angle + lStart) * ribLen * 0.4,
+                    my + Math.sin(angle + lStart) * ribLen * 0.4,
+                    mx + Math.cos(angle + lMid) * ribLen * 0.8,
+                    my + Math.sin(angle + lMid) * ribLen * 0.8,
+                    mx + Math.cos(angle + lEnd) * ribLen,
+                    my + Math.sin(angle + lEnd) * ribLen
+                );
+                ctx.stroke();
+
+                // Rib tip highlight
+                ctx.fillStyle = `hsla(45, 15%, 90%, ${ribAlpha * 0.6})`;
+                ctx.beginPath();
+                ctx.arc(
+                    mx + Math.cos(angle + lEnd) * ribLen,
+                    my + Math.sin(angle + lEnd) * ribLen,
+                    0.7 + t * 0.4, 0, Math.PI * 2
+                );
+                ctx.fill();
+
+                // Right rib (mirror)
+                const rStart = -Math.PI / 2 - breathe;
+                const rMid = -Math.PI / 2 - 0.3 - breathe;
+                const rEnd = -Math.PI / 2 - 0.55 - breathe;
+
+                ctx.strokeStyle = `hsla(30, 8%, 50%, ${ribAlpha * 0.25})`;
+                ctx.lineWidth = ribWidth + 1;
+                ctx.beginPath();
+                ctx.moveTo(mx, my);
+                ctx.bezierCurveTo(
+                    mx + Math.cos(angle + rStart) * ribLen * 0.4,
+                    my + Math.sin(angle + rStart) * ribLen * 0.4,
+                    mx + Math.cos(angle + rMid) * ribLen * 0.8,
+                    my + Math.sin(angle + rMid) * ribLen * 0.8,
+                    mx + Math.cos(angle + rEnd) * ribLen,
+                    my + Math.sin(angle + rEnd) * ribLen
+                );
+                ctx.stroke();
+
+                ctx.strokeStyle = `hsla(42, 14%, 87%, ${ribAlpha})`;
+                ctx.lineWidth = ribWidth;
+                ctx.beginPath();
+                ctx.moveTo(mx, my);
+                ctx.bezierCurveTo(
+                    mx + Math.cos(angle + rStart) * ribLen * 0.4,
+                    my + Math.sin(angle + rStart) * ribLen * 0.4,
+                    mx + Math.cos(angle + rMid) * ribLen * 0.8,
+                    my + Math.sin(angle + rMid) * ribLen * 0.8,
+                    mx + Math.cos(angle + rEnd) * ribLen,
+                    my + Math.sin(angle + rEnd) * ribLen
+                );
+                ctx.stroke();
+
+                ctx.fillStyle = `hsla(45, 15%, 90%, ${ribAlpha * 0.6})`;
+                ctx.beginPath();
+                ctx.arc(
+                    mx + Math.cos(angle + rEnd) * ribLen,
+                    my + Math.sin(angle + rEnd) * ribLen,
+                    0.7 + t * 0.4, 0, Math.PI * 2
+                );
+                ctx.fill();
             }
-            ctx.lineCap = 'round';
-            ctx.restore();
         }
+
+        // --- HEAD: Massive detailed serpent skull ---
         const head = segments[0];
         const headAngle = Math.atan2(targetPos.y - head.y, targetPos.x - head.x);
-        const headScale = head.size / 8;
+        const hs = head.size / 6.5; // slightly bigger scale
+
         ctx.save();
         ctx.translate(head.x, head.y);
         ctx.rotate(headAngle);
-        ctx.scale(headScale, headScale);
-        const spikeOpacity = 0.4 + Math.abs(Math.sin(timestamp / 150)) * 0.6;
-        ctx.strokeStyle = `rgba(230, 230, 255, ${spikeOpacity})`;
-        ctx.lineWidth = 1.5 / headScale;
+        ctx.scale(hs, hs);
+
+        // Head aura glow
+        ctx.shadowColor = 'hsl(190, 100%, 55%)';
+        ctx.shadowBlur = 15 / hs;
+        ctx.fillStyle = 'hsla(190, 60%, 60%, 0.04)';
         ctx.beginPath();
-        ctx.moveTo(-10, -12);
-        ctx.lineTo(-5, -22);
-        ctx.lineTo(0, -15);
-        ctx.lineTo(5, -25);
-        ctx.lineTo(10, -14);
-        ctx.lineTo(15, -20);
-        ctx.lineTo(20, -12);
-        ctx.stroke();
-        ctx.fillStyle = 'rgba(240, 240, 255, 0.8)';
-        ctx.strokeStyle = 'rgba(180, 160, 255, 0.7)';
-        ctx.lineWidth = 2 / headScale;
-        ctx.beginPath();
-        ctx.moveTo(20, 0);
-        ctx.quadraticCurveTo(10, -18, -15, -15);
-        ctx.quadraticCurveTo(-25, -5, -25, 0);
-        ctx.quadraticCurveTo(-25, 5, -15, 15);
-        ctx.quadraticCurveTo(10, 18, 20, 0);
-        ctx.fill();
-        ctx.stroke();
-        ctx.shadowColor = '#00ffff';
-        ctx.shadowBlur = 20 / headScale;
-        ctx.fillStyle = '#00ffff';
-        ctx.beginPath();
-        ctx.arc(5, -6, 4, 0, Math.PI * 2);
-        ctx.arc(5, 6, 4, 0, Math.PI * 2);
+        ctx.arc(0, 0, 30, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
-        const frillPulse = Math.sin(timestamp / 400) * 5;
-        ctx.fillStyle = `rgba(180, 160, 255, 0.2)`;
+
+        const boneHi = 'hsla(42, 16%, 92%, 0.95)';
+        const boneMid = 'hsla(40, 14%, 84%, 0.9)';
+        const boneLo = 'hsla(35, 10%, 62%, 0.7)';
+        const lineW = 0.7 / hs;
+
+        // === Upper cranium ===
+        // 3D shaded skull plate
+        const crGrad = ctx.createLinearGradient(-22, -14, 10, 4);
+        crGrad.addColorStop(0, boneMid);
+        crGrad.addColorStop(0.4, boneHi);
+        crGrad.addColorStop(1, boneMid);
+        ctx.fillStyle = crGrad;
+        ctx.strokeStyle = boneLo;
+        ctx.lineWidth = lineW;
         ctx.beginPath();
-        ctx.moveTo(-15, -15);
-        ctx.quadraticCurveTo(-30, -30 - frillPulse, -45, -10);
-        ctx.quadraticCurveTo(-25, 0, -45, 10);
-        ctx.quadraticCurveTo(-30, 30 + frillPulse, -15, 15);
+        ctx.moveTo(26, -1.5);
+        ctx.lineTo(20, -4);
+        ctx.lineTo(12, -7);
+        ctx.quadraticCurveTo(5, -12, -2, -14);
+        ctx.quadraticCurveTo(-10, -16, -17, -13);
+        ctx.quadraticCurveTo(-24, -9, -24, 0);
+        ctx.quadraticCurveTo(-24, 3, -20, 5);
+        ctx.lineTo(-10, 4.5);
+        ctx.lineTo(4, 2.5);
+        ctx.lineTo(20, -0.5);
         ctx.closePath();
         ctx.fill();
-        const starPulse = 1 + Math.sin(timestamp / 200) * 0.8;
-        ctx.fillStyle = 'white';
+        ctx.stroke();
+
+        // Brow ridge — heavy bone above eye
+        ctx.strokeStyle = boneLo;
+        ctx.lineWidth = 2 / hs;
         ctx.beginPath();
-        ctx.arc(-28, -15, starPulse, 0, Math.PI * 2);
-        ctx.arc(-35, 0, starPulse * 0.8, 0, Math.PI * 2);
-        ctx.arc(-29, 12, starPulse * 1.2, 0, Math.PI * 2);
+        ctx.moveTo(14, -6.5);
+        ctx.quadraticCurveTo(6, -11, -2, -13.5);
+        ctx.quadraticCurveTo(-8, -14.5, -14, -12);
+        ctx.stroke();
+        // Brow highlight
+        ctx.strokeStyle = `hsla(42, 16%, 93%, 0.5)`;
+        ctx.lineWidth = 0.8 / hs;
+        ctx.beginPath();
+        ctx.moveTo(12, -7.5);
+        ctx.quadraticCurveTo(5, -12, -2, -14);
+        ctx.stroke();
+
+        // Cranial suture lines
+        ctx.strokeStyle = 'hsla(30, 8%, 62%, 0.3)';
+        ctx.lineWidth = 0.4 / hs;
+        ctx.beginPath();
+        ctx.moveTo(-18, -11);
+        ctx.quadraticCurveTo(-12, -7, -5, -9);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-22, -3);
+        ctx.quadraticCurveTo(-14, -1, -8, -2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-10, -14);
+        ctx.quadraticCurveTo(-8, -8, -12, -4);
+        ctx.stroke();
+
+        // Snout ridge detail
+        ctx.strokeStyle = 'hsla(35, 10%, 70%, 0.4)';
+        ctx.lineWidth = 0.5 / hs;
+        ctx.beginPath();
+        ctx.moveTo(20, -3);
+        ctx.lineTo(10, -5);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(20, -2);
+        ctx.lineTo(14, -2.5);
+        ctx.stroke();
+
+        // === Lower jaw — separated, angled down ===
+        const jawGrad = ctx.createLinearGradient(-18, 5, 20, 12);
+        jawGrad.addColorStop(0, boneMid);
+        jawGrad.addColorStop(0.5, boneHi);
+        jawGrad.addColorStop(1, boneMid);
+        ctx.fillStyle = jawGrad;
+        ctx.strokeStyle = boneLo;
+        ctx.lineWidth = lineW;
+        ctx.beginPath();
+        ctx.moveTo(26, 1.5);
+        ctx.lineTo(20, 4);
+        ctx.lineTo(10, 8);
+        ctx.quadraticCurveTo(2, 12, -5, 13);
+        ctx.quadraticCurveTo(-12, 14, -18, 10);
+        ctx.quadraticCurveTo(-22, 7, -20, 5);
+        ctx.lineTo(-10, 5);
+        ctx.lineTo(4, 3.5);
+        ctx.lineTo(20, 1);
+        ctx.closePath();
         ctx.fill();
+        ctx.stroke();
+
+        // Jaw bone ridge detail
+        ctx.strokeStyle = 'hsla(35, 10%, 68%, 0.35)';
+        ctx.lineWidth = 0.4 / hs;
+        ctx.beginPath();
+        ctx.moveTo(18, 3);
+        ctx.quadraticCurveTo(6, 7, -4, 9);
+        ctx.stroke();
+
+        // Jaw hinge — detailed joint
+        ctx.fillStyle = boneMid;
+        ctx.strokeStyle = boneLo;
+        ctx.lineWidth = 0.6 / hs;
+        ctx.beginPath();
+        ctx.arc(-19, 7, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Joint inner circle
+        ctx.fillStyle = `hsla(35, 8%, 70%, 0.5)`;
+        ctx.beginPath();
+        ctx.arc(-19, 7, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // === Eye socket — deep angular void ===
+        ctx.fillStyle = 'hsla(260, 70%, 3%, 0.97)';
+        ctx.beginPath();
+        ctx.moveTo(12, -6);
+        ctx.lineTo(6, -12);
+        ctx.lineTo(-2, -9);
+        ctx.lineTo(-1, -5);
+        ctx.quadraticCurveTo(3, -4, 7, -4.5);
+        ctx.closePath();
+        ctx.fill();
+        // Socket rim highlight
+        ctx.strokeStyle = 'hsla(40, 14%, 78%, 0.6)';
+        ctx.lineWidth = 0.9 / hs;
+        ctx.stroke();
+        // Inner socket depth shadow
+        ctx.strokeStyle = 'hsla(260, 30%, 20%, 0.4)';
+        ctx.lineWidth = 0.5 / hs;
+        ctx.beginPath();
+        ctx.moveTo(10, -6.5);
+        ctx.lineTo(5, -10.5);
+        ctx.lineTo(0, -8);
+        ctx.stroke();
+
+        // Soul-fire eye — intense glow
+        const ef = Math.sin(time * 5) * 0.15 + 0.85;
+        const es = Math.sin(time * 3) * 0.4 + 1.6;
+        // Outer glow
+        ctx.shadowColor = 'hsl(185, 100%, 55%)';
+        ctx.shadowBlur = (14 + Math.sin(time * 7) * 5) / hs;
+        ctx.fillStyle = `hsla(185, 100%, 70%, ${ef * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(5, -7.5, es * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        // Bright core
+        ctx.fillStyle = `hsla(185, 100%, 85%, ${ef * 0.95})`;
+        ctx.beginPath();
+        ctx.arc(5, -7.5, es, 0, Math.PI * 2);
+        ctx.fill();
+        // White-hot center
+        ctx.fillStyle = `hsla(180, 100%, 95%, ${ef * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(5.2, -7.8, es * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // === Nose holes ===
+        ctx.fillStyle = 'hsla(260, 40%, 5%, 0.85)';
+        ctx.beginPath();
+        ctx.moveTo(22, -3);
+        ctx.lineTo(24.5, -2);
+        ctx.lineTo(22, -1.2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(22, -0.5);
+        ctx.lineTo(24, 0.2);
+        ctx.lineTo(22, 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // === Teeth — upper jaw row ===
+        ctx.fillStyle = boneHi;
+        ctx.strokeStyle = 'hsla(35, 10%, 65%, 0.35)';
+        ctx.lineWidth = 0.25 / hs;
+        // Large front fangs
+        ctx.beginPath();
+        ctx.moveTo(24, -0.5);
+        ctx.lineTo(27, 2);
+        ctx.lineTo(22.5, 1);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(21, 0);
+        ctx.lineTo(23, 2.5);
+        ctx.lineTo(19.5, 1.5);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Smaller teeth row
+        for (let ti = 0; ti < 6; ti++) {
+            const tx = 17 - ti * 2.5;
+            const tl = 2 - ti * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(tx, 1);
+            ctx.lineTo(tx + 0.7, 1 + tl);
+            ctx.lineTo(tx - 0.7, 1 + tl * 0.85);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // === Teeth — lower jaw row ===
+        for (let ti = 0; ti < 5; ti++) {
+            const tx = 18 - ti * 2.5;
+            const tl = 1.7 - ti * 0.1;
+            ctx.beginPath();
+            ctx.moveTo(tx, 3.5);
+            ctx.lineTo(tx + 0.5, 3.5 - tl);
+            ctx.lineTo(tx - 0.5, 3.5 - tl * 0.85);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // === Horns / bone crests on back of skull ===
+        const hornGrad = ctx.createLinearGradient(-14, -13, -24, -20);
+        hornGrad.addColorStop(0, boneMid);
+        hornGrad.addColorStop(1, 'hsla(35, 10%, 70%, 0.5)');
+        ctx.fillStyle = hornGrad;
+        ctx.strokeStyle = boneLo;
+        ctx.lineWidth = 0.6 / hs;
+        // Main horn
+        ctx.beginPath();
+        ctx.moveTo(-13, -13);
+        ctx.quadraticCurveTo(-16, -18, -22, -20);
+        ctx.lineTo(-18, -11);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Secondary horn
+        ctx.beginPath();
+        ctx.moveTo(-17, -10);
+        ctx.quadraticCurveTo(-22, -14, -27, -14);
+        ctx.lineTo(-21, -8);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Small spine crest
+        ctx.beginPath();
+        ctx.moveTo(-20, -6);
+        ctx.lineTo(-26, -8);
+        ctx.lineTo(-22, -4);
+        ctx.closePath();
+        ctx.fill();
+
+        // === Orbiting souls ===
+        for (let s = 0; s < 3; s++) {
+            const oa = time * 1.5 + s * (Math.PI * 2 / 3);
+            const or2 = 28 + Math.sin(time * 2 + s * 1.5) * 5;
+            const sx = Math.cos(oa) * or2;
+            const sy = Math.sin(oa) * or2;
+            const sa = 0.25 + Math.sin(time * 3.5 + s * 2) * 0.12;
+            ctx.shadowColor = `hsl(${185 + s * 30}, 100%, 60%)`;
+            ctx.shadowBlur = 6 / hs;
+            ctx.fillStyle = `hsla(${185 + s * 30}, 80%, 82%, ${sa})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 1.3 + Math.sin(time * 4 + s) * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            // Soul trail
+            const ta = oa - 0.6;
+            ctx.fillStyle = `hsla(${185 + s * 30}, 60%, 75%, ${sa * 0.25})`;
+            ctx.beginPath();
+            ctx.arc(Math.cos(ta) * or2 * 0.85, Math.sin(ta) * or2 * 0.85, 0.7, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
         ctx.restore();
     },
 };
