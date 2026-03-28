@@ -16,10 +16,14 @@ import {
     Ticket,
     Share2,
     Sparkles,
-    Navigation
+    Navigation,
+    ChevronUp,
+    ChevronDown,
+    Droplets
 } from 'lucide-react';
 import './HomePage.css';
 import GameCard from './components/GameCard/GameCard';
+import { useExpandableCard } from './hooks/useExpandableCard';
 
 // --- Theme Configuration ---
 const VALID_THEMES = ['arcade', 'floating-islands', 'edo-map', 'night-fair'];
@@ -181,22 +185,19 @@ const CarnivalHeader = ({ isScrolled, togglePanel, isPanelOpen }) => (
 
 // --- Sea Card Component (Floating Islands theme — clean design) ---
 const SeaCard = ({ game, onClick }) => {
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick();
-        }
-    };
+    const { isExpanded, cardRef, handlers } = useExpandableCard(onClick);
 
     return (
         <div
+            ref={cardRef}
             className="sea-card"
             data-accent={game.islandTheme}
-            onClick={onClick}
-            onKeyDown={handleKeyDown}
+            data-expanded={isExpanded}
+            {...handlers}
             role="button"
             tabIndex={0}
             aria-label={`Play ${game.title} on ${game.islandName}`}
+            aria-expanded={isExpanded}
         >
             <div className="sea-card-accent" />
             <div className="sea-card-body">
@@ -206,7 +207,11 @@ const SeaCard = ({ game, onClick }) => {
                         {game.islandEmoji} {game.islandName}
                     </span>
                     <h3 className="sea-card-title">{game.title}</h3>
-                    <p className="sea-card-desc">{game.description}</p>
+                    <div className="card-expandable" data-expanded={isExpanded}>
+                        <div className="card-expandable-inner">
+                            <p className="sea-card-desc">{game.description}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div className="sea-card-wave" />
@@ -385,13 +390,11 @@ const SidePanel = ({ theme, onThemeChange, isOpen, togglePanel }) => {
 
     return (
         <>
-            {isOpen && (
-                <div
-                    className="panel-overlay"
-                    onClick={togglePanel}
-                    aria-hidden="true"
-                />
-            )}
+            <div
+                className="panel-overlay"
+                onClick={togglePanel}
+                aria-hidden={!isOpen}
+            />
             <aside
                 className={`side-panel ${isOpen ? 'open' : ''} ${panelClass}`}
                 aria-label="Settings panel"
@@ -573,15 +576,35 @@ const GAMES = [
         boothTheme: 'flock',
         boothEmoji: '🐦',
     },
+    {
+        title: 'Living Canvas',
+        description:
+            'Guide flowing ink across paper or grow living moss on stone. Two art forms, one meditative experience.',
+        status: 'Ready',
+        icon: <Droplets size={40} />,
+        path: '/vqm-mini-games/living-canvas',
+        featured: false,
+        islandName: 'Ink Atoll',
+        islandTheme: 'ink',
+        islandEmoji: '🖌️',
+        edoName: '墨の道',
+        edoTheme: 'sumi',
+        edoEmoji: '🖋️',
+        boothName: 'Living Art',
+        boothTheme: 'art',
+        boothEmoji: '🌿',
+    },
 ];
 
 
 // --- Pagoda Card Component (Edo Map theme) ---
 const PagodaCard = ({ game, index, onHover, onLeave, onClick }) => {
-    const cardRef = useRef(null);
     const { edoName, edoEmoji } = game;
+    const { isExpanded, cardRef, handlers } = useExpandableCard(onClick);
 
-    const handleMouseEnter = () => {
+    // Compose mouse enter: expand + koi fish positioning
+    const handleMouseEnter = (e) => {
+        handlers.onMouseEnter(e);
         if (cardRef.current) {
             const rect = cardRef.current.getBoundingClientRect();
             const laneEl = cardRef.current.closest('.pagodas-lane');
@@ -593,24 +616,27 @@ const PagodaCard = ({ game, index, onHover, onLeave, onClick }) => {
         }
     };
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick();
-        }
+    const handleMouseLeave = (e) => {
+        handlers.onMouseLeave(e);
+        // Note: koi stays at last position (onLeave keeps it there)
     };
 
     return (
         <div
             ref={cardRef}
             className="pagoda-card"
+            data-expanded={isExpanded}
             onMouseEnter={handleMouseEnter}
-            onMouseLeave={onLeave}
-            onClick={onClick}
-            onKeyDown={handleKeyDown}
+            onMouseLeave={handleMouseLeave}
+            onClick={handlers.onClick}
+            onKeyDown={handlers.onKeyDown}
+            onFocus={handlers.onFocus}
+            onBlur={handlers.onBlur}
+            onTouchStart={handlers.onTouchStart}
             role="button"
             tabIndex={0}
             aria-label={`Play ${game.title} — ${edoName}`}
+            aria-expanded={isExpanded}
             style={{ animationDelay: `${index * 0.12}s` }}
         >
             {/* Left scroll roller */}
@@ -645,8 +671,12 @@ const PagodaCard = ({ game, index, onHover, onLeave, onClick }) => {
 
                     <div className="pagoda-text">
                         <h3 className="pagoda-title">{game.title}</h3>
-                        <p className="pagoda-description">{game.description}</p>
-                        <div className="pagoda-play-hint">⛩ Click to enter →</div>
+                        <div className="card-expandable" data-expanded={isExpanded}>
+                            <div className="card-expandable-inner">
+                                <p className="pagoda-description">{game.description}</p>
+                                <div className="pagoda-play-hint">⛩ Click to enter →</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -659,21 +689,18 @@ const PagodaCard = ({ game, index, onHover, onLeave, onClick }) => {
 
 // --- Booth Card Component (Night Fair theme) ---
 const BoothCard = ({ game, index, onClick }) => {
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick();
-        }
-    };
+    const { isExpanded, cardRef, handlers } = useExpandableCard(onClick);
 
     return (
         <div
+            ref={cardRef}
             className="booth-card"
-            onClick={onClick}
-            onKeyDown={handleKeyDown}
+            data-expanded={isExpanded}
+            {...handlers}
             role="button"
             tabIndex={0}
             aria-label={`Play ${game.title} — ${game.boothName}`}
+            aria-expanded={isExpanded}
             style={{ animationDelay: `${index * 0.1}s` }}
         >
             {/* Curved tent awning */}
@@ -704,8 +731,12 @@ const BoothCard = ({ game, index, onClick }) => {
                     <div className="booth-icon">{game.icon}</div>
 
                     <h3 className="booth-title">{game.title}</h3>
-                    <p className="booth-description">{game.description}</p>
-                    <div className="booth-play-hint">🎟 PLAY NOW</div>
+                    <div className="card-expandable" data-expanded={isExpanded}>
+                        <div className="card-expandable-inner">
+                            <p className="booth-description">{game.description}</p>
+                            <div className="booth-play-hint">🎟 PLAY NOW</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -725,11 +756,14 @@ const HomePage = () => {
         return VALID_THEMES.includes(savedTheme) ? savedTheme : 'arcade';
     });
 
+    const [isThemeTransitioning, setIsThemeTransitioning] = useState(false);
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const [hasSeenPanel, setHasSeenPanel] = useState(() => {
         return localStorage.getItem('vqm-seen-panel') === 'true';
     });
     const [isScrolled, setIsScrolled] = useState(false);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+    const [isGamesExpanded, setIsGamesExpanded] = useState(false);
 
     // Edo Map theme state
     const [hoveredPagoda, setHoveredPagoda] = useState(null);
@@ -743,7 +777,9 @@ const HomePage = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
+            const y = window.scrollY;
+            setIsScrolled(y > 50);
+            setShowScrollTop(y > 400);
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
@@ -762,9 +798,19 @@ const HomePage = () => {
     }, []);
 
     const handleThemeChange = useCallback((newTheme) => {
-        setTheme(newTheme);
-        localStorage.setItem('vqm-game-theme', newTheme);
-    }, []);
+        if (newTheme === theme || isThemeTransitioning) return;
+        setIsThemeTransitioning(true);
+        // Phase 1: fade out (300ms)
+        setTimeout(() => {
+            // Phase 2: swap theme at opacity 0
+            setTheme(newTheme);
+            localStorage.setItem('vqm-game-theme', newTheme);
+            // Phase 3: fade in after a frame (let new theme render)
+            requestAnimationFrame(() => {
+                setIsThemeTransitioning(false);
+            });
+        }, 300);
+    }, [theme, isThemeTransitioning]);
 
     const togglePanel = useCallback(() => {
         setIsPanelOpen((prev) => {
@@ -776,8 +822,29 @@ const HomePage = () => {
         });
     }, [hasSeenPanel]);
 
+    // Escape key closes settings panel
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && isPanelOpen) {
+                togglePanel();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isPanelOpen, togglePanel]);
+
     const handlePlay = (path) => {
-        navigate(path);
+        if (document.startViewTransition) {
+            document.startViewTransition(() => {
+                navigate(path);
+            });
+        } else {
+            document.body.classList.add('page-exit');
+            setTimeout(() => {
+                document.body.classList.remove('page-exit');
+                navigate(path);
+            }, 300);
+        }
     };
 
     const handlePagodaHover = useCallback((index, yPos) => {
@@ -831,6 +898,7 @@ const HomePage = () => {
 
     return (
         <div className={`app-layout ${isPanelOpen ? 'panel-open' : ''}`} data-theme={theme}>
+            <a href="#games" className="skip-link">Skip to games</a>
             <SidePanel
                 theme={theme}
                 onThemeChange={handleThemeChange}
@@ -838,7 +906,7 @@ const HomePage = () => {
                 togglePanel={togglePanel}
             />
 
-            <main className={`main-content ${mainContentClass}`}>
+            <main className={`main-content ${mainContentClass}${isThemeTransitioning ? ' theme-transitioning' : ''}`}>
                 {/* Sakura petals overlay for Edo theme */}
                 {isEdo && <SakuraLayer />}
 
@@ -876,7 +944,7 @@ const HomePage = () => {
                     />
                 )}
 
-                <div className={`homepage-container ${containerClass}`}>
+                <div id="games" className={`homepage-container ${containerClass}`}>
                     {/* Arcade: game card grid */}
                     {isArcade && (
                         <section className="game-grid arcade-grid" aria-label="Available games">
@@ -956,27 +1024,38 @@ const HomePage = () => {
 
                     <footer className={`homepage-footer ${footerClass}`}>
                         <div className="footer-content">
-                            <div className="footer-section">
+                            <div className="footer-section footer-about">
                                 <h3>{footerAboutLabel}</h3>
-                                <p>A collection of fun mini-games built with React.</p>
-                                <p>Created with love for learning and creativity.</p>
+                                <p>A collection of fun mini-games built with React. Created with love for learning and creativity.</p>
                             </div>
-                            <div className="footer-section">
-                                <h3>{footerGamesLabel}</h3>
-                                <p>Mouse Stalker</p>
-                                <p>Blooming Garden</p>
-                                <p>3D Ball</p>
-                                <p>Mycelium Network</p>
-                                <p>Firework Festival</p>
-                                <p>Flock Commander</p>
+                            <div className="footer-section footer-games">
+                                <button
+                                    className="footer-games-toggle"
+                                    onClick={() => setIsGamesExpanded(!isGamesExpanded)}
+                                    aria-expanded={isGamesExpanded}
+                                >
+                                    <h3>{footerGamesLabel}</h3>
+                                    <ChevronDown size={16} className={`footer-chevron ${isGamesExpanded ? 'expanded' : ''}`} />
+                                </button>
+                                <div className={`footer-games-list ${isGamesExpanded ? 'expanded' : ''}`}>
+                                    {displayedGames.map((game) => (
+                                        <a
+                                            key={game.title}
+                                            href={game.path}
+                                            onClick={(e) => { e.preventDefault(); handlePlay(game.path); }}
+                                        >
+                                            {game.title}
+                                        </a>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="footer-section">
+                            <div className="footer-section footer-tech">
                                 <h3>{footerTechLabel}</h3>
                                 <p>React + Vite</p>
                                 <p>CSS Animations</p>
                                 <p>Canvas API</p>
                             </div>
-                            <div className="footer-section">
+                            <div className="footer-section footer-connect">
                                 <h3>{footerConnectLabel}</h3>
                                 <a
                                     href="https://github.com/quyen-hoang"
@@ -992,6 +1071,15 @@ const HomePage = () => {
                         </div>
                     </footer>
                 </div>
+
+                {/* Scroll to top button */}
+                <button
+                    className={`scroll-to-top ${showScrollTop ? 'visible' : ''}`}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    aria-label="Scroll to top"
+                >
+                    <ChevronUp size={24} />
+                </button>
             </main>
         </div>
     );

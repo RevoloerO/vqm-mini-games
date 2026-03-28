@@ -3,10 +3,11 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './HomePage';
 import MouseStalkers from './mini-games/MouseStalker/MouseStalker';
 import BloomingGarden from './mini-games/BloomingGarden';
-import ThreeDBall from './mini-games/3DBall/3DBall';
+import ThreeDBall from './mini-games/3DBall/OrbGallery';
 import MyceliumNetwork from './mini-games/MyceliumNetwork/MyceliumNetwork';
 import FireworkFestival from './mini-games/FireworkFestival/FireworkFestival';
 import FlockCommander from './mini-games/FlockCommander/FlockCommander';
+import LivingCanvas from './mini-games/LivingCanvas/LivingCanvas';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
       <Route path="/vqm-mini-games/mycelium-network" element={<MyceliumNetwork />} />
       <Route path="/vqm-mini-games/firework-festival" element={<FireworkFestival />} />
       <Route path="/vqm-mini-games/flock-commander" element={<FlockCommander />} />
+      <Route path="/vqm-mini-games/living-canvas" element={<LivingCanvas />} />
       {/* Catch-all route must be last */}
       <Route path="*" element={<Navigate to="/vqm-mini-games/" replace />} />
     </Routes>

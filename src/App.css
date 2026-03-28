@@ -3,3 +3,42 @@
   padding: 0;
   text-align: center;
 }
+
+/* --- Page Route Transitions --- */
+
+/* View Transition API (Chrome/Edge 111+, Safari 18+) */
+::view-transition-old(root) {
+  animation: page-fade-out 0.3s ease forwards;
+}
+
+::view-transition-new(root) {
+  animation: page-fade-in 0.3s ease forwards;
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Fallback for browsers without View Transition API */
+body.page-exit {
+  animation: page-fade-out 0.3s ease forwards;
+}
+
+/* Page entry animation for all routes */
+#root > * {
+  animation: page-fade-in 0.35s ease;
+}

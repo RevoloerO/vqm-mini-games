@@ -19,6 +19,7 @@ export const useDragonGame = () => {
   const dragonSpores = useRef([]);
   const ghostWisps = useRef([]);
   const naginiSparks = useRef([]);
+  const snakeVenomDrops = useRef([]);
   const clouds = useRef([]);
   const clickEffects = useRef([]);
   const animationFrameId = useRef(null);
@@ -74,6 +75,7 @@ export const useDragonGame = () => {
     dragonSpores.current = [];
     ghostWisps.current = [];
     naginiSparks.current = [];
+    snakeVenomDrops.current = [];
     clickEffects.current = [];
     
     // BUG FIX: Clear announced milestones and victory state on reset
@@ -236,25 +238,51 @@ export const useDragonGame = () => {
                 break;
             }
             case 'ghost': {
+                // Spectral scream: expanding distortion rings + spiraling souls
                 effect = {
-                    x: e.clientX, y: e.clientY, skin: activeSkin,
-                    createdAt: Date.now(), duration: 800, particles: [], angle: 0,
+                    skin: 'ghost',
+                    x: e.clientX, y: e.clientY,
+                    createdAt: Date.now(), duration: 1200,
+                    rings: [],
+                    souls: [],
                 };
-                for (let i = 0; i < 5; i++) {
-                    const bolt = { points: [{x:0, y:0}], angle: Math.random() * Math.PI * 2, alpha: 1 };
-                    let lastX = 0, lastY = 0;
-                    const len = 40 + Math.random() * 40;
-                    for (let j = 0; j < 10; j++) {
-                        lastX += Math.cos(bolt.angle) * (len/10) + (Math.random() - 0.5) * 20;
-                        lastY += Math.sin(bolt.angle) * (len/10) + (Math.random() - 0.5) * 20;
-                        bolt.points.push({ x: lastX, y: lastY });
-                    }
-                    effect.particles.push(bolt);
+                // Create 4 distortion rings
+                for (let i = 0; i < 4; i++) {
+                    effect.rings.push({ delay: i * 80, maxRadius: 60 + i * 25 });
+                }
+                // Create 8 spiraling soul wisps
+                for (let i = 0; i < 8; i++) {
+                    effect.souls.push({
+                        angle: (i / 8) * Math.PI * 2,
+                        speed: 1.5 + Math.sin(i * 1.7) * 0.5,
+                        size: 2 + Math.sin(i * 2.3) * 1,
+                        hue: 190 + (i * 25) % 80,
+                    });
                 }
                 clickEffects.current.push(effect);
                 break;
             }
-            default: { // dragon, snake
+            case 'snake': {
+                // Venom spit: projectile from head toward click
+                if (!head) break;
+                const angle = Math.atan2(e.clientY - head.y, e.clientX - head.x);
+                const speed = 18;
+                effect = {
+                    skin: 'snake',
+                    createdAt: Date.now(), duration: 1400,
+                    x: head.x, y: head.y,
+                    targetX: e.clientX, targetY: e.clientY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: 5,
+                    state: 'traveling',
+                    trail: [],
+                    splashParticles: [],
+                };
+                clickEffects.current.push(effect);
+                break;
+            }
+            default: { // dragon
                 effect = {
                     x: e.clientX, y: e.clientY, skin: activeSkin,
                     createdAt: Date.now(), duration: 800, particles: [], angle: 0,
@@ -440,25 +468,83 @@ export const useDragonGame = () => {
       });
 
       if (activeSkin === 'ghost' && segmentsRef.current.length > 0) {
-          const head = segmentsRef.current[0];
-          const spawnInterval = highPerfMode ? 200 : 100;
-          // BUG FIX: Reduce wisp cap and increase decay to prevent accumulation
-          if (timestamp % spawnInterval < 16.6 && ghostWisps.current.length < 150) {
+          const segs = segmentsRef.current;
+          const spawnInterval = highPerfMode ? 350 : 150;
+          if (timestamp % spawnInterval < 16.6 && ghostWisps.current.length < 60) {
+              // Spawn smoke puffs from along the entire body
+              const spawnIdx = Math.floor(Math.abs(Math.sin(timestamp * 0.008)) * segs.length) % segs.length;
+              const spawnSeg = segs[spawnIdx];
+              const spreadAngle = Math.sin(timestamp * 0.005 + spawnIdx * 2.1) * Math.PI;
+              const spreadDist = spawnSeg.size * (0.5 + Math.abs(Math.sin(spawnIdx * 1.7)) * 0.8);
               ghostWisps.current.push({
-                  x: head.x, y: head.y,
-                  vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
-                  alpha: 0.8, size: 1 + Math.random() * 2.5,
-                  decay: 0.03 + Math.random() * 0.02, // Increased decay
-                  color: `hsl(270, 100%, ${85 + Math.random() * 15}%)`
+                  x: spawnSeg.x + Math.cos(spreadAngle) * spreadDist,
+                  y: spawnSeg.y + Math.sin(spreadAngle) * spreadDist,
+                  vx: Math.sin(timestamp * 0.003 + spawnIdx) * 0.4,
+                  vy: -0.15 + Math.sin(timestamp * 0.004 + spawnIdx * 3) * 0.25,
+                  alpha: 0.35 + Math.abs(Math.sin(spawnIdx * 2.3)) * 0.15,
+                  size: 4 + Math.abs(Math.sin(timestamp * 0.006 + spawnIdx)) * 6,
+                  maxSize: 12 + Math.abs(Math.sin(spawnIdx * 3.1)) * 8,
+                  decay: 0.004 + Math.abs(Math.sin(spawnIdx * 4.3)) * 0.003,
+                  growRate: 0.08 + Math.abs(Math.sin(spawnIdx * 1.9)) * 0.06,
+                  hue: 255 + (spawnIdx * 11) % 30,
+                  wobblePhase: spawnIdx * 1.7,
               });
           }
       }
       ghostWisps.current = ghostWisps.current.filter(w => w.alpha > 0);
       ghostWisps.current.forEach(wisp => {
-          wisp.x += wisp.vx; wisp.y += wisp.vy; wisp.alpha -= wisp.decay;
+          // Slow drift with wobble — like real smoke
+          wisp.wobblePhase += 0.03;
+          wisp.x += wisp.vx + Math.sin(wisp.wobblePhase) * 0.2;
+          wisp.y += wisp.vy + Math.cos(wisp.wobblePhase * 0.6) * 0.15;
+          wisp.alpha -= wisp.decay;
+          // Smoke expands as it fades
+          if (wisp.size < wisp.maxSize) wisp.size += wisp.growRate;
           ctx.globalAlpha = wisp.alpha;
-          ctx.fillStyle = wisp.color;
-          ctx.beginPath(); ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2); ctx.fill();
+          // Radial gradient smoke puff
+          const grad = ctx.createRadialGradient(wisp.x, wisp.y, 0, wisp.x, wisp.y, wisp.size);
+          grad.addColorStop(0, `hsla(${wisp.hue}, 30%, 70%, ${wisp.alpha * 0.6})`);
+          grad.addColorStop(0.4, `hsla(${wisp.hue}, 25%, 55%, ${wisp.alpha * 0.3})`);
+          grad.addColorStop(1, `hsla(${wisp.hue}, 20%, 40%, 0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(wisp.x, wisp.y, wisp.size, 0, Math.PI * 2);
+          ctx.fill();
+      });
+
+      // Snake venom drops — green droplets with gravity from mid-body
+      if (activeSkin === 'snake' && segmentsRef.current.length > 3) {
+          const segs = segmentsRef.current;
+          const spawnInterval = highPerfMode ? 300 : 180;
+          if (timestamp % spawnInterval < 16.6 && snakeVenomDrops.current.length < 60) {
+              const midIdx = Math.floor(segs.length * 0.3 + Math.abs(Math.sin(timestamp * 0.004)) * segs.length * 0.4);
+              const spawnSeg = segs[Math.min(midIdx, segs.length - 1)];
+              snakeVenomDrops.current.push({
+                  x: spawnSeg.x, y: spawnSeg.y,
+                  vx: (Math.sin(timestamp * 0.01 + midIdx) * 0.5),
+                  vy: 0.5 + Math.abs(Math.sin(timestamp * 0.007)) * 0.8,
+                  alpha: 0.9, size: 1.5 + Math.abs(Math.sin(midIdx * 2.1)) * 1.5,
+                  decay: 0.02 + Math.abs(Math.sin(midIdx * 1.3)) * 0.008,
+                  gravity: 0.06,
+              });
+          }
+      }
+      snakeVenomDrops.current = snakeVenomDrops.current.filter(d => d.alpha > 0);
+      snakeVenomDrops.current.forEach(drop => {
+          drop.vy += drop.gravity;
+          drop.x += drop.vx;
+          drop.y += drop.vy;
+          drop.alpha -= drop.decay;
+          ctx.globalAlpha = drop.alpha;
+          // Teardrop shape
+          const grad = ctx.createRadialGradient(drop.x, drop.y - drop.size * 0.3, 0, drop.x, drop.y, drop.size);
+          grad.addColorStop(0, 'hsl(120, 100%, 70%)');
+          grad.addColorStop(0.5, 'hsl(130, 80%, 40%)');
+          grad.addColorStop(1, 'hsla(140, 70%, 25%, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.ellipse(drop.x, drop.y, drop.size * 0.6, drop.size, Math.atan2(drop.vy, drop.vx) + Math.PI / 2, 0, Math.PI * 2);
+          ctx.fill();
       });
       
       // BUG FIX: Ensure sparks only spawn when focused (not wandering)
@@ -632,33 +718,143 @@ export const useDragonGame = () => {
                   break;
               }
               case 'ghost': {
+                  // Spectral scream — distortion rings + spiraling souls
                   ctx.translate(effect.x, effect.y);
-                  effect.particles.forEach(p => {
-                      p.alpha -= 0.05;
-                      if(p.alpha < 0) p.alpha = 0;
-                      ctx.strokeStyle = `hsla(180, 100%, 85%, ${p.alpha * (0.5 + Math.random() * 0.5)})`;
-                      ctx.lineWidth = 1 + Math.random() * 2;
-                      ctx.shadowColor = 'cyan';
-                      ctx.shadowBlur = 15;
+                  const ghostAlpha = Math.sin(progress * Math.PI);
+
+                  // Distortion rings expanding outward
+                  effect.rings.forEach(ring => {
+                      const ringAge = age - ring.delay;
+                      if (ringAge < 0) return;
+                      const ringProgress = Math.min(1, ringAge / (effect.duration - ring.delay));
+                      const ringR = ringProgress * ring.maxRadius;
+                      const ringAlpha = (1 - ringProgress) * 0.6;
+                      // Distorted ring using sine wave
+                      ctx.strokeStyle = `hsla(260, 60%, 80%, ${ringAlpha})`;
+                      ctx.lineWidth = 2 * (1 - ringProgress);
                       ctx.beginPath();
-                      ctx.moveTo(p.points[0].x, p.points[0].y);
-                      for(let i=1; i < p.points.length; i++) {
-                          ctx.lineTo(p.points[i].x, p.points[i].y);
+                      for (let a = 0; a <= Math.PI * 2; a += 0.15) {
+                          const distortion = Math.sin(a * 6 + ringAge * 0.01) * 4 * (1 - ringProgress);
+                          const rx = Math.cos(a) * (ringR + distortion);
+                          const ry = Math.sin(a) * (ringR + distortion);
+                          if (a === 0) ctx.moveTo(rx, ry);
+                          else ctx.lineTo(rx, ry);
                       }
+                      ctx.closePath();
                       ctx.stroke();
                   });
+
+                  // Spiraling soul wisps
+                  effect.souls.forEach(soul => {
+                      const soulDist = progress * 80 * soul.speed;
+                      const spiralAngle = soul.angle + progress * Math.PI * 3;
+                      const sx = Math.cos(spiralAngle) * soulDist;
+                      const sy = Math.sin(spiralAngle) * soulDist;
+                      const soulAlpha = ghostAlpha * 0.7;
+                      ctx.shadowColor = `hsl(${soul.hue}, 100%, 70%)`;
+                      ctx.shadowBlur = 8;
+                      ctx.fillStyle = `hsla(${soul.hue}, 80%, 85%, ${soulAlpha})`;
+                      ctx.beginPath();
+                      ctx.arc(sx, sy, soul.size * (1 - progress * 0.5), 0, Math.PI * 2);
+                      ctx.fill();
+                      // Soul trail
+                      ctx.strokeStyle = `hsla(${soul.hue}, 60%, 80%, ${soulAlpha * 0.3})`;
+                      ctx.lineWidth = 1;
+                      const trailAngle = spiralAngle - 0.5;
+                      const trailDist = soulDist * 0.7;
+                      ctx.beginPath();
+                      ctx.moveTo(sx, sy);
+                      ctx.quadraticCurveTo(
+                          Math.cos(trailAngle) * trailDist, Math.sin(trailAngle) * trailDist,
+                          0, 0
+                      );
+                      ctx.stroke();
+                  });
+                  ctx.shadowBlur = 0;
                   break;
               }
               case 'snake': {
-                  ctx.translate(effect.x, effect.y);
-                  const alpha = Math.sin(progress * Math.PI);
-                  const radius = progress * 50;
-                  ctx.globalAlpha = alpha;
-                  ctx.strokeStyle = `hsla(182, 65%, 60%, ${alpha})`;
-                  ctx.lineWidth = 3 * (1 - progress);
-                  ctx.beginPath();
-                  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-                  ctx.stroke();
+                  // Venom spit projectile
+                  if (effect.state === 'traveling') {
+                      // Check if reached near target
+                      const dx = effect.targetX - effect.x;
+                      const dy = effect.targetY - effect.y;
+                      if (Math.sqrt(dx * dx + dy * dy) < 30 || age > effect.duration * 0.5) {
+                          effect.state = 'splash';
+                          effect.splashTime = Date.now();
+                          // Generate splash particles
+                          for (let i = 0; i < 12; i++) {
+                              const a = (i / 12) * Math.PI * 2;
+                              effect.splashParticles.push({
+                                  x: effect.x, y: effect.y,
+                                  vx: Math.cos(a) * (3 + Math.sin(i * 2.1) * 2),
+                                  vy: Math.sin(a) * (3 + Math.sin(i * 1.7) * 2),
+                                  size: 2 + Math.abs(Math.sin(i * 3.2)) * 2,
+                                  alpha: 1,
+                              });
+                          }
+                      } else {
+                          effect.x += effect.vx;
+                          effect.y += effect.vy;
+                          effect.vy += 0.15; // slight gravity arc
+                          effect.trail.push({ x: effect.x, y: effect.y, alpha: 1 });
+                          if (effect.trail.length > 15) effect.trail.shift();
+
+                          // Draw trail
+                          ctx.lineCap = 'round';
+                          for (let i = effect.trail.length - 1; i > 0; i--) {
+                              const p1 = effect.trail[i];
+                              const p2 = effect.trail[i - 1];
+                              p1.alpha -= 0.08;
+                              ctx.strokeStyle = `hsla(130, 80%, 50%, ${Math.max(0, p1.alpha) * 0.5})`;
+                              ctx.lineWidth = effect.size * (i / effect.trail.length) * 0.8;
+                              ctx.beginPath();
+                              ctx.moveTo(p1.x, p1.y);
+                              ctx.lineTo(p2.x, p2.y);
+                              ctx.stroke();
+                          }
+
+                          // Draw venom droplet
+                          const venomAlpha = 1 - progress * 0.3;
+                          ctx.globalAlpha = venomAlpha;
+                          const venomGrad = ctx.createRadialGradient(effect.x, effect.y, 0, effect.x, effect.y, effect.size);
+                          venomGrad.addColorStop(0, 'hsl(110, 100%, 80%)');
+                          venomGrad.addColorStop(0.5, 'hsl(130, 90%, 45%)');
+                          venomGrad.addColorStop(1, 'hsla(140, 80%, 30%, 0)');
+                          ctx.fillStyle = venomGrad;
+                          ctx.shadowColor = 'hsl(120, 100%, 50%)';
+                          ctx.shadowBlur = 15;
+                          ctx.beginPath();
+                          ctx.arc(effect.x, effect.y, effect.size, 0, Math.PI * 2);
+                          ctx.fill();
+                          ctx.shadowBlur = 0;
+                      }
+                  }
+                  if (effect.state === 'splash') {
+                      const splashAge = Date.now() - effect.splashTime;
+                      const splashProgress = splashAge / (effect.duration * 0.5);
+                      // Expanding toxic puddle
+                      const puddleR = 15 + splashProgress * 30;
+                      const puddleAlpha = (1 - splashProgress) * 0.4;
+                      ctx.fillStyle = `hsla(130, 70%, 35%, ${puddleAlpha})`;
+                      ctx.beginPath();
+                      ctx.ellipse(effect.x, effect.y, puddleR, puddleR * 0.5, 0, 0, Math.PI * 2);
+                      ctx.fill();
+
+                      // Splash droplets
+                      effect.splashParticles.forEach(p => {
+                          p.x += p.vx * 0.95;
+                          p.y += p.vy * 0.95;
+                          p.vy += 0.08;
+                          p.alpha -= 0.03;
+                          if (p.alpha <= 0) return;
+                          ctx.globalAlpha = p.alpha;
+                          ctx.fillStyle = `hsl(125, 90%, 50%)`;
+                          ctx.beginPath();
+                          ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2);
+                          ctx.fill();
+                      });
+                  }
                   break;
               }
           }

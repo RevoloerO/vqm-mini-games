@@ -6,6 +6,10 @@
 /* --- Font Imports --- */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800&family=Noto+Serif+JP:wght@400;700;900&family=Boogaloo&display=swap');
 
+html {
+    scroll-behavior: smooth;
+}
+
 /* ============================================
    SHARED KEYFRAME ANIMATIONS
    ============================================ */
@@ -380,6 +384,28 @@ body {
     position: relative;
 }
 
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent-color, #2980B9);
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0 0 8px 8px;
+    z-index: 9999;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+    outline: 3px solid var(--accent-color, #2980B9);
+    outline-offset: 2px;
+}
+
 .app-layout {
     display: flex;
     min-height: 100vh;
@@ -393,10 +419,28 @@ body {
     position: relative;
     z-index: 1;
     width: 100%;
+    transition: opacity 0.3s ease;
+}
+
+.main-content.theme-transitioning {
+    opacity: 0;
 }
 
 .panel-overlay {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0);
+    z-index: 999;
+    pointer-events: none;
+    transition: background-color 0.4s ease;
+}
+
+.app-layout.panel-open .panel-overlay {
+    background: rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
 }
 
 /* ============================================
@@ -495,7 +539,7 @@ body {
     top: 0;
     z-index: 100;
     box-shadow: 0 0 30px rgba(255, 0, 255, 0.4);
-    transition: all 0.3s ease;
+    transition: padding 0.3s ease, box-shadow 0.3s ease;
 }
 
 .arcade-header.scrolled {
@@ -594,7 +638,7 @@ body {
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .arcade-btn:hover {
@@ -617,7 +661,7 @@ body {
     top: 0;
     z-index: 100;
     box-shadow: 0 4px 30px rgba(92, 138, 97, 0.15);
-    transition: all 0.3s ease;
+    transition: padding 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .islands-header.scrolled {
@@ -692,7 +736,7 @@ body {
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 4px 20px rgba(41, 128, 185, 0.3);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .islands-btn:hover {
@@ -736,7 +780,7 @@ body {
     justify-content: center;
     cursor: pointer;
     opacity: 0;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
     z-index: 2;
 }
 
@@ -755,7 +799,15 @@ body {
     margin: 1.5rem 0;
     padding: 1.25rem;
     border-radius: 12px;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+.side-panel.open .settings-section:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.15s; }
+.side-panel.open .settings-section:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.25s; }
+.side-panel.open .settings-section:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.35s; }
+.side-panel.open .settings-section:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.45s; }
 
 .settings-section h3 {
     margin: 0 0 1rem;
@@ -789,8 +841,12 @@ body {
     border: 2px solid transparent;
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.15s ease;
     gap: 0.25rem;
+}
+
+.theme-option:active {
+    transform: scale(0.92);
 }
 
 .theme-option .theme-icon {
@@ -911,7 +967,7 @@ body {
     cursor: pointer;
     width: 100%;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .arcade-toggle:hover {
@@ -1051,7 +1107,7 @@ body {
     cursor: pointer;
     width: 100%;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .islands-toggle:hover {
@@ -1086,6 +1142,28 @@ body {
 }
 
 /* ============================================
+   EXPANDABLE CARD (shared across all themes)
+   ============================================ */
+.card-expandable {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 0.35s ease, opacity 0.3s ease;
+}
+
+.card-expandable[data-expanded="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transition: grid-template-rows 0.35s ease, opacity 0.3s ease 0.08s;
+}
+
+.card-expandable-inner {
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================
    ISLANDS SEA LAYOUT (Clean Archipelago)
    ============================================ */
 .islands-sea {
@@ -1117,6 +1195,8 @@ body {
 .sea-card:nth-child(2) { animation-delay: 0.2s; }
 .sea-card:nth-child(3) { animation-delay: 0.3s; }
 .sea-card:nth-child(4) { animation-delay: 0.4s; }
+.sea-card:nth-child(5) { animation-delay: 0.5s; }
+.sea-card:nth-child(6) { animation-delay: 0.6s; }
 
 .sea-card:hover {
     transform: translateY(-6px);
@@ -1146,6 +1226,11 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 1.25rem;
+    padding: 0.85rem 1.25rem;
+    transition: padding 0.3s ease;
+}
+
+.sea-card[data-expanded="true"] .sea-card-body {
     padding: 1.25rem 1.5rem;
 }
 
@@ -1241,13 +1326,14 @@ body {
    ============================================ */
 .arcade-grid {
     display: grid;
-    gap: 2.5rem;
+    gap: 1.25rem;
     grid-template-columns: 1fr;
     margin-bottom: 3rem;
 }
 
 @media (min-width: 768px) {
     .arcade-grid {
+        gap: 2rem;
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -1269,7 +1355,7 @@ body {
     background: var(--card-bg);
     border: 3px solid var(--neon-pink);
     border-radius: 12px;
-    padding: 2.5rem 2rem;
+    padding: 1.5rem 1.5rem;
     display: flex;
     flex-direction: column;
     text-align: left;
@@ -1278,11 +1364,15 @@ body {
     cursor: pointer;
     opacity: 0;
     animation: arcade-card-fade 0.4s ease-out forwards;
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.3s ease, padding 0.3s ease;
     box-shadow:
         0 0 15px var(--neon-pink),
         0 0 30px rgba(255, 0, 255, 0.2),
         inset 0 0 40px rgba(0, 255, 255, 0.05);
+}
+
+[data-theme='arcade'] .game-card[data-expanded="true"] {
+    padding: 2rem 1.5rem;
 }
 
 [data-theme='arcade'] .game-card::before {
@@ -1317,14 +1407,18 @@ body {
 }
 
 [data-theme='arcade'] .game-card:first-child {
-    padding: 3.5rem 3rem;
+    padding: 2rem 2rem;
+}
+
+[data-theme='arcade'] .game-card:first-child[data-expanded="true"] {
+    padding: 2.5rem 2rem;
 }
 
 [data-theme='arcade'] .game-card-icon {
     color: var(--neon-cyan);
     filter: drop-shadow(0 0 15px var(--neon-cyan));
-    margin-bottom: 1.5rem;
-    transition: all 0.3s ease;
+    margin-bottom: 0.75rem;
+    transition: color 0.3s ease, filter 0.3s ease;
 }
 
 [data-theme='arcade'] .game-card:hover .game-card-icon {
@@ -1338,7 +1432,7 @@ body {
     font-size: 1.4rem;
     font-weight: 800;
     color: #fff;
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.5rem 0;
     letter-spacing: 2px;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
@@ -1374,34 +1468,42 @@ body {
    FOOTER STYLES
    ============================================ */
 .homepage-footer {
-    margin-top: 5rem;
-    padding: 3rem 0 2rem;
+    margin-top: 4rem;
+    padding: 2.5rem 2rem 1.5rem;
     position: relative;
 }
 
 .footer-content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 3rem;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem 3rem;
+    align-items: start;
+    max-width: 960px;
+    margin: 0 auto;
 }
 
 .footer-section h3 {
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
 }
 
 .footer-section p {
-    margin: 0.5rem 0;
-    font-size: 0.9rem;
+    margin: 0.35rem 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
 }
 
 .footer-section a {
     display: block;
     text-decoration: none;
-    font-weight: 600;
-    margin: 0.5rem 0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin: 0.3rem 0;
     position: relative;
     width: fit-content;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease;
 }
 
 .footer-section a::after {
@@ -1410,7 +1512,7 @@ body {
     bottom: -2px;
     left: 0;
     width: 0;
-    height: 2px;
+    height: 1.5px;
     transition: width 0.3s ease;
 }
 
@@ -1418,18 +1520,76 @@ body {
     width: 100%;
 }
 
+/* --- Expandable Games List --- */
+.footer-games-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+    margin-bottom: 0.75rem;
+}
+
+.footer-games-toggle h3 {
+    margin: 0;
+}
+
+.footer-chevron {
+    transition: transform 0.3s ease;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.footer-chevron.expanded {
+    transform: rotate(180deg);
+}
+
+.footer-games-list {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s ease;
+}
+
+.footer-games-list > a {
+    overflow: hidden;
+    min-height: 0;
+}
+
+.footer-games-list.expanded {
+    grid-template-rows: 1fr;
+}
+
+/* Collapsed: hide all game links */
+.footer-games-list:not(.expanded) a {
+    height: 0;
+    margin: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+
+/* Expanded: show all game links */
+.footer-games-list.expanded a {
+    height: auto;
+    opacity: 1;
+    transition: opacity 0.3s ease 0.1s;
+}
+
 /* Footer Bottom */
 .footer-bottom {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
     text-align: center;
     border-top: 1px solid var(--border-color);
 }
 
 .footer-bottom p {
     margin: 0;
-    font-size: 0.85rem;
-    opacity: 0.8;
+    font-size: 0.8rem;
+    opacity: 0.7;
 }
 
 /* Arcade Footer */
@@ -1445,6 +1605,14 @@ body {
     color: var(--neon-cyan);
     letter-spacing: 2px;
     text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.arcade-footer .footer-games-toggle {
+    color: var(--neon-cyan);
+}
+
+.arcade-footer .footer-chevron {
+    color: var(--neon-pink);
 }
 
 .arcade-footer a {
@@ -1496,6 +1664,14 @@ body {
     font-size: 1rem;
     font-weight: 700;
     color: var(--ocean-deep);
+}
+
+.islands-footer .footer-games-toggle {
+    color: var(--ocean-deep);
+}
+
+.islands-footer .footer-chevron {
+    color: var(--accent-color);
 }
 
 .islands-footer a {
@@ -1559,7 +1735,7 @@ body {
     color: var(--fair-text);
     min-height: 100vh;
     position: relative;
-    overflow: hidden;
+    overflow-x: clip;
 }
 
 /* Star field */
@@ -1649,7 +1825,7 @@ body {
     z-index: 100;
     box-shadow: 0 4px 20px rgba(139, 90, 43, 0.2);
     backdrop-filter: blur(12px);
-    transition: all 0.3s ease;
+    transition: padding 0.3s ease, box-shadow 0.3s ease;
 }
 
 .edo-header.scrolled {
@@ -1755,7 +1931,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
     backdrop-filter: blur(8px);
 }
 
@@ -1788,7 +1964,7 @@ body {
     top: 0;
     z-index: 100;
     box-shadow: 0 4px 24px rgba(156, 39, 176, 0.25);
-    transition: all 0.3s ease;
+    transition: padding 0.3s ease, box-shadow 0.3s ease;
 }
 
 .carnival-header.scrolled {
@@ -1867,7 +2043,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .carnival-btn:hover {
@@ -2060,12 +2236,18 @@ body {
         var(--scroll-cream)  100%);
     border-top:    3px solid var(--scroll-dark);
     border-bottom: 3px solid var(--scroll-dark);
-    padding: 1.8rem 2rem 1.8rem 1.5rem;
+    padding: 1rem 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
     position: relative;
     overflow: hidden;
+    transition: padding 0.3s ease;
+}
+
+.pagoda-card[data-expanded="true"] .pagoda-scroll {
+    padding: 1.5rem 2rem 1.5rem 1.5rem;
+    gap: 0.75rem;
 }
 
 /* Ink stain decoration */
@@ -2279,6 +2461,12 @@ body {
     border: 6px solid rgba(156, 39, 176, 0.6);
     border-radius: 50%;
     animation: ferris-spin 18s linear infinite;
+    transition: border-color 0.3s ease;
+}
+
+.ferris-wheel-container:hover .ferris-rim {
+    animation-duration: 8s;
+    border-color: rgba(233, 30, 99, 0.8);
 }
 
 .ferris-spoke {
@@ -2367,7 +2555,7 @@ body {
 
 .carnival-midway .booth-card:nth-child(odd) {
     align-self: flex-start;
-    margin-left: 2%;
+    margin-left: 4%;
 }
 
 .carnival-midway .booth-card:nth-child(even) {
@@ -2525,13 +2713,18 @@ body {
     border: 2px solid rgba(156, 39, 176, 0.25);
     border-top: none;
     border-radius: 0 0 10px 10px;
-    padding: 1.75rem 1.75rem 2rem;
+    padding: 1rem 1.25rem 1.25rem;
     position: relative;
     overflow: hidden;
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.45),
         0 0 15px rgba(156, 39, 176, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: padding 0.3s ease;
+}
+
+.booth-card[data-expanded="true"] .booth-body {
+    padding: 1.5rem 1.5rem 1.75rem;
 }
 
 /* Subtle purple glow inside */
@@ -2754,7 +2947,7 @@ body {
     cursor: pointer;
     width: 100%;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .edo-toggle:hover {
@@ -2873,7 +3066,7 @@ body {
     cursor: pointer;
     width: 100%;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .carnival-toggle:hover {
@@ -2918,6 +3111,14 @@ body {
     letter-spacing: 2px;
 }
 
+.edo-footer .footer-games-toggle {
+    color: var(--torii-red);
+}
+
+.edo-footer .footer-chevron {
+    color: var(--ink-medium);
+}
+
 .edo-footer a {
     color: var(--ink-dark);
 }
@@ -2960,7 +3161,7 @@ body {
     border-top: none;
     color: var(--fair-text-dim);
     position: relative;
-    overflow: hidden;
+    overflow-x: clip;
 }
 
 /* Pennant bunting along top of footer */
@@ -3018,6 +3219,14 @@ body {
     text-shadow: 0 0 10px rgba(233, 30, 99, 0.4);
 }
 
+.carnival-footer .footer-games-toggle {
+    color: var(--fair-magenta);
+}
+
+.carnival-footer .footer-chevron {
+    color: var(--fair-cyan);
+}
+
 .carnival-footer a {
     color: var(--fair-cyan);
 }
@@ -3047,6 +3256,15 @@ body {
    RESPONSIVE DESIGN
    ============================================ */
 @media (max-width: 1023px) {
+    .footer-content {
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem 2rem;
+    }
+
+    .footer-about {
+        grid-column: 1 / -1;
+    }
+
     .homepage-container {
         padding: 1.5rem 1rem;
     }
@@ -3105,21 +3323,21 @@ body {
         width: 280px;
     }
 
-    .panel-overlay {
-        display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+    .app-layout.panel-open .panel-overlay {
         background: rgba(0, 0, 0, 0.6);
-        z-index: 999;
-        animation: fadeIn 0.3s;
     }
 
     .arcade-header,
     .islands-header {
         padding: 1rem;
+    }
+
+    .arcade-header .header-icon {
+        display: none;
+    }
+
+    .arcade-header .header-title-container {
+        padding-left: 2.5rem;
     }
 
     .arcade-title-main {
@@ -3170,15 +3388,57 @@ body {
     }
 
     [data-theme='arcade'] .game-card {
-        padding: 1.5rem 1.25rem;
+        padding: 1rem 1.25rem;
+    }
+
+    [data-theme='arcade'] .game-card[data-expanded="true"] {
+        padding: 1.25rem 1.25rem;
     }
 
     [data-theme='arcade'] .game-card:first-child {
-        padding: 2rem 1.5rem;
+        padding: 1.25rem 1.25rem;
+    }
+
+    [data-theme='arcade'] .game-card:first-child[data-expanded="true"] {
+        padding: 1.5rem 1.25rem;
     }
 
     [data-theme='arcade'] .game-card:first-child .game-card-title {
         font-size: 1.3rem;
+    }
+
+    [data-theme='arcade'] .game-card-icon {
+        margin-bottom: 0.5rem;
+    }
+
+    [data-theme='arcade'] .game-card-title {
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+        text-align: center;
+    }
+
+    .footer-about {
+        grid-column: 1;
+    }
+
+    .footer-section a {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .footer-games-toggle {
+        justify-content: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .homepage-footer {
+        padding: 2rem 1.5rem 1.5rem;
     }
 }
 
@@ -3200,6 +3460,190 @@ body {
     .islands-ocean {
         height: 70px;
     }
+
+    /* --- Edo mobile fixes --- */
+    .edo-container {
+        padding: 1rem 0.5rem 2rem;
+    }
+
+    .koi-lane {
+        width: 50px;
+    }
+
+    .koi-route {
+        width: 24px;
+    }
+
+    .koi-body {
+        transform: scale(0.8);
+    }
+
+    .pagodas-lane {
+        padding: 1rem 0.5rem 4rem 0.5rem;
+        gap: 2.5rem;
+    }
+
+    .scroll-inner-content {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .pagoda-tower {
+        margin-right: 0;
+        transform: scale(0.75);
+    }
+
+    .pagoda-scroll {
+        padding: 0.75rem 1rem;
+    }
+
+    .pagoda-card[data-expanded="true"] .pagoda-scroll {
+        padding: 1rem 1.25rem;
+    }
+
+    .pagoda-name-banner {
+        font-size: 0.75rem;
+        justify-content: center;
+    }
+
+    .pagoda-title {
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .pagoda-description {
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    .pagoda-icon {
+        display: none;
+    }
+
+    .scroll-roller {
+        width: 12px;
+    }
+
+    /* --- Carnival mobile fixes --- */
+    .carnival-container {
+        padding: 1rem 0.75rem 2rem;
+    }
+
+    .booth-body {
+        padding: 0.75rem 1rem;
+    }
+
+    .booth-card[data-expanded="true"] .booth-body {
+        padding: 1rem 1.25rem;
+    }
+
+    .booth-title {
+        font-size: 1.05rem;
+    }
+
+    .booth-description {
+        font-size: 0.82rem;
+    }
+}
+
+/* ============================================
+   SCROLL TO TOP BUTTON
+   ============================================ */
+.scroll-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 90;
+    opacity: 0;
+    transform: scale(0.5);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.scroll-to-top.visible {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.scroll-to-top:hover {
+    transform: scale(1.12);
+}
+
+.scroll-to-top:active {
+    transform: scale(0.95);
+}
+
+/* Arcade theme scroll-to-top */
+[data-theme='arcade'] .scroll-to-top {
+    background: rgba(10, 14, 39, 0.9);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+[data-theme='arcade'] .scroll-to-top:hover {
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.6), 0 0 50px rgba(255, 0, 255, 0.2);
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
+}
+
+/* Islands theme scroll-to-top */
+[data-theme='floating-islands'] .scroll-to-top {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--grass-green);
+    color: var(--grass-green);
+    box-shadow: 0 4px 16px rgba(41, 128, 185, 0.2);
+}
+[data-theme='floating-islands'] .scroll-to-top:hover {
+    box-shadow: 0 6px 24px rgba(41, 128, 185, 0.35);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Edo theme scroll-to-top */
+[data-theme='edo-map'] .scroll-to-top {
+    background: rgba(245, 236, 215, 0.95);
+    border-color: var(--torii-red);
+    color: var(--torii-red);
+    box-shadow: 0 4px 16px rgba(139, 90, 43, 0.2);
+}
+[data-theme='edo-map'] .scroll-to-top:hover {
+    background: var(--torii-red);
+    color: white;
+    box-shadow: 0 4px 20px rgba(192, 57, 43, 0.4);
+}
+
+/* Carnival theme scroll-to-top */
+[data-theme='night-fair'] .scroll-to-top {
+    background: rgba(20, 10, 50, 0.9);
+    border-color: var(--fair-purple);
+    color: var(--fair-purple);
+    box-shadow: 0 0 15px rgba(156, 39, 176, 0.3);
+}
+[data-theme='night-fair'] .scroll-to-top:hover {
+    box-shadow: 0 0 25px rgba(233, 30, 99, 0.5), 0 0 50px rgba(156, 39, 176, 0.2);
+    border-color: var(--fair-magenta);
+    color: var(--fair-magenta);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .scroll-to-top {
+        width: 42px;
+        height: 42px;
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
 }
 
 /* ============================================
@@ -3209,9 +3653,26 @@ body {
     *,
     *::before,
     *::after {
-        animation-duration: 0.01ms !important;
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        transition-duration: 0.15s !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Disable purely decorative animations */
+    .sakura-petal,
+    .koi-fish,
+    .ferris-rim,
+    .marquee-lights .light,
+    .bulb,
+    .awning-light,
+    .cloud,
+    .ocean-wave-line,
+    .carnival-crowd,
+    .pennant {
+        animation: none !important;
+        opacity: 1 !important;
     }
 }
 
